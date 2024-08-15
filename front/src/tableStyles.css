@@ -1,0 +1,15 @@
+  .table thead th {
+    background-color: lightblue;
+  }
+  
+  .table-hover tbody tr:hover {
+    background-color: #837979;
+  }
+
+  .cell {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    max-width: 150px;
+  }
+  

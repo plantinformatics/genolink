@@ -1,0 +1,305 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  margin: 20px auto;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+}
+
+.col-label {
+  font-weight: bold;
+  margin-right: 100px;
+  margin-bottom: 20px; 
+}
+
+.row {
+  margin-bottom: 30px; 
+}
+
+.col {
+  padding: 10px; 
+}
+
+.col-auto {
+  padding: 10px; 
+  background-color: #f7f7f7; 
+}
+
+.col-auto > div, .col > div {
+
+  margin-bottom: 20px; 
+}
+
+.context {
+  margin: 20px;
+  display: flex;
+}
+
+.geno-data {
+  margin-left: 50px; 
+}
+
+.meta-data {
+  margin-right: 50px; 
+}
+
+.col-md-3-custom {
+  overflow-y: auto;
+  max-height: calc(100vh - 70px);
+  position: fixed;
+  top: 70px; 
+  left: 0;
+  background: white;
+  z-index: 999; 
+  width: 25%; 
+  padding-bottom: 20px;
+}
+
+.col-md-9-custom, .col-md-4-custom {
+  margin-left: 25%;
+  max-height: calc(100vh - 60px);
+  overflow-y: auto;
+  padding-bottom: 20px; 
+}
+
+.scrollable-table {
+  max-height: 800px; 
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+table thead th {
+  position: sticky;
+  top: 0;
+  background-color: #fff; 
+  z-index: 10; 
+}
+
+.vertical-header {
+  writing-mode: vertical-lr; 
+  min-width: 20px; 
+  margin: 0 auto;
+  white-space: nowrap;
+  text-align: right;
+  padding: 5px 10px;
+}
+
+.table th {
+  height: auto; 
+}
+
+.table {
+  width: auto;
+}
+
+/* Container for the genotype data section */
+.geno-data-container {
+  background: #fff;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+/* Search section styling */
+.search-container {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Spacing between select and button */
+  margin-bottom: 20px;
+}
+
+/* Login form styling */
+.login-form input[type="text"],
+.login-form input[type="password"] {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  font-size: 16px;
+}
+
+.login-form input[type="text"]:focus,
+.login-form input[type="password"]:focus {
+  border-color: #0056b3;
+  outline: none;
+}
+
+/* Dataset selector buttons styling */
+.dataset-selector button {
+  background-color: #f4f4f4;
+  border: 1px solid #ddd;
+  padding: 5px 15px;
+  border-radius: 5px;
+  margin-right: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.dataset-selector button:hover,
+.dataset-selector button.active {
+  background-color: #0056b3;
+  color: white;
+  border-color: #0056b3;
+}
+
+/* Filter container for position range and variant list */
+.filter-container {
+  margin-bottom: 20px;
+}
+
+/* Button primary action styling */
+.button-primary {
+  background-color: #0056b3;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.button-primary:hover {
+  background-color: #004494;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .search-container {
+    flex-direction: column;
+  }
+
+  .search-container select,
+  .search-container button {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+}
+
+.position-range-filter .input-container {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.position-range-filter input[type='text'] {
+  width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 12px 20px 12px 40px; /* Increase left padding to make space for the icon */
+  font-size: 16px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: border 0.3s ease;
+}
+
+.position-range-filter input[type='text']:focus {
+  border-color: #66afe9;
+  outline: 0;
+}
+
+.input-container .input-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #aaa;
+}
+
+.input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: #FFF;
+  border: 1px solid #CCC;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.input-group .form-control {
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  padding-left: 40px; 
+}
+
+.input-group-addon {
+  position: absolute;
+  left: 10px;
+  z-index: 10;
+  color: #CCC;
+}
+
+.form-control::placeholder {
+  color: #CCC;
+}
+
+.form-control:focus {
+  border-color: #80bdff;
+  outline: 0;
+  box-shadow: none;
+}
+
+select {
+  margin-left: 5px;
+}
