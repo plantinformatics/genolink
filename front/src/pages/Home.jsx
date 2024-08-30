@@ -35,11 +35,16 @@ const Home = () => {
 
   if (auth.isAuthenticated) {
     return (
-      <div>
-        <br />
+      <div style={{ position: "relative", height: "100vh" }}>
         <button
           onClick={() => void auth.removeUser()}
-          style={{ float: "right", margin: "50px 20px 0 0", backgroundColor:"lightgreen"}}
+          style={{
+            position: "absolute",
+            top: "20px",
+            right: "20px",
+            backgroundColor: "lightgreen",
+            zIndex: 1, 
+          }}
         >
           Log out
         </button>

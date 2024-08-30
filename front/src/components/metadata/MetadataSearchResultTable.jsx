@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import "../../tableStyles.css";
 import { useSelector, useDispatch } from "react-redux";
 import LoadingComponent from "../LoadingComponent";
@@ -9,7 +8,6 @@ import {
   setCheckedAccessions,
 } from "../../actions";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
 
 const MetadataSearchResultTable = ({ filterCode }) => {
@@ -20,8 +18,8 @@ const MetadataSearchResultTable = ({ filterCode }) => {
 
   const [isPaginating, setIsPaginating] = useState(false);
   const [selectAll, setSelectAll] = useState(false);
+  const [expandedRow, setExpandedRow] = useState(null); 
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const checkedAccessions = useSelector((state) => state.checkedAccessions);
 
   const handleCheckboxChange = (item) => {
@@ -58,10 +56,10 @@ const MetadataSearchResultTable = ({ filterCode }) => {
 
       setIsPaginating(true);
       const GENESYS_API_URL = filterCode
-        ?     `https://api.sandbox.genesys-pgr.org/api/v1/acn/query?f=${filterCode}&p=${currentPage + 1
-      }&l=${pageSize}&select=${select}`
-        :     `https://api.sandbox.genesys-pgr.org/api/v1/acn/query?p=${currentPage + 1
-      }&l=${pageSize}&select=${select}`
+        ? `https://api.sandbox.genesys-pgr.org/api/v1/acn/query?f=${filterCode}&p=${currentPage + 1
+        }&l=${pageSize}&select=${select}`
+        : `https://api.sandbox.genesys-pgr.org/api/v1/acn/query?p=${currentPage + 1
+        }&l=${pageSize}&select=${select}`
 
       axios
         .post(GENESYS_API_URL, null, {
@@ -98,86 +96,169 @@ const MetadataSearchResultTable = ({ filterCode }) => {
     }
     return dateStr || "";
   };
+
+  const handleRowClick = (index) => {
+    setExpandedRow(expandedRow === index ? null : index); // Toggle row expansion
+  };
+
   return (
     <>
-      <div style={{ position: "sticky", top: "0", background: "white", zIndex: "11", display: "inline-block" }}>
-        <button
-          className="btn btn-primary"
-          type="button"
-          onClick={() => navigate("/GenotypeMetadataExplorer")}
-          disabled={Object.keys(checkedAccessions).length === 0}
-        >
-          View
-        </button>
-      </div>
-      <table className="table table-bordered table-hover">
-        <thead className="thead-light" style={{ backgroundColor: "lightblue" }}>
-          <tr>
-            <th>
-              <input
-                type="checkbox"
-                checked={selectAll}
-                onChange={handleSelectAllChange}
-              />
-            </th>
-            <th>#</th>
-            <th scope="col">Institute Code</th>
-            <th scope="col">Holding Institute</th>
-            <th scope="col">Accession Number</th>
-            <th scope="col">Accession Name</th>
-            <th scope="col">Taxonomy</th>
-            <th scope="col">Crop Name</th>
-            <th scope="col">Provenance of Material</th>
-            <th scope="col">Acquisition Date</th>
-            <th scope="col">DOI</th>
-            <th scope="col">Last Updated</th>
-          </tr>
-        </thead>
-        <tbody>
-          {searchResults?.content.map((item, index) => (
-            <tr key={item.uuid || item.id || index}>
-              <td className="cell">
+      <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }} className="table table-bordered table-hover">
+          <thead style={{ backgroundColor: 'lightblue', position: 'sticky', top: '0', zIndex: 2 }}>
+            <tr>
+              <th>
                 <input
                   type="checkbox"
-                  checked={checkedAccessions[item.accessionNumber] || false}
-                  onChange={() => handleCheckboxChange(item)}
+                  checked={selectAll}
+                  onChange={handleSelectAllChange}
                 />
-              </td>
-              <td className="cell">{index + 1}</td>
-              <td className="cell">{item.instituteCode || ""}</td>
-              <td className="cell">
-                {item["institute.fullName"] ? (
-                  <Link
-                    to={{
-                      pathname: "institute",
-                      search: `?id=${item["institute.id"]}`,
-                    }}
-                  >
-                    {item["institute.fullName"]}
-                  </Link>
-                ) : (
-                  ""
-                )}
-              </td>
-              <td className="cell">
-                {" "}
-                <Link
-                  to={{ pathname: "accession", search: `?uuid=${item.uuid}` }}
+              </th>
+              <th>#</th>
+              <th scope="col">Institute Code</th>
+              <th scope="col">Holding Institute</th>
+              <th scope="col">Accession Number</th>
+              <th scope="col">Accession Name</th>
+              <th scope="col">Taxonomy</th>
+              <th scope="col">Crop Name</th>
+              <th scope="col">Provenance of Material</th>
+              <th scope="col">Acquisition Date</th>
+              <th scope="col">DOI</th>
+              <th scope="col">Last Updated</th>
+            </tr>
+          </thead>
+          <tbody>
+            {searchResults?.content.map((item, index) => (
+              <tr
+                key={item.uuid || item.id || index}
+                style={{
+                  backgroundColor: 'white',
+                  cursor: 'pointer',
+                }}
+                onClick={() => handleRowClick(index)} 
+              >
+                <td
+                  className="cell"
+                  style={{
+                    overflow: expandedRow === index ? 'visible' : 'hidden', 
+                    whiteSpace: expandedRow === index ? 'normal' : 'nowrap', 
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checkedAccessions[item.accessionNumber] || false}
+                    onChange={() => handleCheckboxChange(item)}
+                  />
+                </td>
+                <td
+                  className="cell"
+                  style={{
+                    overflow: expandedRow === index ? 'visible' : 'hidden',
+                    whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
+                  }}
+                >
+                  {index + 1}
+                </td>
+                <td
+                  className="cell"
+                  style={{
+                    overflow: expandedRow === index ? 'visible' : 'hidden',
+                    whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
+                  }}
+                >
+                  {item.instituteCode || ""}
+                </td>
+                <td
+                  className="cell"
+                  style={{
+                    overflow: expandedRow === index ? 'visible' : 'hidden',
+                    whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
+                  }}
+                >
+                  {item["institute.fullName"] ? (
+                    item["institute.fullName"]
+                  ) : (
+                    ""
+                  )}
+                </td>
+                <td
+                  className="cell"
+                  style={{
+                    overflow: expandedRow === index ? 'visible' : 'hidden',
+                    whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
+                  }}
                 >
                   {item.accessionNumber || ""}
-                </Link>
-              </td>
-              <td className="cell">{item.accessionName || ""}</td>
-              <td className="cell">{item["taxonomy.taxonName"] || ""}</td>
-              <td className="cell">{item.cropName || ""}</td>
-              <td className="cell">{item["countryOfOrigin.name"] || ""}</td>
-              <td className="cell">{formatDate(item.acquisitionDate)}</td>
-              <td className="cell">{item.doi || ""}</td>
-              <td className="cell">{item.lastModifiedDate || ""}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                </td>
+                <td
+                  className="cell"
+                  style={{
+                    overflow: expandedRow === index ? 'visible' : 'hidden',
+                    whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
+                  }}
+                >
+                  {item.accessionName || ""}
+                </td>
+                <td
+                  className="cell"
+                  style={{
+                    overflow: expandedRow === index ? 'visible' : 'hidden',
+                    whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
+                  }}
+                >
+                  {item["taxonomy.taxonName"] || ""}
+                </td>
+                <td
+                  className="cell"
+                  style={{
+                    overflow: expandedRow === index ? 'visible' : 'hidden',
+                    whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
+                  }}
+                >
+                  {item.cropName || ""}
+                </td>
+                <td
+                  className="cell"
+                  style={{
+                    overflow: expandedRow === index ? 'visible' : 'hidden',
+                    whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
+                  }}
+                >
+                  {item["countryOfOrigin.name"] || ""}
+                </td>
+                <td
+                  className="cell"
+                  style={{
+                    overflow: expandedRow === index ? 'visible' : 'hidden',
+                    whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
+                  }}
+                >
+                  {formatDate(item.acquisitionDate)}
+                </td>
+                <td
+                  className="cell"
+                  style={{
+                    overflow: expandedRow === index ? 'visible' : 'hidden',
+                    whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
+                  }}
+                >
+                  {item.doi || ""}
+                </td>
+                <td
+                  className="cell"
+                  style={{
+                    overflow: expandedRow === index ? 'visible' : 'hidden',
+                    whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
+                  }}
+                >
+                  {item.lastModifiedDate || ""}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
       {isPaginating ? (
         <LoadingComponent />
       ) : totalAccessions > 50 ? (

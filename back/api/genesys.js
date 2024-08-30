@@ -19,7 +19,20 @@ router.post("/login", (req, res) => {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 router.post("/accession/filters", async (req, res) => {
-  const url = `${config.genesysServer}/filter`;
+  let url = `${config.genesysServer}/filter`;
+
+  const queryParams = [];
+
+  if (req.query.p) queryParams.push(`p=${req.query.p}`);
+  if (req.query.l) queryParams.push(`l=${req.query.l}`);
+  if (req.query.s) queryParams.push(`s=${req.query.s}`);
+  if (req.query.d) queryParams.push(`d=${req.query.d}`);
+  if (req.query.f) queryParams.push(`d=${req.query.f}`);
+
+  if (queryParams.length > 0) {
+    url += `?${queryParams.join("&")}`;
+  }
+
   const header = {
     headers: {
       Authorization: `Bearer ${token}`,

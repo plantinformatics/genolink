@@ -15,6 +15,7 @@ const LinkageGroupFilter = ({
   const drawerRef = useRef(null);
   const buttonClickedRef = useRef(false);
   const platform = useSelector((state) => state.platform);
+  const [showFileInput, setShowFileInput] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -51,14 +52,21 @@ const LinkageGroupFilter = ({
     setIsDrawerOpen(!isDrawerOpen);
   };
 
+  const handleButtonClick = () => {
+    toggleDrawer();
+    setShowFileInput(!showFileInput);
+  };
+
   return (
     <div className="linkage-group-filter">
-      <button className="button-primary" onClick={toggleDrawer}>
-        Chromosomes
+      <button onClick={handleButtonClick} style={{
+        display: "inline-block", width: "280px", height:"38px", textAlign: "left", position: "relative", border: "2px solid #ebba35", margin: "15px 0 5px 0", backgroundColor: "beige"
+      }}>
+        Chromosomes <span style={{ float: "right" }}>{showFileInput ? "\u25B2" : "\u25BC"}</span>
       </button>
       {isDrawerOpen && (
-        <div ref={drawerRef} className="card mt-1">
-          <div className="card-body">
+        <div ref={drawerRef} >
+          <div>
             {linkageGroups.map((group) => (
               <div key={group} className="form-check">
                 <input

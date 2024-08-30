@@ -7,20 +7,23 @@ const VariantListFilter = ({ setVariantList }) => {
     const newValue = e.target.value;
     setInputValue(newValue);
 
-    // Split the input string by commas and trim whitespace
     const variantArray = newValue.split(",").map((item) => item.trim());
 
-    // Update the variantList in the parent component
-    setVariantList(variantArray.filter((item) => item)); // Filter out empty strings
+    setVariantList(variantArray.filter((item) => item)); 
   };
 
   return (
     <div className="variant-list-filter">
+      <br/>
+      <label htmlFor="variantIds" className="form-label" >Variant IDs:</label>
       <input
+        id="variantIds"
         type="text"
+        className="form-control"
         value={inputValue}
         onChange={handleInputChange}
         placeholder="Enter variants, separated by commas"
+        style={{width:"282px"}}
       />
     </div>
   );

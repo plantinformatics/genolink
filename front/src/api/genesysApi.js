@@ -12,10 +12,10 @@ import {
   setResetTrigger,
 } from '../actions';
 
-export const fetchInitialData = async (token, dispatch) => {
+export const fetchInitialData = async (token, dispatch, userInput=" ") => {
   try {
-    const body = { _text: " ", maxPageSize: 1000 };
-    const response = await axios.post('https://api.sandbox.genesys-pgr.org/api/v1/acn/filter?d=ASC&l=100&s=seqNo', body, {
+    const body = { _text: userInput};
+    const response = await axios.post('https://api.sandbox.genesys-pgr.org/api/v1/acn/filter?l=1', body, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
@@ -48,9 +48,9 @@ export const fetchInitialData = async (token, dispatch) => {
   }
 };
 
-export const fetchInitialData2 = async (token, dispatch) => {
+export const fetchInitialData2 = async (token, dispatch, userInput=" ") => {
   try {
-    const body = {};
+    const body = { _text: userInput};
     const pageSize = 500;
     const select = "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,institute.country.name";
     const response = await axios.post(`https://api.sandbox.genesys-pgr.org/api/v1/acn/query?p=0&l=${pageSize}&select=${select}`, body, {
@@ -130,22 +130,19 @@ export const applyFilter = async (token, filterData, dispatch) => {
 
 export const resetFilter = async (token, dispatch) => {
   try {
-    await Promise.all([
+    const [filtercode, response2] = await Promise.all([
       fetchInitialData(token, dispatch),
       fetchInitialData2(token, dispatch)
-    ])
-      .catch((error) => {
-        console.error("Error fetching initial data:", error);
-        setIsLoading(false);
-      });
+    ]);
 
     dispatch(setResetTrigger(true));
-    return response.data.filterCode;
+    return filtercode;
   } catch (error) {
     console.error("Error resetting filter:", error);
-    throw error;
+    throw error; // Re-throw the error to be handled by the caller
   }
 };
+
 
 
 

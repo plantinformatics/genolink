@@ -47,6 +47,7 @@ const AccessionFilter = () => {
           value={inputValue}
           onChange={onChangeAccession}
           onBlur={handleBlur}
+          style={{ width: "500px", padding: "8px", marginLeft: "150px" }}
           placeholder="Enter Accession Numbers separated by commas..."
         />
       </div>
@@ -55,6 +56,7 @@ const AccessionFilter = () => {
           type="file"
           onChange={handleFileUpload}
           accept=".txt"
+          style={{ padding: "4px", width: "250px" }}
         />
       </div>
     </>
