@@ -6,7 +6,7 @@ import { fetchGerminateLinkageGroups } from "../../../api/genolinkGerminateApi";
 const LinkageGroupFilter = ({
   selectedGroups,
   setSelectedGroups,
-  selectedDataset,
+  selectedStudyDbId,
   username,
   password,
 }) => {
@@ -24,7 +24,7 @@ const LinkageGroupFilter = ({
           const groups = await fetchGigwaLinkageGroups(
             username,
             password,
-            selectedDataset
+            selectedStudyDbId
           );
           setLinkageGroups(groups);
         } else if (platform === "Germinate") {
@@ -37,7 +37,7 @@ const LinkageGroupFilter = ({
     };
 
     fetchData();
-  }, [platform, username, password, selectedDataset]);
+  }, [platform, username, password, selectedStudyDbId]);
 
   const handleInputChange = (groupName) => {
     setSelectedGroups((prevSelectedGroups) =>

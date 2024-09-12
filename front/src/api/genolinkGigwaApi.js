@@ -10,8 +10,7 @@ export const searchSamplesInDatasets = async (username, password, Accessions) =>
       accessions: Accessions,
     }
     );
-    const {response, numberOfGenesysAccessions, numberOfPresentAccessions, numberOfMappedAccessions} = result.data;
-    return {response, numberOfGenesysAccessions, numberOfPresentAccessions, numberOfMappedAccessions};
+    return result.data;
   } catch (error) {
     console.error("Error searching samples in datasets: ", error);
     throw error;
@@ -21,6 +20,16 @@ export const searchSamplesInDatasets = async (username, password, Accessions) =>
 export const fetchVariants = async (params) => {
   try {
     const response = await axios.post(`${genolinkServer}/api/gigwa/ga4gh/variants/search`, params);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching variants: ", error);
+    throw error;
+  }
+};
+
+export const fetchAlleles = async (params) => {
+  try {
+    const response = await axios.post(`${genolinkServer}/api/gigwa/brapi/v2/search/allelematrix`, params);
     return response.data;
   } catch (error) {
     console.error("Error fetching variants: ", error);
@@ -47,34 +56,46 @@ export const exportGigwaVCF = async (params) => {
   }
 };
 
-export const fetchGigwaLinkageGroups = async (username, password, selectedDataset) => {
-  try {
-    const referenceSetDbIds = await axios.get(`${genolinkServer}/api/gigwa/brapi/v2/referencesets`, {
+export const fetchGigwaLinkageGroups = (username, password, selectedStudyDbId) => {
+  return axios
+    .get(`${genolinkServer}/api/gigwa/brapi/v2/referencesets`, {
       params: {
         username,
-        password
+        password,
+      },
+    })
+    .then((referenceSetDbIdsResponse) => {
+      const referenceSetDbIds = referenceSetDbIdsResponse.data?.result?.data || [];
+      if (!referenceSetDbIds.length) {
+        throw new Error("No reference sets found for the user.");
       }
-    });
+      const selectedReferenceSetDbId = referenceSetDbIds
+        .map((referenceSet) => referenceSet.referenceSetDbId)
+        .find((reference) => reference.startsWith(Array.isArray(selectedStudyDbId) ? selectedStudyDbId[0] : selectedStudyDbId));
 
-    const selectedReferenceSetDbId = referenceSetDbIds.data.result.data
-      .map((referenceSet) => referenceSet.referenceSetDbId)
-      .find((reference) => reference.startsWith(selectedDataset.split("§").slice(0, -1).join("§")));
+      if (!selectedReferenceSetDbId) {
+        throw new Error(`No reference set found for study ID: ${selectedStudyDbId}`);
+      }
 
-
-      const response = await axios.get(`${genolinkServer}/api/gigwa/brapi/v2/references`, {
+      return selectedReferenceSetDbId;
+    })
+    .then((selectedReferenceSetDbId) => {
+      return axios.get(`${genolinkServer}/api/gigwa/brapi/v2/references`, {
         params: {
           username,
           password,
-          referenceSetDbId: selectedReferenceSetDbId
-        }
+          referenceSetDbId: selectedReferenceSetDbId,
+        },
       });
-      
-    const linkageGroups = response.data.result.data.map(
-      (item) => item.referenceName
-    );
-    return linkageGroups;
-  } catch (error) {
-    console.error("Error fetching Gigwa linkage groups:", error);
-    throw error;
-  }
+    })
+    .then((referencesResponse) => {
+      const linkageGroups = referencesResponse.data?.result?.data?.map(
+        (item) => item.referenceName
+      ) || [];
+      return linkageGroups;
+    })
+    .catch((error) => {
+      console.error("Error fetching Gigwa linkage groups:", error);
+      throw error;
+    });
 };

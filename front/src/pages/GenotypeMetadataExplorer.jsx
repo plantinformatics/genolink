@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
+import { Button, Collapse, Card } from "react-bootstrap";
 import { setPlatform } from "../actions";
 
 import GenotypeSearchResultsTable from "../components/genotype/GenotypeSearchResultsTable";
@@ -17,7 +18,6 @@ import {
   fetchVariants,
 } from "../api/genolinkGigwaApi";
 import { fetchCallsetDataForAccession } from "../api/genolinkGerminateApi";
-import { exportGigwaVCF } from "../api/genolinkGigwaApi";
 
 const GenotypeMetadataExplorer = () => {
   const [selectedOption, setSelectedOption] = useState("Gigwa");
@@ -25,12 +25,11 @@ const GenotypeMetadataExplorer = () => {
   const [posEnd, setPosEnd] = useState("");
   const [genomData, setGenomData] = useState("");
   const [datasets, setDatasets] = useState([]);
-  const [selectedDataset, setSelectedDataset] = useState("");
+  const [selectedDataset, setSelectedDataset] = useState([]);
   const [sampleDetails, setSampleDetails] = useState([]);
   const [selectedSamplesDetails, setSelectedSamplesDetails] = useState([]);
   const [isGenomeSearchSubmit, setIsGenomeSearchSubmit] = useState(false);
   const [isGenomDataLoading, setIsGenomDataLoading] = useState(false);
-  const [isExportGenomDataLoading, setIsExportGenomDataLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedGroups, setSelectedGroups] = useState([]);
   const [samples, setSamples] = useState([]);
@@ -39,13 +38,9 @@ const GenotypeMetadataExplorer = () => {
   const [showDatasetSelector, setShowDatasetSelector] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [openDrawerId, setOpenDrawerId] = useState(null);
   const [searchType, setSearchType] = useState("PositionRange");
   const [variantList, setVariantList] = useState([]);
-  const [selectedAccession, setSelectedAccession] = useState(null);
-  const [numberOfGenesysAccessions, setNumberOfGenesysAccessions] = useState(null);
-  const [numberOfPresentAccessions, setNumberOfPresentAccessions] = useState(null);
-  const [numberOfMappedAccessions, setNumberOfMappedAccessions] = useState(null);
-
 
   const searchResults = useSelector((state) => state.searchResults);
   const checkedAccessionsObject = useSelector(
@@ -56,6 +51,7 @@ const GenotypeMetadataExplorer = () => {
     checkedAccessions.includes(item.accessionNumber)
   );
   const dispatch = useDispatch();
+
   useEffect(() => {
     if (selectedOption === "Gigwa" && isGenomeSearchSubmit) {
       fetchData(currentPage);
@@ -66,35 +62,24 @@ const GenotypeMetadataExplorer = () => {
     setGenomData("");
   }, [selectedOption]);
 
+  const toggleDrawer = (id) => {
+    setOpenDrawerId(openDrawerId === id ? null : id);
+  };
+
   const handleDatasetDetails = (dataset) => {
     setSelectedSamplesDetails(
       sampleDetails.filter(
         (sample) =>
           sample.studyDbId ===
-          `${dataset.split("§")[0]}§${dataset.split("§")[1]}` &&
+            `${dataset.split("§")[0]}§${dataset.split("§")[1]}` &&
           sample.sampleName.split("-").slice(-1)[0] === dataset.split("§")[2]
       )
     );
     setSelectedDataset(dataset);
   };
 
-  const handleDownloadClick = async () => {
-    setIsExportGenomDataLoading(true);
-    const params = {
-      username: username,
-      password: password,
-      variantList: variantList,
-      selectedSamplesDetails: selectedSamplesDetails,
-      variantPage: currentPage,
-      linkagegroups: selectedGroups.join(";"),
-      start: posStart || -1,
-      end: posEnd || -1,
-    };
-    await exportGigwaVCF(params);
-    setIsExportGenomDataLoading(false);
-  };
-
   const handleSearch = async () => {
+    setIsGenomDataLoading(true);
     if (!username || !password) {
       alert("Please enter username and password");
       setIsGenomDataLoading(false);
@@ -105,35 +90,29 @@ const GenotypeMetadataExplorer = () => {
       if (selectedOption === "Gigwa") {
         if (!isGenomeSearchSubmit) {
           const Accessions = checkedResults.map((item) => item.accessionNumber);
-          const { response, numberOfGenesysAccessions, numberOfPresentAccessions, numberOfMappedAccessions } = await searchSamplesInDatasets(
+          const sampleDetails = await searchSamplesInDatasets(
             username,
             password,
             Accessions
           );
-          setNumberOfGenesysAccessions(numberOfGenesysAccessions);
-          setNumberOfPresentAccessions(numberOfPresentAccessions);
-          setNumberOfMappedAccessions(numberOfMappedAccessions);
-
-          if (response.result.data.length === 0) {
-            alert("No genotype data found in the Database!");
-            return;
-          }
           setDatasets([
             ...new Set(
-              response.result.data.map(
+              sampleDetails.map(
                 (sample) =>
-                  `${sample.studyDbId}§${sample.sampleName.split("-").slice(-1)[0]
+                  `${sample.studyDbId}§${
+                    sample.sampleName.split("-").slice(-1)[0]
                   }`
               )
             ),
           ]);
-          setSampleDetails(response.result.data);
+          setSampleDetails(sampleDetails);
           setIsGenomeSearchSubmit(true);
           setShowLogin(false);
           setShowSearchTypeSelector(true);
           setShowDatasetSelector(true);
         }
         if (selectedSamplesDetails.length > 0) {
+          console.log(selectedSamplesDetails);
           fetchData(1);
           setCurrentPage(1);
         }
@@ -151,9 +130,6 @@ const GenotypeMetadataExplorer = () => {
           case 403: // Forbidden
             message = "Access denied: You do not have permission to access these resources. Please check your credentials.";
             break;
-          case 404: // No Data Found
-            message = "No genotype data found in the Database!";
-            break;
           default:
             message = "An error occurred: " + (error.message || "Unknown error");
             break;
@@ -161,11 +137,13 @@ const GenotypeMetadataExplorer = () => {
       }
       alert(message);
     }
+
+    setIsGenomDataLoading(false);
   };
 
   const fetchData = async (page) => {
+    setIsGenomDataLoading(true);
     try {
-      setIsGenomDataLoading(true);
       if (selectedOption === "Gigwa") {
         const data = await fetchVariants({
           username: username,
@@ -177,12 +155,6 @@ const GenotypeMetadataExplorer = () => {
           start: posStart || -1,
           end: posEnd || -1,
         });
-
-        if (data.data.count === 0) {
-          alert(`No genotype data found!
-            Please set the filters again. `);
-          return;
-        }
         setGenomData(data.data);
         setSamples(data.desiredSamples);
         setShowSearchTypeSelector(false);
@@ -206,31 +178,16 @@ const GenotypeMetadataExplorer = () => {
       }
     } catch (error) {
       alert("An error occurred: " + error.message);
-      setIsGenomDataLoading(false);
-    } finally {
-      setIsGenomDataLoading(false);
     }
+    setIsGenomDataLoading(false);
   };
 
   const handleSelectChange = (event) => {
-    setSelectedAccession(event.target.value);
-  };
-
-  const handleReset = () => {
-    setShowSearchTypeSelector(true);
-    setShowDatasetSelector(true);
-    setIsGenomeSearchSubmit(false);
-    setGenomData("");
-  }
-
-  const handleOptionChange = (event) => {
     setIsGenomeSearchSubmit(false);
     const newSelectedOption = event.target.value;
     setSelectedOption(newSelectedOption);
     dispatch(setPlatform(newSelectedOption));
   };
-
-
 
   const handleSearchTypeChange = (newType) => {
     if (newType !== searchType) {
@@ -245,34 +202,29 @@ const GenotypeMetadataExplorer = () => {
     }
     setSearchType(newType); // Update the search type
   };
+
   return (
     <div className="geno-data-container">
       <div className="row">
         <div className="col-md-6">
           <h2>Metadata</h2>
-          <div className="form-group">
-            <label htmlFor="accessionSelect">Accession Number:</label>
-            <select
-              id="accessionSelect"
-              onChange={handleSelectChange}
-              value={selectedAccession || ""}
-            >
-              <option value="" disabled>
-                Select
-              </option>
-              {checkedResults?.map((item) => (
-                <option key={item.accessionNumber} value={item.accessionNumber}>
+          {checkedResults?.map((item, index) => (
+            <React.Fragment key={index}>
+              <div className="col-md-3">
+                <Button
+                  className="w-100 mb-2"
+                  onClick={() => toggleDrawer(item.accessionNumber)}
+                  aria-controls={`collapse${item.accessionNumber}`}
+                  aria-expanded={openDrawerId === item.accessionNumber}
+                >
                   {item.accessionNumber}
-                </option>
-              ))}
-            </select>
-          </div>
-          {selectedAccession && (
-            <div className="metadata-details">
-              {checkedResults
-                .filter((item) => item.accessionNumber === selectedAccession)
-                .map((item) => (
-                  <div key={item.accessionNumber}>
+                </Button>
+              </div>
+              <Collapse in={openDrawerId === item.accessionNumber}>
+                <div id={`collapse${item.accessionNumber}`}>
+                  <Card.Body>
+                    <br />
+                    <h3>{item.accessionNumber}</h3>
                     <hr />
                     <div className="row">
                       <div className="col border-right bg-light">
@@ -281,16 +233,14 @@ const GenotypeMetadataExplorer = () => {
                         <div className="col-label">Holding institute</div>
                         <div className="col-label">Institute code</div>
                         <div className="col-label">Data provider</div>
-                        <div className="col-label">Origin Of Material</div>
                         <div className="col-label">Acquisition Date</div>
                       </div>
                       <div className="col-auto">
                         {item.doi && <div>{item.doi}</div>}
                         <div>{item.accessionNumber || ""}</div>
-                        <div>{item["institute.fullName"] || ""}</div>
+                        <div>{item.institute.fullName || ""}</div>
                         <div>{item.instituteCode || ""}</div>
-                        <div>{item["institute.owner.name"] || ""}</div>
-                        <div>{item["countryOfOrigin.name"] || ""}</div>
+                        <div>{item.institute.owner?.name || ""}</div>
                         <div>{item.acquisitionDate || ""}</div>
                       </div>
                     </div>
@@ -307,12 +257,12 @@ const GenotypeMetadataExplorer = () => {
                       <div className="col border-right bg-light">
                         <div>{item.genus || ""}</div>
                         <div>
-                          {item["taxonomy.grinTaxonomySpecies.speciesName"] || ""}
+                          {item.taxonomy.grinTaxonomySpecies?.speciesName || ""}
                         </div>
                         <div>
-                          {item["taxonomy.grinTaxonomySpecies.name"] || ""}
+                          {item.taxonomy.grinTaxonomySpecies?.name || ""}
                         </div>
-                        <div>{item["crop.name"] || ""}</div>
+                        <div>{item.crop?.name || ""}</div>
                       </div>
                     </div>
 
@@ -325,9 +275,9 @@ const GenotypeMetadataExplorer = () => {
                       <div className="col border-right bg-light">
                         <div>
                           <a
-                            href={`https://npgsweb.ars-grin.gov/gringlobal/taxon/taxonomydetail?id=${item["taxonomy.grinTaxonomySpecies.id"]}`}
+                            href={`https://npgsweb.ars-grin.gov/gringlobal/taxon/taxonomydetail?id=${item.taxonomy.grinTaxonomySpecies?.id}`}
                           >
-                            {item["taxonomy.grinTaxonomySpecies.name"] || ""}
+                            {item.taxonomy.grinTaxonomySpecies?.name || ""}
                           </a>
                         </div>
                       </div>
@@ -353,17 +303,18 @@ const GenotypeMetadataExplorer = () => {
                       </div>
                       <div className="col border-right bg-light">
                         <div>{item.uuid || ""}</div>
-                        <div>{item["institute.owner.lastModifiedDate"]}</div>
+                        <div>{item.institute.owner?.lastModifiedDate}</div>
                         <div>
-                          {item["institute.owner.createdDate"] ||
+                          {item.institute.owner?.createdDate ||
                             "Date not provided"}
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-            </div>
-          )}
+                  </Card.Body>
+                </div>
+              </Collapse>
+            </React.Fragment>
+          ))}
         </div>
 
         <div className="col-md-6">
@@ -377,7 +328,7 @@ const GenotypeMetadataExplorer = () => {
                   <div className="search-container">
                     <select
                       className="form-select"
-                      onChange={handleOptionChange}
+                      onChange={handleSelectChange}
                       value={selectedOption}
                     >
                       {["Gigwa", "Germinate"].map((option) => (
@@ -386,23 +337,13 @@ const GenotypeMetadataExplorer = () => {
                         </option>
                       ))}
                     </select>
-                    {!genomData ? (
-                      <button
-                        type="button"
-                        className="button-primary"
-                        onClick={handleSearch}
-                      >
-                        Search
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        className="button-primary"
-                        onClick={handleReset}
-                      >
-                        Reset
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      className="button-primary"
+                      onClick={handleSearch}
+                    >
+                      Search
+                    </button>
                   </div>
                   {showLogin && (
                     <>
@@ -433,12 +374,10 @@ const GenotypeMetadataExplorer = () => {
                     </>
                   )}
 
-                  {selectedOption === "Gigwa" &&
+                  {isGenomeSearchSubmit &&
+                    selectedOption === "Gigwa" &&
                     showDatasetSelector && (
                       <div className="dataset-selector">
-                        <h5> {numberOfMappedAccessions} of {numberOfGenesysAccessions}  accessions have sample name mappings.</h5>
-                        <h5> {numberOfPresentAccessions} of {numberOfGenesysAccessions} accessions have genotypes in Gigwa.</h5>
-                        <br />
                         <label style={{ marginRight: "10px" }}>
                           Select Dataset:
                         </label>{" "}
@@ -459,7 +398,8 @@ const GenotypeMetadataExplorer = () => {
                         ))}
                       </div>
                     )}
-                  {showDatasetSelector && selectedDataset && (
+                  {/* {isGenomeSearchSubmit && genomData ? ( */}
+                  {showDatasetSelector && (
                     <div className="filter-container">
                       <LinkageGroupFilter
                         selectedDataset={selectedDataset}
@@ -470,52 +410,37 @@ const GenotypeMetadataExplorer = () => {
                       />
                     </div>
                   )}
-                  {selectedDataset && (
-                    <>
-                      {showSearchTypeSelector && (
-                        <select
-                          className="form-select"
-                          value={searchType}
-                          onChange={(e) => handleSearchTypeChange(e.target.value)} // Step 3: Handle changes
-                          style={{ marginRight: "10px" }}
-                        >
-                          <option value="PositionRange">PositionRange</option>
-                          <option value="VariantIDs">VariantIDs</option>
-                        </select>
-                      )}
-                      {showSearchTypeSelector &&
-                        (searchType === "PositionRange" ? (
-                          <PositionRangeFilter
-                            posStart={posStart}
-                            setPosStart={setPosStart}
-                            posEnd={posEnd}
-                            setPosEnd={setPosEnd}
-                          />
-                        ) : (
-                          <VariantListFilter setVariantList={setVariantList} />
-                        ))}
-                    </>
+                  {showSearchTypeSelector && (
+                    <select
+                      className="form-select"
+                      value={searchType}
+                      onChange={(e) => handleSearchTypeChange(e.target.value)} // Step 3: Handle changes
+                      style={{ marginRight: "10px" }}
+                    >
+                      <option value="PositionRange">PositionRange</option>
+                      <option value="VariantIDs">VariantIDs</option>
+                    </select>
                   )}
-
-                  {isGenomDataLoading && <LoadingComponent />}
-                  {genomData && !isGenomDataLoading ? (
-                    <>
-                      <GenotypeSearchResultsTable
-                        data={genomData}
-                        currentPage={currentPage}
-                        setCurrentPage={setCurrentPage}
-                        samples={samples}
-                        platform={selectedOption}
+                  {showSearchTypeSelector &&
+                    (searchType === "PositionRange" ? (
+                      <PositionRangeFilter
+                        posStart={posStart}
+                        setPosStart={setPosStart}
+                        posEnd={posEnd}
+                        setPosEnd={setPosEnd}
                       />
+                    ) : (
+                      <VariantListFilter setVariantList={setVariantList} />
+                    ))}
 
-                      {isExportGenomDataLoading && <LoadingComponent />}
-                      {!isExportGenomDataLoading && (
-                        <button onClick={handleDownloadClick}>
-                          Export VCF
-                        </button>
-                      )}
-
-                    </>
+                  {isGenomeSearchSubmit && genomData ? (
+                    <GenotypeSearchResultsTable
+                      data={genomData}
+                      currentPage={currentPage}
+                      setCurrentPage={setCurrentPage}
+                      samples={samples}
+                      platform={selectedOption}
+                    />
                   ) : null}
                 </div>
               )}

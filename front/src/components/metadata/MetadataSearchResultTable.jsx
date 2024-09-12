@@ -2,6 +2,7 @@ import { useState } from "react";
 import "../../tableStyles.css";
 import { useSelector, useDispatch } from "react-redux";
 import LoadingComponent from "../LoadingComponent";
+import { genesysServer } from "../../config/apiConfig";
 import {
   setCurrentPage,
   setSearchResults,
@@ -18,7 +19,7 @@ const MetadataSearchResultTable = ({ filterCode }) => {
 
   const [isPaginating, setIsPaginating] = useState(false);
   const [selectAll, setSelectAll] = useState(false);
-  const [expandedRow, setExpandedRow] = useState(null); 
+  const [expandedRow, setExpandedRow] = useState(null);
   const dispatch = useDispatch();
   const checkedAccessions = useSelector((state) => state.checkedAccessions);
 
@@ -56,9 +57,9 @@ const MetadataSearchResultTable = ({ filterCode }) => {
 
       setIsPaginating(true);
       const GENESYS_API_URL = filterCode
-        ? `https://api.sandbox.genesys-pgr.org/api/v1/acn/query?f=${filterCode}&p=${currentPage + 1
+        ? `${genesysServer}/api/v1/acn/query?f=${filterCode}&p=${currentPage + 1
         }&l=${pageSize}&select=${select}`
-        : `https://api.sandbox.genesys-pgr.org/api/v1/acn/query?p=${currentPage + 1
+        : `${genesysServer}/api/v1/acn/query?p=${currentPage + 1
         }&l=${pageSize}&select=${select}`
 
       axios
@@ -101,6 +102,9 @@ const MetadataSearchResultTable = ({ filterCode }) => {
     setExpandedRow(expandedRow === index ? null : index); // Toggle row expansion
   };
 
+
+
+
   return (
     <>
       <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
@@ -135,13 +139,13 @@ const MetadataSearchResultTable = ({ filterCode }) => {
                   backgroundColor: 'white',
                   cursor: 'pointer',
                 }}
-                onClick={() => handleRowClick(index)} 
+                onClick={() => handleRowClick(index)}
               >
                 <td
                   className="cell"
                   style={{
-                    overflow: expandedRow === index ? 'visible' : 'hidden', 
-                    whiteSpace: expandedRow === index ? 'normal' : 'nowrap', 
+                    overflow: expandedRow === index ? 'visible' : 'hidden',
+                    whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
                   }}
                 >
                   <input
@@ -188,8 +192,15 @@ const MetadataSearchResultTable = ({ filterCode }) => {
                     whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
                   }}
                 >
-                  {item.accessionNumber || ""}
+                  <a
+                    href={`https://www.genesys-pgr.org/a/${item.uuid}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {item.accessionNumber || ""}
+                  </a>
                 </td>
+
                 <td
                   className="cell"
                   style={{

@@ -12,6 +12,8 @@ import {
   setCropCheckedBoxes,
   setTaxonomyCheckedBoxes,
   setOriginOfMaterialCheckedBoxes,
+  setSampStatCheckedBoxes,
+  setGermplasmStorageCheckedBoxes,
   setCheckedAccessions,
 } from "../../../actions";
 
@@ -42,6 +44,8 @@ const SearchFilters = () => {
   const [isCropDrawerOpen, setIsCropDrawerOpen] = useState(false);
   const [isTaxonomyDrawerOpen, setIsTaxonomyDrawerOpen] = useState(false);
   const [isOriginDrawerOpen, setIsOriginDrawerOpen] = useState(false);
+  const [isSampStatDrawerOpen, setIsSampStatDrawerOpen] = useState(false);
+  const [isGermplasmStorageDrawerOpen, setIsGermplasmStorageDrawerOpen] = useState(false);
   const [filterMode, setFilterMode] = useState("Passport Filter");
   const [isFilterApplied, setIsFilterApplied] = useState(false);
   const [initialRequestSent, setInitialRequestSent] = useState(false);
@@ -66,6 +70,12 @@ const SearchFilters = () => {
   const originOfMaterialCheckedBoxes = useSelector(
     (state) => state.originOfMaterialCheckedBoxes
   );
+  const sampStatCheckedBoxes = useSelector(
+    (state) => state.sampStatCheckedBoxes
+  );
+  const germplasmStorageCheckedBoxes = useSelector(
+    (state) => state.germplasmStorageCheckedBoxes
+  );
   const instituteCode = useSelector((state) => state.instituteCode);
 
   const resetTrigger = useSelector((state) => state.resetTrigger);
@@ -77,7 +87,12 @@ const SearchFilters = () => {
   const originOfMaterialList = useSelector(
     (state) => state.originOfMaterialList
   );
-
+  const sampStatList = useSelector(
+    (state) => state.sampStatList
+  );
+  const germplasmStorageList = useSelector(
+    (state) => state.germplasmStorageList
+  );
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -139,16 +154,29 @@ const SearchFilters = () => {
           countryOfOrigin: { code3: originOfMaterialCheckedBoxes },
         };
       }
-
+      if (sampStatCheckedBoxes.length > 0) {
+        body = {
+          ...body,
+          sampStat: sampStatCheckedBoxes,
+        };
+      }
+      if (germplasmStorageCheckedBoxes.length > 0) {
+        body = {
+          ...body,
+          storage: germplasmStorageCheckedBoxes,
+        };
+      }
       try {
         const filterCode = await applyFilter(token, body, dispatch);
         setFilterCode(filterCode);
         setIsLoading(false);
         setIsFilterApplied(true);
+        setInputValue("");
         // setIsSearchSubmit(true);
       } catch (error) {
         setIsLoading(false);
         setIsFilterApplied(false);
+        setInputValue("");
         // setIsSearchSubmit(false);
       }
     };
@@ -164,12 +192,16 @@ const SearchFilters = () => {
     dispatch(setCropCheckedBoxes([]));
     dispatch(setTaxonomyCheckedBoxes([]));
     dispatch(setOriginOfMaterialCheckedBoxes([]));
+    dispatch(setSampStatCheckedBoxes([]));
+    dispatch(setGermplasmStorageCheckedBoxes([]));
     // setIsAccessionDrawerOpen(false);
     setIsCropDrawerOpen(false);
     setIsDateDrawerOpen(false);
     setIsInstituteDrawerOpen(false);
     setIsOriginDrawerOpen(false);
     setIsTaxonomyDrawerOpen(false);
+    setIsSampStatDrawerOpen(false);
+    setIsGermplasmStorageDrawerOpen(false);
     dispatch(setResetTrigger(false));
     dispatch(setCheckedAccessions({}));
   }, [resetTrigger]);
@@ -459,6 +491,40 @@ const SearchFilters = () => {
                   <MultiSelectFilter
                     options={originOfMaterialList}
                     type="originOfMaterialCheckedBoxes"
+                  />
+                )}
+              </div>
+              <div>
+                <button
+                  className="btn btn-info"
+                  onClick={() => setIsSampStatDrawerOpen(!isSampStatDrawerOpen)}
+                  style={{
+                    display: "inline-block", width: "280px", textAlign: "left", position: "relative", border: "2px solid #ebba35", backgroundColor: "beige", marginBottom: "5px", fontWeight: "500"
+                  }}
+                >
+                  Biological Status Of Accession <span style={{ float: "right" }}>{isSampStatDrawerOpen ? "\u25B2" : "\u25BC"}</span>
+                </button>
+                {isSampStatDrawerOpen && (
+                  <MultiSelectFilter
+                    options={sampStatList}
+                    type="sampStatCheckedBoxes"
+                  />
+                )}
+              </div>
+              <div>
+                <button
+                  className="btn btn-info"
+                  onClick={() => setIsGermplasmStorageDrawerOpen(!isGermplasmStorageDrawerOpen)}
+                  style={{
+                    display: "inline-block", width: "280px", textAlign: "left", position: "relative", border: "2px solid #ebba35", backgroundColor: "beige", marginBottom: "5px", fontWeight: "500"
+                  }}
+                >
+                  Type Of Germplasm Storage <span style={{ float: "right" }}>{isGermplasmStorageDrawerOpen ? "\u25B2" : "\u25BC"}</span>
+                </button>
+                {isGermplasmStorageDrawerOpen && (
+                  <MultiSelectFilter
+                    options={germplasmStorageList}
+                    type="germplasmStorageCheckedBoxes"
                   />
                 )}
               </div>

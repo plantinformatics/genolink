@@ -2,6 +2,7 @@ import React, { useState } from "react";
 
 const GenotypeSearchResultsTable = ({
   data,
+  alleles,
   currentPage,
   setCurrentPage,
   samples,
@@ -10,19 +11,20 @@ const GenotypeSearchResultsTable = ({
   const itemsPerPage = 1000;
   let totalPages;
   let genotypeMap = {};
-
   const [sortedData, setSortedData] = useState(data.variants || []);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
-
-  if (platform == "Gigwa") {
+  if (platform === "Gigwa" && alleles && alleles.result && alleles.result.dataMatrices) {
     totalPages = Math.ceil(data.count / itemsPerPage);
-    data.variants.forEach((item) => {
-      item.calls.forEach((call) => {
-        const sampleId = call.callSetId.split("§")[2];
+    // const callSetDbIds = alleles.result.callSetDbIds; // Sample IDs
+    const dataMatrix = alleles.result.dataMatrices[0].dataMatrix; // Genotype data for each variant
+    // Populate genotypeMap from alleles
+    dataMatrix.forEach((genotypes, variantIndex) => {
+      genotypes.forEach((genotype, sampleIndex) => {
+        const sampleId = samples[sampleIndex]; // Extract sample ID
         if (!genotypeMap[sampleId]) {
           genotypeMap[sampleId] = [];
         }
-        genotypeMap[sampleId].push(call.genotype);
+        genotypeMap[sampleId][variantIndex] = genotype; // Store genotype by variant index
       });
     });
   } else if (platform == "Germinate") {
@@ -92,7 +94,6 @@ const GenotypeSearchResultsTable = ({
     setSortConfig({ key: columnKey, direction });
   };
 
-
   return (
     <div>
       <div className="scrollable-table">
@@ -115,9 +116,9 @@ const GenotypeSearchResultsTable = ({
             </thead>
             <tbody>
               {sortedData &&
-                sortedData.map((item, index) => (
-                  <tr key={index}>
-                    <td>{index + 1 + (currentPage - 1) * itemsPerPage}</td>
+                sortedData.map((item, variantIndex) => (
+                  <tr key={variantIndex}>
+                    <td>{variantIndex + 1 + (currentPage - 1) * itemsPerPage}</td>
                     <td>{item.referenceName}</td>
                     <td>{item.start}</td>
                     <td>{item.id.split('§')[2]}</td>
@@ -127,17 +128,13 @@ const GenotypeSearchResultsTable = ({
                       <td key={sample}>
                         {genotypeMap[sample]?.length > 0 ? (
                           <>
-                            {(genotypeMap[sample][index][0] === null ||
-                              genotypeMap[sample][index][0] === undefined ||
-                              genotypeMap[sample][index][0] === ''
-                              ? '.'
-                              : genotypeMap[sample][index][0]) +
-                              '/' +
-                              (genotypeMap[sample][index][1] === null ||
-                                genotypeMap[sample][index][1] === undefined ||
-                                genotypeMap[sample][index][1] === ''
-                                ? '.'
-                                : genotypeMap[sample][index][1])}
+                            {genotypeMap[sample][variantIndex] === "."
+                              ? "."
+                              : genotypeMap[sample][variantIndex] === "0"
+                                ? "0/0"
+                                : genotypeMap[sample][variantIndex] === "1"
+                                  ? "1/1"
+                                  : genotypeMap[sample][variantIndex]}
                           </>
                         ) : (
                           ''

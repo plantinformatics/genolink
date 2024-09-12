@@ -104,7 +104,7 @@ router.post("/brapi/v2/search/samples", checkCredentials, async (req, res) => {
     if (error.response) {
       logger.error(`API Error in /brapi/v2/search/samples: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
       
-      const errorMessage = error.response.data.metadata.status.map(status => status.message).join(', ');
+      const errorMessage = error.response.data.metadata?.status.map(status => status.message).join(', ');
       
       res.status(error.response.status).send({
         message: errorMessage,
@@ -143,7 +143,7 @@ router.get("/brapi/v2/references", checkCredentials, async (req, res) => {
     if (error.response) {
       logger.error(`API Error in /brapi/v2/references: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
       
-      const errorMessage = error.response.data.metadata.status.map(status => status.message).join(', ');
+      const errorMessage = error.response.data.metadata?.status.map(status => status.message).join(', ');
       
       res.status(error.response.status).send({
         message: errorMessage,
@@ -182,7 +182,7 @@ router.get("/brapi/v2/referencesets", checkCredentials, async (req, res) => {
     if (error.response) {
       logger.error(`API Error in /brapi/v2/referencesets: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
       
-      const errorMessage = error.response.data.metadata.status.map(status => status.message).join(', ');
+      const errorMessage = error.response.data.metadata?.status.map(status => status.message).join(', ');
       
       res.status(error.response.status).send({
         message: errorMessage,
@@ -227,9 +227,10 @@ router.post("/ga4gh/variants/search", checkCredentials, async (req, res) => {
     const token = await generateGigwaToken(req);
 
     const samplesDetails = req.body.selectedSamplesDetails;
-    const sampleList = req.body.selectedSamplesDetails.map((sample) =>
-      sample.sampleName.split("-").slice(0, -2).join("-")
-    );
+    // const sampleList = req.body.selectedSamplesDetails.map((sample) =>
+    //   sample.sampleName.split("-").slice(0, -2).join("-")
+    // );
+    const sampleList = req.body.sampleVcfNames;
     const callsetIds = samplesDetails.map(
       (item) => `${item.sampleDbId}§${item.germplasmDbId.split("§")[1]}`
     );
@@ -246,7 +247,7 @@ router.post("/ga4gh/variants/search", checkCredentials, async (req, res) => {
       discriminate: false,
       end: req.body.end || -1,
       geneName: "",
-      getGT: true,
+      getGT: false,
       gtPattern: "Any",
       gtPattern2: "Any",
       maxHeZ: 100,
@@ -277,7 +278,7 @@ router.post("/ga4gh/variants/search", checkCredentials, async (req, res) => {
       variantSetId: `${samplesDetails[0]?.studyDbId}`,
       // variantSetId: "Database1§1",
     };
-
+    // logger.info(JSON.stringify(body, null, 2));
     response = await axios.post(
       `${config.gigwaServer}/gigwa/rest/ga4gh/variants/search`,
       body,
@@ -324,8 +325,9 @@ router.post("/searchSamplesInDatasets", checkCredentials, async (req, res) => {
     });
 
     const variantSets = variantSetsResponse.data.result.data;
+    const datasetNames = variantSets.map((vs) => vs.variantSetName);
+    const variantSetDbIds = variantSets.map((vs) => vs.variantSetDbId);
     const studyDbIds = variantSets.map((vs) => vs.studyDbId);
-
     const sampleNames = [];
     for (const vs of variantSets) {
       const parts = vs.variantSetDbId.split("§").slice(1); // Skip the database part
@@ -333,7 +335,6 @@ router.post("/searchSamplesInDatasets", checkCredentials, async (req, res) => {
         sampleNames.push(`${sample}-${parts.join("-")}`);
       }
     }
-
     const searchResponse = await axios.post(`${config.gigwaServer}/gigwa/rest/brapi/v2/search/samples`, {
       sampleNames,
       studyDbIds,
@@ -341,8 +342,15 @@ router.post("/searchSamplesInDatasets", checkCredentials, async (req, res) => {
       headers: { Authorization: `Bearer ${token}` },
     });
     const response = searchResponse.data;
-    const numberOfPresentAccessions = searchResponse.data.result.data.length;
-    res.send({response, numberOfGenesysAccessions, numberOfPresentAccessions, numberOfMappedAccessions});
+    const sampleDbIds = response.result.data.map(individual => individual.sampleDbId);
+
+    const uniqueSamplePresence = new Set(
+      response.result.data.map(individual => individual.germplasmDbId.split('§')[1])
+    );
+
+    const numberOfPresentAccessions = uniqueSamplePresence.size; 
+        
+    res.send({response, variantSetDbIds, sampleDbIds, datasetNames, vcfSamples: samples , numberOfGenesysAccessions, numberOfPresentAccessions, numberOfMappedAccessions});
   } catch (error) {
     if (error.response && error.response.data && error.response.data.message) {
       logger.error(`Error in dataset search - ${error.response.data.message}`);
@@ -379,7 +387,7 @@ router.post(
       if (error.response) {
         logger.error(`API Error in /brapi/v2/search/allelematrix: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
         
-        const errorMessage = error.response.data.metadata.status.map(status => status.message).join(', ');
+        const errorMessage = error.response.data.metadata?.status.map(status => status.message).join(', ');
         
         res.status(error.response.status).send({
           message: errorMessage,

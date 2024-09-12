@@ -29,6 +29,14 @@ export const setOriginOfMaterialCheckedBoxes = (boxes) => ({
   type: "SET_ORIGIN_OF_MATERIAL_CHECKED_BOXES",
   payload: boxes,
 });
+export const setSampStatCheckedBoxes = (boxes) => ({
+  type: "SET_SAMP_STAT_CHECKED_BOXES",
+  payload: boxes,
+});
+export const setGermplasmStorageCheckedBoxes = (boxes) => ({
+  type: "SET_GERMPLASM_STORAGE_CHECKED_BOXES",
+  payload: boxes,
+});
 export const setInstituteCode = (codes) => ({
   type: "SET_INSTITUTE_CODE",
   payload: codes,
@@ -47,6 +55,16 @@ export const setTaxonomyList = (tax) => ({
 export const setOriginOfMaterialList = (origin) => ({
   type: "SET_ORIGIN_OF_MATERIAL_LIST",
   payload: origin,
+});
+
+export const setSampStatList = (stat) => ({
+  type: "SET_SAMP_STAT_LIST",
+  payload: stat,
+});
+
+export const setGermplasmStorageList = (storage) => ({
+  type: "SET_GERMPLASM_STORAGE_LIST",
+  payload: storage,
 });
 
 export const setAccessionNumber = (number) => ({

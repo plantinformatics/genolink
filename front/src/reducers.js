@@ -6,10 +6,14 @@ const initialState = {
   cropCheckedBoxes: [],
   taxonomyCheckedBoxes: [],
   originOfMaterialCheckedBoxes: [],
+  sampStatCheckedBoxes: [],
+  germplasmStorageCheckedBoxes: [],
   instituteCode: [],
   cropList: [],
   taxonomyList: [],
   originOfMaterialList: [],
+  sampStatList: [],
+  germplasmStorageList: [],
   accessionNumber: "",
   resetTrigger: false,
   currentPage: 0,
@@ -67,13 +71,21 @@ const rootReducer = (state = initialState, action) => {
         ...state,
         originOfMaterialCheckedBoxes: action.payload,
       };
-
+    case "SET_SAMP_STAT_CHECKED_BOXES":
+      return {
+        ...state,
+        sampStatCheckedBoxes: action.payload,
+      };
+    case "SET_GERMPLASM_STORAGE_CHECKED_BOXES":
+      return {
+        ...state,
+        germplasmStorageCheckedBoxes: action.payload,
+      };
     case "SET_INSTITUTE_CODE":
       return {
         ...state,
         instituteCode: action.payload,
       };
-
     case "SET_CROP_LIST":
       return {
         ...state,
@@ -90,13 +102,21 @@ const rootReducer = (state = initialState, action) => {
         ...state,
         originOfMaterialList: action.payload,
       };
-
+    case "SET_SAMP_STAT_LIST":
+      return {
+        ...state,
+        sampStatList: action.payload,
+      };
+      case "SET_GERMPLASM_STORAGE_LIST":
+        return {
+          ...state,
+          germplasmStorageList: action.payload,
+        };
     case "SET_ACCESSION_NUMBER":
       return {
         ...state,
         accessionNumber: action.payload,
       };
-
     case "SET_RESET_TRIGGER":
       return {
         ...state,

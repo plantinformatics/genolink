@@ -11,22 +11,32 @@ import VariantListFilter from "./filters/VariantListFilter";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser, faLock } from "@fortawesome/free-solid-svg-icons";
+import { faCopy } from "@fortawesome/free-solid-svg-icons";
+
 
 import {
   searchSamplesInDatasets,
-  fetchVariants,
+  fetchVariants, fetchAlleles
 } from "../../api/genolinkGigwaApi";
 import { fetchCallsetDataForAccession } from "../../api/genolinkGerminateApi";
 import { exportGigwaVCF } from "../../api/genolinkGigwaApi";
 
 const GenotypeExplorer = () => {
   const [selectedOption, setSelectedOption] = useState("Gigwa");
+  const [copied, setCopied] = useState(false);
   const [posStart, setPosStart] = useState("");
   const [posEnd, setPosEnd] = useState("");
   const [genomData, setGenomData] = useState("");
+  const [alleleData, setAlleleData] = useState("");
   const [datasets, setDatasets] = useState([]);
   const [selectedDataset, setSelectedDataset] = useState("");
+  const [selectedStudyDbId, setSelectedStudyDbId] = useState("");
+  const [selectedVariantSetDbId, setSelectedVariantSetDbId] = useState([]);
   const [sampleDetails, setSampleDetails] = useState([]);
+  const [variantSetDbIds, setVariantSetDbIds] = useState([]);
+  const [sampleDbIds, setSampleDbIds] = useState([]);
+  const [sampleNames, setSampleNames] = useState([]);
+  const [sampleVcfNames, setSampleVcfNames] = useState([]);
   const [selectedSamplesDetails, setSelectedSamplesDetails] = useState([]);
   const [isGenomeSearchSubmit, setIsGenomeSearchSubmit] = useState(false);
   const [isGenomDataLoading, setIsGenomDataLoading] = useState(false);
@@ -67,14 +77,15 @@ const GenotypeExplorer = () => {
   }, [selectedOption]);
 
   const handleDatasetDetails = (dataset) => {
-    setSelectedSamplesDetails(
-      sampleDetails.filter(
-        (sample) =>
-          sample.studyDbId ===
-          `${dataset.split("§")[0]}§${dataset.split("§")[1]}` &&
-          sample.sampleName.split("-").slice(-1)[0] === dataset.split("§")[2]
-      )
+    const selectedSamples = sampleDetails.filter((sample) =>
+      sample.sampleName.includes(dataset)
     );
+    const selectedVariantSetDbId = variantSetDbIds.filter((variantSetDbId) =>
+      variantSetDbId.includes(dataset));
+
+    setSelectedVariantSetDbId(selectedVariantSetDbId)
+    setSelectedSamplesDetails(selectedSamples);
+    setSelectedStudyDbId([...new Set(selectedSamples.map((sample) => sample.studyDbId))]);
     setSelectedDataset(dataset);
   };
 
@@ -84,6 +95,7 @@ const GenotypeExplorer = () => {
       username: username,
       password: password,
       variantList: variantList,
+      // sampleVcfNames: sampleVcfNames,
       selectedSamplesDetails: selectedSamplesDetails,
       variantPage: currentPage,
       linkagegroups: selectedGroups.join(";"),
@@ -105,11 +117,12 @@ const GenotypeExplorer = () => {
       if (selectedOption === "Gigwa") {
         if (!isGenomeSearchSubmit) {
           const Accessions = checkedResults?.map((item) => item.accessionNumber);
-          const { response, numberOfGenesysAccessions, numberOfPresentAccessions, numberOfMappedAccessions } = await searchSamplesInDatasets(
+          const { response, variantSetDbIds, sampleDbIds, datasetNames, vcfSamples, numberOfGenesysAccessions, numberOfPresentAccessions, numberOfMappedAccessions } = await searchSamplesInDatasets(
             username,
             password,
             Accessions
           );
+          const sampleNames = response.result.data.map(sample => sample.sampleName);
           setNumberOfGenesysAccessions(numberOfGenesysAccessions);
           setNumberOfPresentAccessions(numberOfPresentAccessions);
           setNumberOfMappedAccessions(numberOfMappedAccessions);
@@ -118,16 +131,19 @@ const GenotypeExplorer = () => {
             alert("No genotype data found in the Database!");
             return;
           }
-          setDatasets([
-            ...new Set(
-              response.result.data.map(
-                (sample) =>
-                  `${sample.studyDbId}§${sample.sampleName.split("-").slice(-1)[0]
-                  }`
-              )
-            ),
-          ]);
+
+          const filteredDatasetNames = datasetNames.filter(datasetName =>
+            sampleNames.some(sampleName => sampleName.includes(datasetName))
+          );
+
+          // Set filtered dataset names
+          setVariantSetDbIds(variantSetDbIds);
+          setSampleDbIds(sampleDbIds);
+          setSampleVcfNames(vcfSamples);
+          setDatasets(filteredDatasetNames);
           setSampleDetails(response.result.data);
+          setSampleNames(response.result.data.map((sample) =>
+            sample.sampleName.split("-").slice(0, -2).join("-")));
           setIsGenomeSearchSubmit(true);
           setShowLogin(false);
           setShowSearchTypeSelector(true);
@@ -163,14 +179,16 @@ const GenotypeExplorer = () => {
     }
   };
 
+
   const fetchData = async (page) => {
     try {
       setIsGenomDataLoading(true);
       if (selectedOption === "Gigwa") {
-        const data = await fetchVariants({
+        const fetchDataPromise = fetchVariants({
           username: username,
           password: password,
           variantList: variantList,
+          sampleVcfNames: sampleVcfNames,
           selectedSamplesDetails: selectedSamplesDetails,
           variantPage: page - 1,
           linkagegroups: selectedGroups.join(";"),
@@ -178,11 +196,82 @@ const GenotypeExplorer = () => {
           end: posEnd || -1,
         });
 
+        let fetchAllelesPromise;
+
+        if (posStart && posEnd) {
+          fetchAllelesPromise = fetchAlleles({
+            username: username,
+            password: password,
+            callSetDbIds: sampleDbIds,
+            variantSetDbIds: selectedVariantSetDbId,
+            positionRanges: selectedGroups.map(group => `${group}:${posStart}-${posEnd}`),
+            dataMatrixAbbreviations: ["GT"],
+            pagination: [
+              {
+                dimension: "variants",
+                page: page - 1,
+                pageSize: 1000
+              },
+              {
+                dimension: "callsets",
+                page: 0,
+                pageSize: 10000
+              }
+            ],
+          });
+        } else if (variantList.length > 0) {
+          fetchAllelesPromise = fetchAlleles({
+            username: username,
+            password: password,
+            callSetDbIds: sampleDbIds,
+            variantSetDbIds: selectedVariantSetDbId,
+            variantDbIds: variantList.map(variant => `${selectedVariantSetDbId[0].split("§")[0]}§${variant}`),
+            dataMatrixAbbreviations: ["GT"],
+            pagination: [
+              {
+                dimension: "variants",
+                page: page - 1,
+                pageSize: 1000
+              },
+              {
+                dimension: "callsets",
+                page: 0,
+                pageSize: 10000
+              }
+            ],
+          });
+        } else {
+          fetchAllelesPromise = fetchAlleles({
+            username: username,
+            password: password,
+            callSetDbIds: sampleDbIds,
+            variantSetDbIds: selectedVariantSetDbId,
+            dataMatrixAbbreviations: ["GT"],
+            pagination: [
+              {
+                dimension: "variants",
+                page: page - 1,
+                pageSize: 1000
+              },
+              {
+                dimension: "callsets",
+                page: 0,
+                pageSize: 10000
+              }
+            ],
+          });
+        }
+
+        // Run both fetches in parallel
+        const [data, allelesData] = await Promise.all([fetchDataPromise, fetchAllelesPromise]);
+
         if (data.data.count === 0) {
           alert(`No genotype data found!
             Please set the filters again. `);
           return;
         }
+
+        setAlleleData(allelesData || {}); // Ensure allelesData is set properly
         setGenomData(data.data);
         setSamples(data.desiredSamples);
         setShowSearchTypeSelector(false);
@@ -233,137 +322,29 @@ const GenotypeExplorer = () => {
   const handleSearchTypeChange = (newType) => {
     if (newType !== searchType) {
       if (newType === "PositionRange") {
-        // Clear VariantIDs related data
         setVariantList([]);
       } else if (newType === "VariantIDs") {
-        // Clear PositionRange related data
         setPosStart("");
         setPosEnd("");
       }
     }
-    setSearchType(newType); // Update the search type
+    setSearchType(newType);
   };
+
+  const handleCopySampleNames = () => {
+    const samples = sampleNames.join("\n");
+    navigator.clipboard.writeText(samples)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(err => {
+        console.error("Failed to copy sample names: ", err);
+      });
+  };
+
+
   return (
-    // <div className="geno-data-container">
-    //   <div className="row">
-    //     <div className="col-md-6">
-    //       <h2>Metadata</h2>
-    //       <div className="form-group">
-    //         <label htmlFor="accessionSelect">Accession Number:</label>
-    //         <select
-    //           id="accessionSelect"
-    //           onChange={handleSelectChange}
-    //           value={selectedAccession || ""}
-    //         >
-    //           <option value="" disabled>
-    //             Select
-    //           </option>
-    //           {checkedResults?.map((item) => (
-    //             <option key={item.accessionNumber} value={item.accessionNumber}>
-    //               {item.accessionNumber}
-    //             </option>
-    //           ))}
-    //         </select>
-    //       </div>
-    //       {selectedAccession && (
-    //         <div className="metadata-details">
-    //           {checkedResults
-    //             .filter((item) => item.accessionNumber === selectedAccession)
-    //             .map((item) => (
-    //               <div key={item.accessionNumber}>
-    //                 <hr />
-    //                 <div className="row">
-    //                   <div className="col border-right bg-light">
-    //                     {item.doi && <div className="col-label">DOI</div>}
-    //                     <div className="col-label">Accession number</div>
-    //                     <div className="col-label">Holding institute</div>
-    //                     <div className="col-label">Institute code</div>
-    //                     <div className="col-label">Data provider</div>
-    //                     <div className="col-label">Origin Of Material</div>
-    //                     <div className="col-label">Acquisition Date</div>
-    //                   </div>
-    //                   <div className="col-auto">
-    //                     {item.doi && <div>{item.doi}</div>}
-    //                     <div>{item.accessionNumber || ""}</div>
-    //                     <div>{item["institute.fullName"] || ""}</div>
-    //                     <div>{item.instituteCode || ""}</div>
-    //                     <div>{item["institute.owner.name"] || ""}</div>
-    //                     <div>{item["countryOfOrigin.name"] || ""}</div>
-    //                     <div>{item.acquisitionDate || ""}</div>
-    //                   </div>
-    //                 </div>
-
-    //                 <h3> Taxonomy provided to Genesys</h3>
-    //                 <hr />
-    //                 <div className="row">
-    //                   <div className="col border-right bg-light">
-    //                     <div className="col-label">Genus</div>
-    //                     <div className="col-label">Specific epithet</div>
-    //                     <div className="col-label">Scientific name</div>
-    //                     <div className="col-label">Crop name</div>
-    //                   </div>
-    //                   <div className="col border-right bg-light">
-    //                     <div>{item.genus || ""}</div>
-    //                     <div>
-    //                       {item["taxonomy.grinTaxonomySpecies.speciesName"] || ""}
-    //                     </div>
-    //                     <div>
-    //                       {item["taxonomy.grinTaxonomySpecies.name"] || ""}
-    //                     </div>
-    //                     <div>{item["crop.name"] || ""}</div>
-    //                   </div>
-    //                 </div>
-
-    //                 <h3> GRIN Taxonomy</h3>
-    //                 <hr />
-    //                 <div className="row">
-    //                   <div className="col border-right bg-light">
-    //                     <div className="col-label">Matched GRIN taxon</div>
-    //                   </div>
-    //                   <div className="col border-right bg-light">
-    //                     <div>
-    //                       <a
-    //                         href={`https://npgsweb.ars-grin.gov/gringlobal/taxon/taxonomydetail?id=${item["taxonomy.grinTaxonomySpecies.id"]}`}
-    //                       >
-    //                         {item["taxonomy.grinTaxonomySpecies.name"] || ""}
-    //                       </a>
-    //                     </div>
-    //                   </div>
-    //                 </div>
-
-    //                 <h3> Accession names</h3>
-    //                 <hr />
-    //                 <div className="row">
-    //                   <div className="col border-right bg-light">
-    //                     <div className="col-label">Accession name</div>
-    //                   </div>
-    //                   <div className="col border-right bg-light">
-    //                     <div>{item.accessionName || ""}</div>
-    //                   </div>
-    //                 </div>
-    //                 <h3> Metadata</h3>
-    //                 <hr />
-    //                 <div className="row">
-    //                   <div className="col border-right bg-light">
-    //                     <div className="col-label">UUID</div>
-    //                     <div className="col-label">Last updated</div>
-    //                     <div className="col-label">Created</div>
-    //                   </div>
-    //                   <div className="col border-right bg-light">
-    //                     <div>{item.uuid || ""}</div>
-    //                     <div>{item["institute.owner.lastModifiedDate"]}</div>
-    //                     <div>
-    //                       {item["institute.owner.createdDate"] ||
-    //                         "Date not provided"}
-    //                     </div>
-    //                   </div>
-    //                 </div>
-    //               </div>
-    //             ))}
-    //         </div>
-    //       )}
-    //     </div>
-
     <div>
       {checkedResults && (
         <div className="geno-data">
@@ -435,7 +416,32 @@ const GenotypeExplorer = () => {
                 showDatasetSelector && (
                   <div className="dataset-selector">
                     <h5>{numberOfMappedAccessions} of {numberOfGenesysAccessions} accessions have sample name mappings.</h5>
-                    <h5>{numberOfPresentAccessions} of {numberOfGenesysAccessions} accessions have genotypes in Gigwa.</h5>
+                    <div>
+                      <h5>
+                        {numberOfPresentAccessions} of {numberOfGenesysAccessions} accessions have genotypes in Gigwa.
+                        {!copied ? (
+                          <button
+                            type="button"
+                            className="btn btn-outline-secondary ml-2"
+                            style={{
+                              marginLeft: "10px",
+                              padding: "5px 10px",
+                              fontSize: "16px",
+                              display: "inline-flex",
+                              alignItems: "center",
+                            }}
+                            onClick={handleCopySampleNames}
+                          >
+                            <FontAwesomeIcon icon={faCopy} style={{ marginRight: "5px" }} />
+                            Copy
+                          </button>
+                        ) : (
+                          <span style={{ color: "green", marginLeft: "10px" }}>Copied!</span>
+                        )}
+                      </h5>
+                    </div>
+
+
                     <br />
                     <select
                       value={selectedDataset || ""} // Bind to the currently selected dataset, default to an empty string
@@ -445,7 +451,7 @@ const GenotypeExplorer = () => {
                       <option value="" disabled>
                         Select Dataset
                       </option>
-                      {datasets.map((dataset) => (
+                      {datasets && datasets.map((dataset) => (
                         <option key={dataset} value={dataset}>
                           {dataset}
                         </option>
@@ -453,12 +459,12 @@ const GenotypeExplorer = () => {
                     </select>
 
                   </div>
-
                 )}
+
               {showDatasetSelector && selectedDataset && (
                 <div className="filter-container">
                   <LinkageGroupFilter
-                    selectedDataset={selectedDataset}
+                    selectedStudyDbId={selectedStudyDbId}
                     selectedGroups={selectedGroups}
                     setSelectedGroups={setSelectedGroups}
                     username={username}
@@ -494,10 +500,11 @@ const GenotypeExplorer = () => {
               )}
 
               {isGenomDataLoading && <LoadingComponent />}
-              {genomData && !isGenomDataLoading ? (
+              {genomData && alleleData && !isGenomDataLoading ? (
                 <>
                   <GenotypeSearchResultsTable
                     data={genomData}
+                    alleles={alleleData}
                     currentPage={currentPage}
                     setCurrentPage={setCurrentPage}
                     samples={samples}
