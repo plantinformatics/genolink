@@ -1,3 +1,5 @@
+![Genolink Logo](front/public/Genolink.png)
+
 # About Genolink
 Genolink is a middleware solution enabling seamless integration and interoperability between genotype databases and Genesys-PGR (genebank passport repository). Genolink is funded as part of the Australian Grains Genebank Strategic Partnership, a $30M joint investment between the Victorian State Government and Grains Research and Development Corporation (GRDC) that aims to unlock the genetic potential of plant genetic resources for the benefit of the Australian grain growers.
 https://agriculture.vic.gov.au/crops-and-horticulture/the-australian-grains-genebank
