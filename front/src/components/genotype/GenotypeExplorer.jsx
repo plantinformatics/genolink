@@ -15,6 +15,7 @@ import { faCopy } from "@fortawesome/free-solid-svg-icons";
 
 
 import {
+  getGigwaToken,
   searchSamplesInDatasets,
   fetchVariants, fetchAlleles
 } from "../../api/genolinkGigwaApi";
@@ -51,6 +52,7 @@ const GenotypeExplorer = () => {
   const [password, setPassword] = useState("");
   const [searchType, setSearchType] = useState("PositionRange");
   const [variantList, setVariantList] = useState([]);
+  const [gigwaToken, setGigwaToken] = useState("");
   // const [selectedAccession, setSelectedAccession] = useState(null);
   const [numberOfGenesysAccessions, setNumberOfGenesysAccessions] = useState(null);
   const [numberOfPresentAccessions, setNumberOfPresentAccessions] = useState(null);
@@ -91,9 +93,8 @@ const GenotypeExplorer = () => {
 
   const handleDownloadClick = async () => {
     setIsExportGenomDataLoading(true);
-    const params = {
-      username: username,
-      password: password,
+    const body = {
+      gigwaToken,
       variantList: variantList,
       // sampleVcfNames: sampleVcfNames,
       selectedSamplesDetails: selectedSamplesDetails,
@@ -102,7 +103,7 @@ const GenotypeExplorer = () => {
       start: posStart || -1,
       end: posEnd || -1,
     };
-    await exportGigwaVCF(params);
+    await exportGigwaVCF(body);
     setIsExportGenomDataLoading(false);
   };
 
@@ -116,10 +117,11 @@ const GenotypeExplorer = () => {
     try {
       if (selectedOption === "Gigwa") {
         if (!isGenomeSearchSubmit) {
+          const token = await getGigwaToken(username, password);
+          setGigwaToken(token);
           const Accessions = checkedResults?.map((item) => item.accessionNumber);
           const { response, variantSetDbIds, sampleDbIds, datasetNames, vcfSamples, numberOfGenesysAccessions, numberOfPresentAccessions, numberOfMappedAccessions } = await searchSamplesInDatasets(
-            username,
-            password,
+            token,
             Accessions
           );
           const sampleNames = response.result.data.map(sample => sample.sampleName);
@@ -185,8 +187,7 @@ const GenotypeExplorer = () => {
       setIsGenomDataLoading(true);
       if (selectedOption === "Gigwa") {
         const fetchDataPromise = fetchVariants({
-          username: username,
-          password: password,
+          gigwaToken: gigwaToken,
           variantList: variantList,
           sampleVcfNames: sampleVcfNames,
           selectedSamplesDetails: selectedSamplesDetails,
@@ -200,8 +201,7 @@ const GenotypeExplorer = () => {
 
         if (posStart && posEnd) {
           fetchAllelesPromise = fetchAlleles({
-            username: username,
-            password: password,
+            gigwaToken: gigwaToken,
             callSetDbIds: sampleDbIds,
             variantSetDbIds: selectedVariantSetDbId,
             positionRanges: selectedGroups.map(group => `${group}:${posStart}-${posEnd}`),
@@ -221,8 +221,7 @@ const GenotypeExplorer = () => {
           });
         } else if (variantList.length > 0) {
           fetchAllelesPromise = fetchAlleles({
-            username: username,
-            password: password,
+            gigwaToken: gigwaToken,
             callSetDbIds: sampleDbIds,
             variantSetDbIds: selectedVariantSetDbId,
             variantDbIds: variantList.map(variant => `${selectedVariantSetDbId[0].split("§")[0]}§${variant}`),
@@ -242,8 +241,7 @@ const GenotypeExplorer = () => {
           });
         } else {
           fetchAllelesPromise = fetchAlleles({
-            username: username,
-            password: password,
+            gigwaToken: gigwaToken,
             callSetDbIds: sampleDbIds,
             variantSetDbIds: selectedVariantSetDbId,
             dataMatrixAbbreviations: ["GT"],
@@ -301,15 +299,19 @@ const GenotypeExplorer = () => {
     }
   };
 
-  const handleSelectChange = (event) => {
-    setSelectedAccession(event.target.value);
-  };
+  // const handleSelectChange = (event) => {
+  //   setSelectedAccession(event.target.value);
+  // };
 
   const handleReset = () => {
     setShowSearchTypeSelector(true);
     setShowDatasetSelector(true);
     setIsGenomeSearchSubmit(false);
     setGenomData("");
+    setVariantList([]);
+    setSelectedGroups([]);
+    setPosStart("");
+    setPosEnd("");
   }
 
   const handleOptionChange = (event) => {
@@ -467,8 +469,7 @@ const GenotypeExplorer = () => {
                     selectedStudyDbId={selectedStudyDbId}
                     selectedGroups={selectedGroups}
                     setSelectedGroups={setSelectedGroups}
-                    username={username}
-                    password={password}
+                    gigwaToken={gigwaToken}
                   />
                 </div>
               )}

@@ -1,12 +1,27 @@
 import axios from 'axios';
 import { genolinkServer } from '../config/apiConfig';
 
-export const searchSamplesInDatasets = async (username, password, Accessions) => {
+
+export const getGigwaToken = async (username, password) => {
+  try {
+    const response = await axios.post(`${genolinkServer}/api/gigwa/generateGigwaToken`, {
+      username,
+      password,
+    });
+
+    // Store token and session ID
+    const token = response.data;
+    return token;
+  } catch (error) {
+    console.error("Login failed: ", error);
+  }
+};
+
+export const searchSamplesInDatasets = async (gigwaToken, Accessions) => {
   try {
     const result = await axios.post(
       `${genolinkServer}/api/gigwa/searchSamplesInDatasets`, {
-      username,
-      password,
+      gigwaToken: gigwaToken,
       accessions: Accessions,
     }
     );
@@ -17,9 +32,9 @@ export const searchSamplesInDatasets = async (username, password, Accessions) =>
   }
 };
 
-export const fetchVariants = async (params) => {
+export const fetchVariants = async (body) => {
   try {
-    const response = await axios.post(`${genolinkServer}/api/gigwa/ga4gh/variants/search`, params);
+    const response = await axios.post(`${genolinkServer}/api/gigwa/ga4gh/variants/search`, body);
     return response.data;
   } catch (error) {
     console.error("Error fetching variants: ", error);
@@ -27,9 +42,9 @@ export const fetchVariants = async (params) => {
   }
 };
 
-export const fetchAlleles = async (params) => {
+export const fetchAlleles = async (body) => {
   try {
-    const response = await axios.post(`${genolinkServer}/api/gigwa/brapi/v2/search/allelematrix`, params);
+    const response = await axios.post(`${genolinkServer}/api/gigwa/brapi/v2/search/allelematrix`, body);
     return response.data;
   } catch (error) {
     console.error("Error fetching variants: ", error);
@@ -37,16 +52,16 @@ export const fetchAlleles = async (params) => {
   }
 };
 
-export const exportGigwaVCF = async (params) => {
+export const exportGigwaVCF = async (body) => {
   try {
-    const response = await axios.post(`${genolinkServer}/api/gigwa/exportData`, params, {
+    const response = await axios.post(`${genolinkServer}/api/gigwa/exportData`, body, {
       responseType: 'blob',  // Expect a blob response
     });
 
     const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/octet-stream' }));
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `${params.selectedSamplesDetails[0]?.studyDbId.split("§")[0]}.zip`); // Specify the filename for download
+    link.setAttribute('download', `${body.selectedSamplesDetails[0]?.studyDbId.split("§")[0]}.zip`); // Specify the filename for download
     document.body.appendChild(link);
     link.click();
     link.parentNode.removeChild(link);
@@ -56,12 +71,11 @@ export const exportGigwaVCF = async (params) => {
   }
 };
 
-export const fetchGigwaLinkageGroups = (username, password, selectedStudyDbId) => {
+export const fetchGigwaLinkageGroups = (gigwaToken, selectedStudyDbId) => {
   return axios
     .get(`${genolinkServer}/api/gigwa/brapi/v2/referencesets`, {
       params: {
-        username,
-        password,
+        gigwaToken: gigwaToken,
       },
     })
     .then((referenceSetDbIdsResponse) => {
@@ -82,8 +96,7 @@ export const fetchGigwaLinkageGroups = (username, password, selectedStudyDbId) =
     .then((selectedReferenceSetDbId) => {
       return axios.get(`${genolinkServer}/api/gigwa/brapi/v2/references`, {
         params: {
-          username,
-          password,
+          gigwaToken: gigwaToken,
           referenceSetDbId: selectedReferenceSetDbId,
         },
       });

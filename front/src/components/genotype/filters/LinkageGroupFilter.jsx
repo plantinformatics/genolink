@@ -7,8 +7,7 @@ const LinkageGroupFilter = ({
   selectedGroups,
   setSelectedGroups,
   selectedStudyDbId,
-  username,
-  password,
+  gigwaToken,
 }) => {
   const [linkageGroups, setLinkageGroups] = useState([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -22,8 +21,7 @@ const LinkageGroupFilter = ({
       try {
         if (platform === "Gigwa") {
           const groups = await fetchGigwaLinkageGroups(
-            username,
-            password,
+            gigwaToken,
             selectedStudyDbId
           );
           setLinkageGroups(groups);
@@ -37,7 +35,7 @@ const LinkageGroupFilter = ({
     };
 
     fetchData();
-  }, [platform, username, password, selectedStudyDbId]);
+  }, [platform, selectedStudyDbId]);
 
   const handleInputChange = (groupName) => {
     setSelectedGroups((prevSelectedGroups) =>

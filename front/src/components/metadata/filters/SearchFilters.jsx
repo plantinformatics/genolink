@@ -111,6 +111,7 @@ const SearchFilters = () => {
   }, [auth.user?.access_token, dispatch, searchResults]);
 
   const handleSearch = (userInput = "") => {
+    dispatch(setCheckedAccessions({}));
     setIsLoading(true);
     setInitialRequestSent(true);
     const fetchData = async () => {
