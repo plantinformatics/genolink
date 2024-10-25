@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import LoadingComponent from "../../LoadingComponent";
 import { useAuth } from "react-oidc-context";
 import { useDispatch, useSelector } from "react-redux";
-import wheatImage from "../../../assets/Wheat.jpg"
 import {
   setInstituteCheckedBoxes,
   setResetTrigger,
@@ -94,6 +93,8 @@ const SearchFilters = () => {
     (state) => state.germplasmStorageList
   );
   const dispatch = useDispatch();
+
+  const wheatImage = '/Wheat.PNG';
 
   useEffect(() => {
     const fetchData = async () => {
