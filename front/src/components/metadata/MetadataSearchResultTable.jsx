@@ -51,7 +51,7 @@ const MetadataSearchResultTable = ({ filterCode }) => {
   const fetchMoreResults = () => {
     const token = auth.user?.access_token;
     const pageSize = 500;
-    const select = "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,institute.country.name";
+    const select = "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases";
 
     if (currentPage !== undefined && currentPage !== null) {
 
@@ -123,6 +123,7 @@ const MetadataSearchResultTable = ({ filterCode }) => {
               <th scope="col">Holding Institute</th>
               <th scope="col">Accession Number</th>
               <th scope="col">Accession Name</th>
+              <th scope="col">Aliases</th>
               <th scope="col">Taxonomy</th>
               <th scope="col">Crop Name</th>
               <th scope="col">Provenance of Material</th>
@@ -200,7 +201,6 @@ const MetadataSearchResultTable = ({ filterCode }) => {
                     {item.accessionNumber || ""}
                   </a>
                 </td>
-
                 <td
                   className="cell"
                   style={{
@@ -209,6 +209,21 @@ const MetadataSearchResultTable = ({ filterCode }) => {
                   }}
                 >
                   {item.accessionName || ""}
+                </td>
+                <td
+                  className="cell"
+                  style={{
+                    overflow: expandedRow === index ? 'visible' : 'hidden',
+                    whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
+                  }}
+                >
+                  {item.aliases && item.aliases.length > 0
+                    ? item.aliases
+                      .filter(alias => alias.aliasType !== "ACCENAME")
+                      .map(alias => (
+                        `${alias.name}${alias.usedBy ? ` ${alias.usedBy}` : ''}`
+                      )).join(', ')
+                    : ""}
                 </td>
                 <td
                   className="cell"
