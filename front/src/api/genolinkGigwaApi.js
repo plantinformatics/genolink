@@ -2,16 +2,12 @@ import axios from 'axios';
 import { genolinkServer } from '../config/apiConfig';
 
 
-export const getGigwaToken = async (username, password) => {
+export const getGigwaToken = async (username = "", password = "") => {
   try {
     const response = await axios.post(`${genolinkServer}/api/gigwa/generateGigwaToken`, {
-      username,
-      password,
+      ...(username && password ? { username, password } : {}) 
     });
-
-    // Store token and session ID
-    const token = response.data;
-    return token;
+    return response.data;
   } catch (error) {
     console.error("Login failed: ", error);
   }

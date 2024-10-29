@@ -50,6 +50,8 @@ const GenotypeExplorer = () => {
   const [showDatasetSelector, setShowDatasetSelector] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [accessMode, setAccessMode] = useState("private");
+  const [showPrivacyRadio, setShowPrivacyRadio] = useState(true);
   const [searchType, setSearchType] = useState("PositionRange");
   const [variantList, setVariantList] = useState([]);
   const [gigwaToken, setGigwaToken] = useState("");
@@ -77,6 +79,11 @@ const GenotypeExplorer = () => {
   useEffect(() => {
     setGenomData("");
   }, [selectedOption]);
+
+  const handleAccessModeChange = (event) => {
+    setAccessMode(event.target.value);
+    setShowLogin(event.target.value === "private");
+  };
 
   const handleDatasetDetails = (dataset) => {
     const selectedSamples = sampleDetails.filter((sample) =>
@@ -108,17 +115,21 @@ const GenotypeExplorer = () => {
   };
 
   const handleSearch = async () => {
-    if (!username || !password) {
-      alert("Please enter username and password");
-      setIsGenomDataLoading(false);
+
+    if (accessMode === "private" && (!username || !password)) {
+      alert("Please enter username and password for private access");
       return;
     }
 
     try {
       if (selectedOption === "Gigwa") {
         if (!isGenomeSearchSubmit) {
-          const token = await getGigwaToken(username, password);
+          const token = await getGigwaToken(
+            accessMode === "private" ? username : "",
+            accessMode === "private" ? password : ""
+          );
           setGigwaToken(token);
+
           const Accessions = checkedResults?.map((item) => item.accessionNumber);
           const { response, variantSetDbIds, sampleDbIds, datasetNames, vcfSamples, numberOfGenesysAccessions, numberOfPresentAccessions, numberOfMappedAccessions } = await searchSamplesInDatasets(
             token,
@@ -150,6 +161,7 @@ const GenotypeExplorer = () => {
           setShowLogin(false);
           setShowSearchTypeSelector(true);
           setShowDatasetSelector(true);
+          setShowPrivacyRadio(false);
         }
         if (selectedSamplesDetails.length > 0) {
           fetchData(1);
@@ -304,14 +316,17 @@ const GenotypeExplorer = () => {
   // };
 
   const handleReset = () => {
-    setShowSearchTypeSelector(true);
-    setShowDatasetSelector(true);
+    setShowSearchTypeSelector(false);
+    setShowDatasetSelector(false);
     setIsGenomeSearchSubmit(false);
     setGenomData("");
     setVariantList([]);
     setSelectedGroups([]);
+    setSelectedSamplesDetails([]);
+    setSelectedDataset("");
     setPosStart("");
     setPosEnd("");
+    setShowPrivacyRadio(true);
   }
 
   const handleOptionChange = (event) => {
@@ -385,7 +400,29 @@ const GenotypeExplorer = () => {
                   </button>
                 )}
               </div>
-              {showLogin && (
+              {showPrivacyRadio ? (<div className="access-mode-toggle">
+                <label>
+                  <input
+                    type="radio"
+                    value="private"
+                    checked={accessMode === "private"}
+                    onChange={handleAccessModeChange}
+                  />
+                  Private
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    value="public"
+                    checked={accessMode === "public"}
+                    onChange={handleAccessModeChange}
+                  />
+                  Public
+                </label>
+              </div>) : null}
+
+
+              {showLogin && accessMode === "private" && (
                 <>
                   <div className="input-group mb-3">
                     <span className="input-group-addon">
@@ -446,8 +483,8 @@ const GenotypeExplorer = () => {
 
                     <br />
                     <select
-                      value={selectedDataset || ""} // Bind to the currently selected dataset, default to an empty string
-                      onChange={(e) => handleDatasetDetails(e.target.value)} // Handle selection changes
+                      value={selectedDataset || ""}
+                      onChange={(e) => handleDatasetDetails(e.target.value)}
                       style={{ backgroundColor: "beige" }}
                     >
                       <option value="" disabled>

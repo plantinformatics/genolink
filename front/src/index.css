@@ -293,3 +293,25 @@ table thead th {
   outline: 0;
   box-shadow: none;
 }
+
+.access-mode-toggle {
+  display: flex;
+  align-items: center;
+  margin: 1em 0;
+}
+
+.access-mode-toggle label {
+  margin-right: 1em;
+  font-weight: bold;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.access-mode-toggle input[type="radio"] {
+  margin-right: 0.5em;
+}
+
+.access-mode-toggle label:hover {
+  cursor: pointer;
+  color: #007bff; /* Change to your preferred highlight color */
+}

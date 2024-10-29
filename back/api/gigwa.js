@@ -12,15 +12,13 @@ router.post("/generateGigwaToken", async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    // Create login body and request token
+    // If username and password are provided, send them; otherwise, send an empty body
     const tokenResponse = await axios.post(
       `${config.gigwaServer}/gigwa/rest/gigwa/generateToken`,
-      { username, password }
+      username && password ? { username, password } : {}
     );
 
-    // Extract token and send back to frontend
     const token = tokenResponse.data.token;
-
     res.send(token);
   } catch (error) {
     res.status(500).send("Login failed: " + error.message);
