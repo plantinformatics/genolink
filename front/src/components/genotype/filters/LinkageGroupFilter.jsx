@@ -56,11 +56,9 @@ const LinkageGroupFilter = ({
   };
 
   return (
-    <div className="linkage-group-filter">
-      <button onClick={handleButtonClick} style={{
-        display: "inline-block", width: "280px", height:"38px", textAlign: "left", position: "relative", border: "2px solid #ebba35", margin: "15px 0 5px 0", backgroundColor: "beige"
-      }}>
-        Chromosomes <span style={{ float: "right" }}>{showFileInput ? "\u25B2" : "\u25BC"}</span>
+    <div>
+      <button onClick={handleButtonClick} className="select-style-button">
+        Chromosomes <span style={{ float: "right", marginLeft: "6.5px" }}>{"\u2304"}</span>
       </button>
       {isDrawerOpen && (
         <div ref={drawerRef} >

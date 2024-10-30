@@ -40,7 +40,6 @@ button {
   border-radius: 8px;
   border: 1px solid transparent;
   font-size: 1em;
-  font-weight: 500;
   font-family: inherit;
   background-color: #1a1a1a;
   cursor: pointer;
@@ -314,4 +313,14 @@ table thead th {
 .access-mode-toggle label:hover {
   cursor: pointer;
   color: #007bff; /* Change to your preferred highlight color */
+}
+
+.select-style-button {
+  display: inline-block;
+  font-size: 1em;
+  border-radius: 0px;
+  background-color: beige;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  text-align: left; /* Align text to mimic select dropdown */
 }

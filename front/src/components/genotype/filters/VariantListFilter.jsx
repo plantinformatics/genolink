@@ -13,9 +13,6 @@ const VariantListFilter = ({ setVariantList }) => {
   };
 
   return (
-    <div className="variant-list-filter">
-      <br/>
-      <label htmlFor="variantIds" className="form-label" >Variant IDs:</label>
       <input
         id="variantIds"
         type="text"
@@ -23,9 +20,8 @@ const VariantListFilter = ({ setVariantList }) => {
         value={inputValue}
         onChange={handleInputChange}
         placeholder="Enter variants, separated by commas"
-        style={{width:"282px"}}
+        style={{width:"282px", marginTop: "10px"}}
       />
-    </div>
   );
 };
 

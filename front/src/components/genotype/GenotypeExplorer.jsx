@@ -52,7 +52,7 @@ const GenotypeExplorer = () => {
   const [password, setPassword] = useState("");
   const [accessMode, setAccessMode] = useState("private");
   const [showPrivacyRadio, setShowPrivacyRadio] = useState(true);
-  const [searchType, setSearchType] = useState("PositionRange");
+  const [searchType, setSearchType] = useState("");
   const [variantList, setVariantList] = useState([]);
   const [gigwaToken, setGigwaToken] = useState("");
   // const [selectedAccession, setSelectedAccession] = useState(null);
@@ -500,40 +500,40 @@ const GenotypeExplorer = () => {
                   </div>
                 )}
 
-              {showDatasetSelector && selectedDataset && (
-                <div className="filter-container">
-                  <LinkageGroupFilter
-                    selectedStudyDbId={selectedStudyDbId}
-                    selectedGroups={selectedGroups}
-                    setSelectedGroups={setSelectedGroups}
-                    gigwaToken={gigwaToken}
-                  />
-                </div>
-              )}
               {selectedDataset && (
                 <>
                   {showSearchTypeSelector && (
                     <select
-                      className="form-select"
-                      value={searchType}
+                      value={searchType || ""}
                       onChange={(e) => handleSearchTypeChange(e.target.value)} // Step 3: Handle changes
-                      style={{ width: "280px", backgroundColor: "beige", fontWeight: "500", border: "2px solid #ebba35" }}
+                      style={{ backgroundColor: "beige"}}
                     >
+                      <option value="" disabled>
+                        Filter Type
+                      </option>
                       <option value="PositionRange">PositionRange</option>
                       <option value="VariantIDs">VariantIDs</option>
                     </select>
                   )}
                   {showSearchTypeSelector &&
                     (searchType === "PositionRange" ? (
-                      <PositionRangeFilter
-                        posStart={posStart}
-                        setPosStart={setPosStart}
-                        posEnd={posEnd}
-                        setPosEnd={setPosEnd}
-                      />
-                    ) : (
+                      <>
+                        <PositionRangeFilter
+                          posStart={posStart}
+                          setPosStart={setPosStart}
+                          posEnd={posEnd}
+                          setPosEnd={setPosEnd}
+                        />
+                        <LinkageGroupFilter
+                          selectedStudyDbId={selectedStudyDbId}
+                          selectedGroups={selectedGroups}
+                          setSelectedGroups={setSelectedGroups}
+                          gigwaToken={gigwaToken}
+                        />
+                      </>
+                    ) : searchType === "VariantIDs" ? (
                       <VariantListFilter setVariantList={setVariantList} />
-                    ))}
+                    ) : null)}
                 </>
               )}
 
