@@ -37,6 +37,7 @@ const GenotypeExplorer = () => {
   const [variantSetDbIds, setVariantSetDbIds] = useState([]);
   const [sampleDbIds, setSampleDbIds] = useState([]);
   const [sampleNames, setSampleNames] = useState([]);
+  const [completeNames, setCompleteNames] = useState([]);
   const [sampleVcfNames, setSampleVcfNames] = useState([]);
   const [selectedSamplesDetails, setSelectedSamplesDetails] = useState([]);
   const [isGenomeSearchSubmit, setIsGenomeSearchSubmit] = useState(false);
@@ -44,7 +45,6 @@ const GenotypeExplorer = () => {
   const [isExportGenomDataLoading, setIsExportGenomDataLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedGroups, setSelectedGroups] = useState([]);
-  const [samples, setSamples] = useState([]);
   const [showLogin, setShowLogin] = useState(true);
   const [showSearchTypeSelector, setShowSearchTypeSelector] = useState(false);
   const [showDatasetSelector, setShowDatasetSelector] = useState(false);
@@ -55,7 +55,6 @@ const GenotypeExplorer = () => {
   const [searchType, setSearchType] = useState("");
   const [variantList, setVariantList] = useState([]);
   const [gigwaToken, setGigwaToken] = useState("");
-  // const [selectedAccession, setSelectedAccession] = useState(null);
   const [numberOfGenesysAccessions, setNumberOfGenesysAccessions] = useState(null);
   const [numberOfPresentAccessions, setNumberOfPresentAccessions] = useState(null);
   const [numberOfMappedAccessions, setNumberOfMappedAccessions] = useState(null);
@@ -64,6 +63,9 @@ const GenotypeExplorer = () => {
   const searchResults = useSelector((state) => state.searchResults);
   const checkedAccessionsObject = useSelector(
     (state) => state.checkedAccessions
+  );
+  const checkedAccessionNamesObject = useSelector(
+    (state) => state.checkedAccessionNames
   );
   const checkedAccessions = Object.keys(checkedAccessionsObject);
   const checkedResults = searchResults?.content?.filter((item) =>
@@ -131,9 +133,10 @@ const GenotypeExplorer = () => {
           setGigwaToken(token);
 
           const Accessions = checkedResults?.map((item) => item.accessionNumber);
-          const { response, variantSetDbIds, sampleDbIds, datasetNames, vcfSamples, numberOfGenesysAccessions, numberOfPresentAccessions, numberOfMappedAccessions } = await searchSamplesInDatasets(
+          const { response, variantSetDbIds, sampleDbIds, datasetNames, vcfSamples, numberOfGenesysAccessions, numberOfPresentAccessions, numberOfMappedAccessions, accessionPlusAccessionName } = await searchSamplesInDatasets(
             token,
-            Accessions
+            Accessions,
+            checkedAccessionNamesObject,
           );
           const sampleNames = response.result.data.map(sample => sample.sampleName);
           setNumberOfGenesysAccessions(numberOfGenesysAccessions);
@@ -148,15 +151,23 @@ const GenotypeExplorer = () => {
           const filteredDatasetNames = datasetNames.filter(datasetName =>
             sampleNames.some(sampleName => sampleName.includes(datasetName))
           );
+          const uniqueSampleNames = Array.from(new Set(
+            response.result.data.map(sample =>
+              sample.germplasmDbId.split("§")[1]
+          )));
 
+          const filteredAccessionPlusAccessionName = accessionPlusAccessionName.filter(item => {
+            const thirdPart = item.split("§")[2];
+            return uniqueSampleNames.includes(thirdPart);
+          });
           // Set filtered dataset names
           setVariantSetDbIds(variantSetDbIds);
           setSampleDbIds(sampleDbIds);
           setSampleVcfNames(vcfSamples);
           setDatasets(filteredDatasetNames);
           setSampleDetails(response.result.data);
-          setSampleNames(response.result.data.map((sample) =>
-            sample.sampleName.split("-").slice(0, -2).join("-")));
+          setSampleNames(uniqueSampleNames);
+          setCompleteNames(filteredAccessionPlusAccessionName);
           setIsGenomeSearchSubmit(true);
           setShowLogin(false);
           setShowSearchTypeSelector(true);
@@ -283,7 +294,6 @@ const GenotypeExplorer = () => {
 
         setAlleleData(allelesData || {}); // Ensure allelesData is set properly
         setGenomData(data.data);
-        setSamples(data.desiredSamples);
         setShowSearchTypeSelector(false);
         setShowDatasetSelector(false);
       } else if (selectedOption === "Germinate") {
@@ -359,7 +369,6 @@ const GenotypeExplorer = () => {
         console.error("Failed to copy sample names: ", err);
       });
   };
-
 
   return (
     <div>
@@ -506,7 +515,7 @@ const GenotypeExplorer = () => {
                     <select
                       value={searchType || ""}
                       onChange={(e) => handleSearchTypeChange(e.target.value)} // Step 3: Handle changes
-                      style={{ backgroundColor: "beige"}}
+                      style={{ backgroundColor: "beige" }}
                     >
                       <option value="" disabled>
                         Filter Type
@@ -545,7 +554,7 @@ const GenotypeExplorer = () => {
                     alleles={alleleData}
                     currentPage={currentPage}
                     setCurrentPage={setCurrentPage}
-                    samples={samples}
+                    samples={completeNames}
                     platform={selectedOption}
                   />
 

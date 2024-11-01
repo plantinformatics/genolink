@@ -23,11 +23,17 @@ const initialState = {
   creationStartDate: null,
   creationEndDate: null,
   checkedAccessions: {},
+  checkedAccessionNames: {},
   platform: "Gigwa",
 };
 
 const rootReducer = (state = initialState, action) => {
   switch (action.type) {
+    case "SET_CHECKED_ACCESSION_NAMES":
+      return {
+        ...state,
+        checkedAccessionNames: action.payload,
+      };
     case "SET_CHECKED_ACCESSIONS":
       return {
         ...state,

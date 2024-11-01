@@ -7,6 +7,7 @@ import {
   setCurrentPage,
   setSearchResults,
   setCheckedAccessions,
+  setCheckedAccessionNames,
 } from "../../actions";
 import axios from "axios";
 import { useAuth } from "react-oidc-context";
@@ -22,31 +23,43 @@ const MetadataSearchResultTable = ({ filterCode }) => {
   const [expandedRow, setExpandedRow] = useState(null);
   const dispatch = useDispatch();
   const checkedAccessions = useSelector((state) => state.checkedAccessions);
+  const checkedAccessionNames = useSelector((state) => state.checkedAccessionNames);
 
   const handleCheckboxChange = (item) => {
     const newCheckedAccessions = { ...checkedAccessions };
-
+    const newCheckedAccessionNames = { ...checkedAccessionNames };
+  
     if (newCheckedAccessions[item.accessionNumber]) {
       delete newCheckedAccessions[item.accessionNumber];
+      delete newCheckedAccessionNames[item.accessionNumber];
     } else {
       newCheckedAccessions[item.accessionNumber] = true;
+      newCheckedAccessionNames[item.accessionNumber] = item.accessionName;
     }
-
+  
     dispatch(setCheckedAccessions(newCheckedAccessions));
+    dispatch(setCheckedAccessionNames(newCheckedAccessionNames));
   };
 
   const handleSelectAllChange = () => {
+    const newCheckedAccessions = {};
+    const newCheckedAccessionNames = {};
+  
     if (selectAll) {
       dispatch(setCheckedAccessions({}));
+      dispatch(setCheckedAccessionNames({}));
     } else {
-      const newCheckedAccessions = {};
       searchResults?.content.forEach((item) => {
         newCheckedAccessions[item.accessionNumber] = true;
+        newCheckedAccessionNames[item.accessionNumber] = item.accessionName;
       });
       dispatch(setCheckedAccessions(newCheckedAccessions));
+      dispatch(setCheckedAccessionNames(newCheckedAccessionNames));
     }
+  
     setSelectAll(!selectAll);
   };
+  
 
   const fetchMoreResults = () => {
     const token = auth.user?.access_token;
@@ -201,6 +214,7 @@ const MetadataSearchResultTable = ({ filterCode }) => {
                     {item.accessionNumber || ""}
                   </a>
                 </td>
+
                 <td
                   className="cell"
                   style={{

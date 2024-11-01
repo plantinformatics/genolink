@@ -35,7 +35,7 @@ const accessionMappingHandler = async (req, res) => {
       Sample: sa.Sample,
     }));
     res.status(200).send({ Samples: samples });
-    logger.info(`Accessions mapped successfully for request: ${req.body}`);
+    logger.info(`Accessions mapped successfully for request: ${JSON.stringify(req.body)}`);
   } catch (error) {
     logger.error("Error fetching samples:", error);
     res.status(500).send({ message: "Internal server error" });

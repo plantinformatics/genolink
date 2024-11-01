@@ -329,7 +329,7 @@ router.post("/ga4gh/variants/search", async (req, res) => {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 router.post("/searchSamplesInDatasets", async (req, res) => {
-  const accessions = req.body.accessions;
+  const { accessions, accessionNames } = req.body;
 
   if (!accessions || accessions.length === 0) {
     logger.error("No accessions provided");
@@ -343,6 +343,17 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
     }).then((response) => response.data);
 
     const samples = samplesObj.Samples.map((obj) => obj.Sample);
+    const Accessions = samplesObj.Samples.map((obj) => obj.Accession);
+
+    const accessionPlusAccessionName = Object.entries(accessionNames)
+      .filter(([key]) => Accessions.includes(key))
+      .flatMap(([key, value]) => {
+        // Map each sample to create individual entries for the key
+        return samplesObj.Samples
+          .filter((obj) => obj.Accession === key)
+          .map((obj) => `${value}§${key}§${obj.Sample}`);
+      });
+        
     const numberOfMappedAccessions = samples.length;
     const numberOfGenesysAccessions = accessions.length;
 
@@ -376,7 +387,7 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
 
     const numberOfPresentAccessions = uniqueSamplePresence.size;
 
-    res.send({ response, variantSetDbIds, sampleDbIds, datasetNames, vcfSamples: samples, numberOfGenesysAccessions, numberOfPresentAccessions, numberOfMappedAccessions });
+    res.send({ response, variantSetDbIds, sampleDbIds, datasetNames, vcfSamples: samples, numberOfGenesysAccessions, numberOfPresentAccessions, numberOfMappedAccessions, accessionPlusAccessionName });
   } catch (error) {
     if (error.response && error.response.data && error.response.data.message) {
       logger.error(`Error in dataset search - ${error.response.data.message}`);

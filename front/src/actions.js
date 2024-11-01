@@ -104,6 +104,10 @@ export const setCheckedAccessions = (accessions) => ({
   type: "SET_CHECKED_ACCESSIONS",
   payload: accessions,
 });
+export const setCheckedAccessionNames = (accessionNames) => ({
+  type: "SET_CHECKED_ACCESSION_NAMES",
+  payload: accessionNames,
+});
 export const setPlatform = (platform) => ({
   type: "SET_PLATFORM",
   payload: platform,

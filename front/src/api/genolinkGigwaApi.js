@@ -13,12 +13,13 @@ export const getGigwaToken = async (username = "", password = "") => {
   }
 };
 
-export const searchSamplesInDatasets = async (gigwaToken, Accessions) => {
+export const searchSamplesInDatasets = async (gigwaToken, Accessions, AccesionNames) => {
   try {
     const result = await axios.post(
       `${genolinkServer}/api/gigwa/searchSamplesInDatasets`, {
       gigwaToken: gigwaToken,
       accessions: Accessions,
+      accessionNames: AccesionNames,
     }
     );
     return result.data;
