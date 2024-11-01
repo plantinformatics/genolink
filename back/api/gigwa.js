@@ -354,7 +354,7 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
           .map((obj) => `${value}§${key}§${obj.Sample}`);
       });
         
-    const numberOfMappedAccessions = samples.length;
+    const numberOfMappedAccessions = Array.from(new Set(Accessions)).length;
     const numberOfGenesysAccessions = accessions.length;
 
     const variantSetsResponse = await axios.get(`${config.gigwaServer}/gigwa/rest/brapi/v2/variantsets`, {
