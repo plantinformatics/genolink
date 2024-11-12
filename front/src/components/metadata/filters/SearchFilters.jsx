@@ -21,14 +21,8 @@ import AccessionFilter from "./AccessionFilter";
 import MetadataSearchResultTable from "../MetadataSearchResultTable";
 import DateRangeFilter from "./DateRangeFilter";
 import GenotypeExplorer from "../../genotype/GenotypeExplorer";
-import { createSampleAccessions } from "../../../api/genolinkInternalApi";
-
-
-import {
-  fetchInitialData,
-  applyFilter,
-  resetFilter,
-} from "../../../api/genesysApi";
+import GenolinkInternalApi from "../../../api/GenolinkInternalApi";
+import GenesysApi from "../../../api/GenesysApi";
 
 const SearchFilters = () => {
   const auth = useAuth();
@@ -53,6 +47,9 @@ const SearchFilters = () => {
   const [showFileInput, setShowFileInput] = useState(false);
   // const [isSearchSubmit, setIsSearchSubmit] = useState(false);
   const [inputValue, setInputValue] = useState("");
+
+  const genolinkInternalApi = new GenolinkInternalApi();
+  const genesysApi = new GenesysApi(auth.user?.access_token);
 
   const checkedAccessions = useSelector((state) => state.checkedAccessions);
   const hasCheckedAccessions = Object.keys(checkedAccessions).length > 0;
@@ -100,7 +97,7 @@ const SearchFilters = () => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        await fetchInitialData(auth.user?.access_token, dispatch);
+        await genesysApi.fetchInitialFilterData(dispatch);
       } catch (error) {
         console.error("Error fetching initial data:", error);
       } finally {
@@ -116,7 +113,6 @@ const SearchFilters = () => {
     setIsLoading(true);
     setInitialRequestSent(true);
     const fetchData = async () => {
-      const token = auth.user?.access_token;
       let body = {};
 
       if (userInput) {
@@ -169,17 +165,15 @@ const SearchFilters = () => {
         };
       }
       try {
-        const filterCode = await applyFilter(token, body, dispatch);
+        const filterCode = await genesysApi.applyFilter(body, dispatch);
         setFilterCode(filterCode);
         setIsLoading(false);
         setIsFilterApplied(true);
         setInputValue("");
-        // setIsSearchSubmit(true);
       } catch (error) {
         setIsLoading(false);
         setIsFilterApplied(false);
         setInputValue("");
-        // setIsSearchSubmit(false);
       }
     };
 
@@ -219,7 +213,7 @@ const SearchFilters = () => {
     }
     try {
       setIsUploadLoading(true);
-      await createSampleAccessions(file);
+      await genolinkInternalApi.createSampleAccessions(file);
       setIsUploadLoading(false);
       alert("File uploaded successfully!");
       setShowFileInput(false);
@@ -228,7 +222,7 @@ const SearchFilters = () => {
       setIsUploadLoading(false);
       console.error("Error uploading file:", error);
       alert("Failed to upload file!");
-      setShowFileInput(false); 
+      setShowFileInput(false);
       setInputKey(Date.now());
     }
   };
@@ -240,20 +234,19 @@ const SearchFilters = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'sample_accessions_template.csv'; 
+    link.download = 'sample_accessions_template.csv';
     document.body.appendChild(link);
     link.click();
 
     document.body.removeChild(link);
-    URL.revokeObjectURL(url); 
+    URL.revokeObjectURL(url);
   };
 
   const handleResetFilter = async () => {
     setIsResetLoading(true);
-    const token = auth.user?.access_token;
 
     try {
-      const filterCode = await resetFilter(token, dispatch);
+      const filterCode = await genesysApi.resetFilter(dispatch);
       setFilterCode(filterCode);
       setIsResetLoading(false);
       setIsFilterApplied(false);
@@ -271,28 +264,28 @@ const SearchFilters = () => {
     const bottomDivs = e.target.nextElementSibling;
     const startTopHeight = topDiv.offsetHeight;
     const startBottomHeight = bottomDivs ? bottomDivs.offsetHeight : 0;
-  
+
     const onMouseMove = (moveEvent) => {
       const delta = moveEvent.clientY - startY;
       const newTopHeight = Math.max(100, startTopHeight + delta);
       const newBottomHeight = Math.max(50, startBottomHeight - delta);
-  
+
       topDiv.style.height = `${newTopHeight}px`;
       if (bottomDivs) {
         bottomDivs.style.height = `${newBottomHeight}px`;
       }
-      setGenesysHeight(`${newTopHeight}px`); 
+      setGenesysHeight(`${newTopHeight}px`);
     };
-  
+
     const onMouseUp = () => {
       document.removeEventListener("mousemove", onMouseMove);
       document.removeEventListener("mouseup", onMouseUp);
     };
-  
+
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
   };
-  
+
 
   return (
     <>

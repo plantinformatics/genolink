@@ -13,17 +13,13 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser, faLock } from "@fortawesome/free-solid-svg-icons";
 import { faCopy } from "@fortawesome/free-solid-svg-icons";
 
-
-import {
-  getGigwaToken,
-  searchSamplesInDatasets,
-  fetchVariants, fetchAlleles
-} from "../../api/genolinkGigwaApi";
-import { fetchCallsetDataForAccession } from "../../api/genolinkGerminateApi";
-import { exportGigwaVCF } from "../../api/genolinkGigwaApi";
+import GenolinkGigwaApi from "../../api/GenolinkGigwaApi";
+import GenolinkGerminateApi from "../../api/GenolinkGerminateApi";
 
 const GenotypeExplorer = () => {
   const [selectedOption, setSelectedOption] = useState("Gigwa");
+  const [genolinkGigwaApi, setGenolinkGigwaApi] = useState(new GenolinkGigwaApi());
+  const [genolinkGerminateApi, setGenolinkGerminateApi] = useState(new GenolinkGerminateApi());
   const [copied, setCopied] = useState(false);
   const [posStart, setPosStart] = useState("");
   const [posEnd, setPosEnd] = useState("");
@@ -54,7 +50,6 @@ const GenotypeExplorer = () => {
   const [showPrivacyRadio, setShowPrivacyRadio] = useState(true);
   const [searchType, setSearchType] = useState("");
   const [variantList, setVariantList] = useState([]);
-  const [gigwaToken, setGigwaToken] = useState("");
   const [numberOfGenesysAccessions, setNumberOfGenesysAccessions] = useState(null);
   const [numberOfPresentAccessions, setNumberOfPresentAccessions] = useState(null);
   const [numberOfMappedAccessions, setNumberOfMappedAccessions] = useState(null);
@@ -103,7 +98,6 @@ const GenotypeExplorer = () => {
   const handleDownloadClick = async () => {
     setIsExportGenomDataLoading(true);
     const body = {
-      gigwaToken,
       variantList: variantList,
       // sampleVcfNames: sampleVcfNames,
       selectedSamplesDetails: selectedSamplesDetails,
@@ -112,7 +106,7 @@ const GenotypeExplorer = () => {
       start: posStart || -1,
       end: posEnd || -1,
     };
-    await exportGigwaVCF(body);
+    await genolinkGigwaApi.exportGigwaVCF(body);
     setIsExportGenomDataLoading(false);
   };
 
@@ -126,18 +120,16 @@ const GenotypeExplorer = () => {
     try {
       if (selectedOption === "Gigwa") {
         if (!isGenomeSearchSubmit) {
-          const token = await getGigwaToken(
+          const token = await genolinkGigwaApi.getGigwaToken(
             accessMode === "private" ? username : "",
             accessMode === "private" ? password : ""
           );
-          setGigwaToken(token);
+          // genolinkGigwaApi.setToken(token);
+
+          setGenolinkGigwaApi(genolinkGigwaApi);
 
           const Accessions = checkedResults?.map((item) => item.accessionNumber);
-          const { response, variantSetDbIds, sampleDbIds, datasetNames, vcfSamples, numberOfGenesysAccessions, numberOfPresentAccessions, numberOfMappedAccessions, accessionPlusAccessionName } = await searchSamplesInDatasets(
-            token,
-            Accessions,
-            checkedAccessionNamesObject,
-          );
+          const { response, variantSetDbIds, sampleDbIds, datasetNames, vcfSamples, numberOfGenesysAccessions, numberOfPresentAccessions, numberOfMappedAccessions, accessionPlusAccessionName } = await genolinkGigwaApi.searchSamplesInDatasets(Accessions, checkedAccessionNamesObject);
           const sampleNames = response.result.data.map(sample => sample.sampleName);
           setNumberOfGenesysAccessions(numberOfGenesysAccessions);
           setNumberOfPresentAccessions(numberOfPresentAccessions);
@@ -154,7 +146,7 @@ const GenotypeExplorer = () => {
           const uniqueSampleNames = Array.from(new Set(
             response.result.data.map(sample =>
               sample.germplasmDbId.split("§")[1]
-          )));
+            )));
 
           const filteredAccessionPlusAccessionName = accessionPlusAccessionName.filter(item => {
             const thirdPart = item.split("§")[2];
@@ -209,8 +201,7 @@ const GenotypeExplorer = () => {
     try {
       setIsGenomDataLoading(true);
       if (selectedOption === "Gigwa") {
-        const fetchDataPromise = fetchVariants({
-          gigwaToken: gigwaToken,
+        const fetchDataPromise = await genolinkGigwaApi.fetchVariants({
           variantList: variantList,
           sampleVcfNames: sampleVcfNames,
           selectedSamplesDetails: selectedSamplesDetails,
@@ -223,8 +214,7 @@ const GenotypeExplorer = () => {
         let fetchAllelesPromise;
 
         if (posStart && posEnd) {
-          fetchAllelesPromise = fetchAlleles({
-            gigwaToken: gigwaToken,
+          fetchAllelesPromise = genolinkGigwaApi.fetchAlleles({
             callSetDbIds: sampleDbIds,
             variantSetDbIds: selectedVariantSetDbId,
             positionRanges: selectedGroups.map(group => `${group}:${posStart}-${posEnd}`),
@@ -243,8 +233,7 @@ const GenotypeExplorer = () => {
             ],
           });
         } else if (variantList.length > 0) {
-          fetchAllelesPromise = fetchAlleles({
-            gigwaToken: gigwaToken,
+          fetchAllelesPromise = genolinkGigwaApi.fetchAlleles({
             callSetDbIds: sampleDbIds,
             variantSetDbIds: selectedVariantSetDbId,
             variantDbIds: variantList.map(variant => `${selectedVariantSetDbId[0].split("§")[0]}§${variant}`),
@@ -263,8 +252,7 @@ const GenotypeExplorer = () => {
             ],
           });
         } else {
-          fetchAllelesPromise = fetchAlleles({
-            gigwaToken: gigwaToken,
+          fetchAllelesPromise = genolinkGigwaApi.fetchAlleles({
             callSetDbIds: sampleDbIds,
             variantSetDbIds: selectedVariantSetDbId,
             dataMatrixAbbreviations: ["GT"],
@@ -300,7 +288,7 @@ const GenotypeExplorer = () => {
         const Accessions = checkedResults?.map((item) => item.accessionNumber);
         const responses = await Promise.all(
           Accessions.map((accession) =>
-            fetchCallsetDataForAccession(
+            genolinkGerminateApi.fetchCallsetDataForAccession(
               username,
               password,
               accession,
@@ -537,7 +525,8 @@ const GenotypeExplorer = () => {
                           selectedStudyDbId={selectedStudyDbId}
                           selectedGroups={selectedGroups}
                           setSelectedGroups={setSelectedGroups}
-                          gigwaToken={gigwaToken}
+                          genolinkGigwaApi={genolinkGigwaApi}
+                          genolinkGerminateApi={genolinkGerminateApi}
                         />
                       </>
                     ) : searchType === "VariantIDs" ? (

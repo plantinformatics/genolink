@@ -1,12 +1,13 @@
 import { useEffect, useRef } from "react";
 import { useAuth } from "react-oidc-context";
-import { sendTokenToAppServer } from "../api/genolinkGenesysApi";
+import GenolinkApi from "../api/GenolinkApi";
 import SearchFilters from "../components/metadata/filters/SearchFilters";
 
 const Home = () => {
   const auth = useAuth();
   const retryCountRef = useRef(0);
   const maxRetries = 5;
+  const genolinkApi = new GenolinkApi(auth.user?.access_token);
 
   // Monitor for iframe insertions, specifically those used for silent token renewal
   const monitorIframes = () => {
@@ -47,7 +48,7 @@ const Home = () => {
 
   const handleLogin = async (token) => {
     if (token) {
-      await sendTokenToAppServer(token);
+      await genolinkApi.sendTokenToAppServer(token);
     }
   };
 

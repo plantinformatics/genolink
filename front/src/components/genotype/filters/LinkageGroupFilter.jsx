@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
-import { fetchGigwaLinkageGroups } from "../../../api/genolinkGigwaApi";
-import { fetchGerminateLinkageGroups } from "../../../api/genolinkGerminateApi";
+
+
 
 const LinkageGroupFilter = ({
   selectedGroups,
   setSelectedGroups,
   selectedStudyDbId,
-  gigwaToken,
+  genolinkGigwaApi,
+  genolinkGerminateApi,
 }) => {
   const [linkageGroups, setLinkageGroups] = useState([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -20,13 +21,12 @@ const LinkageGroupFilter = ({
     const fetchData = async () => {
       try {
         if (platform === "Gigwa") {
-          const groups = await fetchGigwaLinkageGroups(
-            gigwaToken,
+          const groups = await genolinkGigwaApi.fetchGigwaLinkageGroups(
             selectedStudyDbId
           );
           setLinkageGroups(groups);
         } else if (platform === "Germinate") {
-          const groups = await fetchGerminateLinkageGroups(username, password);
+          const groups = await genolinkGerminateApi.fetchGerminateLinkageGroups(username, password);
           setLinkageGroups(groups);
         }
       } catch (error) {
