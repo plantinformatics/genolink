@@ -11,20 +11,26 @@ const config = require("../config/appConfig");
 router.post("/generateGigwaToken", async (req, res) => {
   try {
     const { username, password } = req.body;
+    const requestBody = username && password ? { username, password } : undefined;
 
-    // If username and password are provided, send them; otherwise, send an empty body
     const tokenResponse = await axios.post(
       `${config.gigwaServer}/gigwa/rest/gigwa/generateToken`,
-      username && password ? { username, password } : {}
+      requestBody,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      }
     );
 
     const token = tokenResponse.data.token;
-    res.send(token);
+    res.send({ token });
   } catch (error) {
+    console.error("Login failed:", error);
     res.status(500).send("Login failed: " + error.message);
   }
 });
-
 // Get a filtered list of breeding programs
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 router.post("/brapi/v2/programs", checkCredentials, async (req, res) => {
