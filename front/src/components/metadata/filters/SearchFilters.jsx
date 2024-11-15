@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import LoadingComponent from "../../LoadingComponent";
 import { useAuth } from "react-oidc-context";
 import { useDispatch, useSelector } from "react-redux";
+import { FaCircleXmark } from "react-icons/fa6";
 import {
   setInstituteCheckedBoxes,
   setResetTrigger,
@@ -47,6 +48,11 @@ const SearchFilters = () => {
   const [showFileInput, setShowFileInput] = useState(false);
   // const [isSearchSubmit, setIsSearchSubmit] = useState(false);
   const [inputValue, setInputValue] = useState("");
+  const [activeFilters, setActiveFilters] = useState([]);
+  const [filterBody, setFilterBody] = useState({});
+  const [searchButtonName, setSearchButtonName] = useState("Search");
+
+
 
   const genolinkInternalApi = new GenolinkInternalApi();
   const genesysApi = new GenesysApi(auth.user?.access_token);
@@ -94,6 +100,15 @@ const SearchFilters = () => {
   const wheatImage = '/Wheat.PNG';
 
   useEffect(() => {
+    if (Object.keys(activeFilters).length > 0 && searchButtonName !== "Update Search"){
+      setSearchButtonName('Update Search')
+    } else {
+      setSearchButtonName('Search');
+    }
+    }, [activeFilters]);
+
+
+  useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
@@ -106,79 +121,163 @@ const SearchFilters = () => {
     };
 
     fetchData();
-  }, [auth.user?.access_token, dispatch, searchResults]);
+  }, [auth.user?.access_token, dispatch]);
 
-  const handleSearch = (userInput = "") => {
-    dispatch(setCheckedAccessions({}));
+  const removeFilter = (filterToRemove) => {
+    switch (filterToRemove.type) {
+      case "Text":
+        setInputValue("");
+        break;
+      case "Accession Numbers":
+        dispatch(setAccessionNumbers([]));
+        break;
+      case "Institute Code":
+        dispatch(setInstituteCheckedBoxes([]));
+        break;
+      case "Start Date":
+        dispatch(setCreationStartDate(null));
+        break;
+      case "End Date":
+        dispatch(setCreationEndDate(null));
+        break;
+      case "Crop":
+        dispatch(setCropCheckedBoxes([]));
+        break;
+      case "Taxonomy":
+        dispatch(setTaxonomyCheckedBoxes([]));
+        break;
+      case "Origin of Material":
+        dispatch(setOriginOfMaterialCheckedBoxes([]));
+        break;
+      case "Biological Status":
+        dispatch(setSampStatCheckedBoxes([]));
+        break;
+      case "Germplasm Storage":
+        dispatch(setGermplasmStorageCheckedBoxes([]));
+        break;
+      default:
+        break;
+    }
+
+    setActiveFilters((prevFilters) =>
+      prevFilters.filter((filter) => filter !== filterToRemove)
+    );
+
+    let updatedBody = {};
+    activeFilters
+      .filter((filter) => filter !== filterToRemove)
+      .forEach((filter) => {
+        switch (filter.type) {
+          case "Text":
+            updatedBody._text = filter.value;
+            break;
+          case "Accession Numbers":
+            updatedBody.accessionNumbers = filter.value;
+            break;
+          case "Institute Code":
+            updatedBody.institute = { code: filter.value };
+            break;
+          case "Start Date":
+            updatedBody.createdDate = { ...updatedBody.createdDate, ge: filter.value };
+            break;
+          case "End Date":
+            updatedBody.createdDate = { ...updatedBody.createdDate, le: filter.value };
+            break;
+          case "Crop":
+            updatedBody.crop = filter.value;
+            break;
+          case "Taxonomy":
+            updatedBody.taxonomy = { genus: filter.value };
+            break;
+          case "Origin of Material":
+            updatedBody.countryOfOrigin = { code3: filter.value };
+            break;
+          case "Biological Status":
+            updatedBody.sampStat = filter.value;
+            break;
+          case "Germplasm Storage":
+            updatedBody.storage = filter.value;
+            break;
+          default:
+            break;
+        }
+      });
+
+    setFilterBody(updatedBody)
+  };
+
+  const handleSearch = async (userInput = "") => {
+    dispatch(setCheckedAccessions({})); // Clear checked accessions
     setIsLoading(true);
     setInitialRequestSent(true);
-    const fetchData = async () => {
-      let body = {};
 
-      if (userInput) {
-        body = { ...body, _text: userInput }
-      }
-      if (accessionNumbers.length > 0) {
-        body = { ...body, accessionNumbers };
-      }
-      if (instituteCheckedBoxes.length > 0) {
-        body = { ...body, institute: { code: instituteCheckedBoxes } };
-      }
-      if (creationStartDate && creationEndDate)
-        body = {
-          ...body,
-          createdDate: { ge: creationStartDate, le: creationEndDate },
-        };
-      else if (creationStartDate)
-        body = { ...body, createdDate: { ge: creationStartDate } };
-      else if (creationEndDate)
-        body = { ...body, createdDate: { le: creationEndDate } };
+    // Build the request body from Redux state if no custom body is provided
+    const body = Object.keys(filterBody).length > 0 ? filterBody : {
+      // Text search
+      _text: userInput || (inputValue && inputValue.trim()),
 
-      if (cropCheckedBoxes.length > 0) {
-        body = {
-          ...body,
-          crop: cropCheckedBoxes,
-        };
-      }
-      if (taxonomyCheckedBoxes.length > 0) {
-        body = {
-          ...body,
-          taxonomy: { genus: taxonomyCheckedBoxes },
-        };
-      }
-      if (originOfMaterialCheckedBoxes.length > 0) {
-        body = {
-          ...body,
-          countryOfOrigin: { code3: originOfMaterialCheckedBoxes },
-        };
-      }
-      if (sampStatCheckedBoxes.length > 0) {
-        body = {
-          ...body,
-          sampStat: sampStatCheckedBoxes,
-        };
-      }
-      if (germplasmStorageCheckedBoxes.length > 0) {
-        body = {
-          ...body,
-          storage: germplasmStorageCheckedBoxes,
-        };
-      }
-      try {
-        const filterCode = await genesysApi.applyFilter(body, dispatch);
-        setFilterCode(filterCode);
-        setIsLoading(false);
-        setIsFilterApplied(true);
-        setInputValue("");
-      } catch (error) {
-        setIsLoading(false);
-        setIsFilterApplied(false);
-        setInputValue("");
-      }
+      // Accession Numbers
+      ...(accessionNumbers.length > 0 && { accessionNumbers }),
+
+      // Institute Code
+      ...(instituteCheckedBoxes.length > 0 && { institute: { code: instituteCheckedBoxes } }),
+
+      // Creation Date Range
+      createdDate: {
+        ...(creationStartDate && { ge: creationStartDate }),
+        ...(creationEndDate && { le: creationEndDate }),
+      },
+
+      // Crop
+      ...(cropCheckedBoxes.length > 0 && { crop: cropCheckedBoxes }),
+
+      // Taxonomy
+      ...(taxonomyCheckedBoxes.length > 0 && { taxonomy: { genus: taxonomyCheckedBoxes } }),
+
+      // Origin of Material
+      ...(originOfMaterialCheckedBoxes.length > 0 && { countryOfOrigin: { code3: originOfMaterialCheckedBoxes } }),
+
+      // Biological Status (SampStat)
+      ...(sampStatCheckedBoxes.length > 0 && { sampStat: sampStatCheckedBoxes }),
+
+      // Germplasm Storage
+      ...(germplasmStorageCheckedBoxes.length > 0 && { storage: germplasmStorageCheckedBoxes }),
     };
 
-    fetchData();
-  }
+    // Filter out any undefined fields in `body`
+    Object.keys(body).forEach((key) => body[key] === undefined && delete body[key]);
+
+    try {
+      // Send the API request with the built or provided `body`
+      const filterCode = await genesysApi.applyFilter(body, dispatch);
+      setFilterCode(filterCode); // Save filter code in state
+      setIsLoading(false); // Stop loading spinner
+      setIsFilterApplied(true);
+
+      // Update active filters only if no custom body is provided (to prevent re-adding removed filters)
+      if (Object.keys(filterBody).length === 0) {
+        const newFilters = [];
+        if (userInput) newFilters.push({ type: "Text", value: userInput });
+        if (accessionNumbers.length > 0) newFilters.push({ type: "Accession Numbers", value: accessionNumbers });
+        if (instituteCheckedBoxes.length > 0) newFilters.push({ type: "Institute Code", value: instituteCheckedBoxes });
+        if (creationStartDate) newFilters.push({ type: "Start Date", value: creationStartDate });
+        if (creationEndDate) newFilters.push({ type: "End Date", value: creationEndDate });
+        if (cropCheckedBoxes.length > 0) newFilters.push({ type: "Crop", value: cropCheckedBoxes });
+        if (taxonomyCheckedBoxes.length > 0) newFilters.push({ type: "Taxonomy", value: taxonomyCheckedBoxes });
+        if (originOfMaterialCheckedBoxes.length > 0) newFilters.push({ type: "Origin of Material", value: originOfMaterialCheckedBoxes });
+        if (sampStatCheckedBoxes.length > 0) newFilters.push({ type: "Biological Status", value: sampStatCheckedBoxes });
+        if (germplasmStorageCheckedBoxes.length > 0) newFilters.push({ type: "Germplasm Storage", value: germplasmStorageCheckedBoxes });
+
+        setActiveFilters(newFilters); // Update active filters in UI
+      }
+
+      setInputValue(""); // Clear input after applying filters
+    } catch (error) {
+      console.error("Error applying filter:", error);
+      setIsLoading(false);
+      setIsFilterApplied(false);
+    }
+  };
 
   useEffect(() => {
     dispatch(setInstituteCheckedBoxes([]));
@@ -251,6 +350,7 @@ const SearchFilters = () => {
       setIsResetLoading(false);
       setIsFilterApplied(false);
       setGenesysHeight("auto");
+      setActiveFilters([]);
     } catch (error) {
       setIsResetLoading(false);
       console.error("Error handling reset filter:", error);
@@ -324,6 +424,8 @@ const SearchFilters = () => {
         {/* div3: Genesys Filter */}
         <div
           style={{
+            maxWidth: "340px",
+            overflowX: "auto",
             gridColumn: "1",
             gridRow: "2 / 5",
             background: "#50748c00",
@@ -403,6 +505,22 @@ const SearchFilters = () => {
           {filterMode === "Passport Filter" && (
             <>
               <div>
+              <h5 style={{ visibility: activeFilters.length > 0 ? 'visible' : 'hidden' }}>Active Filters</h5>
+                {activeFilters.length > 0 ? (
+                  <ul className="active-filters-list">
+                    {activeFilters.map((filter, index) => (
+                      <li key={index} className="active-filter-item">
+                        <div className="filter-label">{filter.type}:</div>
+                        <div className="filter-value">
+                          {Array.isArray(filter.value) ? filter.value.join(", ") : filter.value}
+                        </div>
+                        <button className="remove-filter-button" onClick={() => removeFilter(filter)}>
+                          <FaCircleXmark color="red" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
                 <button
                   className="btn btn-info"
                   onClick={() => setIsDateDrawerOpen(!isDateDrawerOpen)}
@@ -549,7 +667,7 @@ const SearchFilters = () => {
               style={{
                 display: 'flex',
                 flexDirection: 'column',
-                height: '100vh',  // Adjust this to fit your layout
+                height: '100vh',
                 overflowY: 'auto',
               }}
             >
@@ -584,10 +702,10 @@ const SearchFilters = () => {
                     padding: '8px 16px',
                     border: 'none',
                     cursor: 'pointer',
-                    marginLeft: '10px', // Add spacing if needed
+                    marginLeft: '10px',
                   }}
                 >
-                  Search
+                  {searchButtonName}
                 </button>
               </div>
 
