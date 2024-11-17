@@ -271,7 +271,6 @@ const SearchFilters = () => {
         setActiveFilters(newFilters); // Update active filters in UI
       }
 
-      setInputValue(""); // Clear input after applying filters
     } catch (error) {
       console.error("Error applying filter:", error);
       setIsLoading(false);
