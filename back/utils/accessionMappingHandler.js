@@ -1,9 +1,9 @@
-const db = require("../models"); // Adjust this path to where your Sequelize models are initialized
-const logger = require("../middlewares/logger"); // Assuming logger is in the 'middlewares' directory
+const db = require("../models"); 
+const logger = require("../middlewares/logger"); 
 
 const accessionMappingHandler = async (req, res) => {
   try {
-    const { Accessions } = req.body; // Expecting an array of accessions
+    const { Accessions } = req.body;
 
     if (!Accessions || Accessions.length === 0) {
       res.status(400).send({ message: "Accessions list is required" });

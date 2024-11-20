@@ -6,7 +6,6 @@ class GenolinkApi extends BaseApi {
     super(genolinkServer, token); 
   }
 
-  // Method to send token to the app server
   async sendTokenToAppServer(token) {
     try {
       const endpoint = "/api/genesys/login"; 

@@ -262,9 +262,6 @@ router.post("/ga4gh/variants/search", async (req, res) => {
 
     const token = req.body.gigwaToken;
     const samplesDetails = req.body.selectedSamplesDetails;
-    // const sampleList = req.body.selectedSamplesDetails.map((sample) =>
-    //   sample.sampleName.split("-").slice(0, -2).join("-")
-    // );
     const sampleList = req.body.sampleVcfNames;
     const callsetIds = samplesDetails.map(
       (item) => `${item.sampleDbId}§${item.germplasmDbId.split("§")[1]}`
@@ -311,7 +308,6 @@ router.post("/ga4gh/variants/search", async (req, res) => {
       variantSetId: `${samplesDetails[0]?.studyDbId}`,
       // variantSetId: "Database1§1",
     };
-    // logger.info(JSON.stringify(body, null, 2));
     response = await axios.post(
       `${config.gigwaServer}/gigwa/rest/ga4gh/variants/search`,
       body,
@@ -354,7 +350,6 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
     const accessionPlusAccessionName = Object.entries(accessionNames)
       .filter(([key]) => Accessions.includes(key))
       .flatMap(([key, value]) => {
-        // Map each sample to create individual entries for the key
         return samplesObj.Samples
           .filter((obj) => obj.Accession === key)
           .map((obj) => `${value}§${key}§${obj.Sample}`);
@@ -373,7 +368,7 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
     const studyDbIds = variantSets.map((vs) => vs.studyDbId);
     const sampleNames = [];
     for (const vs of variantSets) {
-      const parts = vs.variantSetDbId.split("§").slice(1); // Skip the database part
+      const parts = vs.variantSetDbId.split("§").slice(1); 
       for (const sample of samples) {
         sampleNames.push(`${sample}-${parts.join("-")}`);
       }
@@ -502,10 +497,6 @@ router.post('/exportData', async (req, res) => {
       variantEffect: "",
       variantSetId: `${selectedSamplesDetails[0]?.studyDbId}`,
     };
-
-    // logger.info(JSON.stringify(body));
-    // logger.info(token);
-    // logger.info(`JSESSIONID=${jsessionID}; termsOfUseAgreed=true`);
     const response = await axios.post(`${config.gigwaServer}/gigwa/rest/gigwa/exportData`, body, {
       headers: {
         assembly: "0",

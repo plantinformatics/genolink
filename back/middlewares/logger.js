@@ -2,7 +2,6 @@ const winston = require("winston");
 const path = require("path");
 const fs = require("fs");
 
-// Create a logs directory if it doesn't exist
 const logsDir = path.join(__dirname, "..", "logs");
 if (!fs.existsSync(logsDir)) {
   fs.mkdirSync(logsDir);

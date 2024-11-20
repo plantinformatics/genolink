@@ -15,16 +15,14 @@ const GenotypeSearchResultsTable = ({
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   if (platform === "Gigwa" && alleles && alleles.result && alleles.result.dataMatrices) {
     totalPages = Math.ceil(data.count / itemsPerPage);
-    // const callSetDbIds = alleles.result.callSetDbIds; // Sample IDs
-    const dataMatrix = alleles.result.dataMatrices[0].dataMatrix; // Genotype data for each variant
-    // Populate genotypeMap from alleles
+    const dataMatrix = alleles.result.dataMatrices[0].dataMatrix;
     dataMatrix.forEach((genotypes, variantIndex) => {
       genotypes.forEach((genotype, sampleIndex) => {
-        const sampleId = samples[sampleIndex]; // Extract sample ID
+        const sampleId = samples[sampleIndex]; 
         if (!genotypeMap[sampleId]) {
           genotypeMap[sampleId] = [];
         }
-        genotypeMap[sampleId][variantIndex] = genotype; // Store genotype by variant index
+        genotypeMap[sampleId][variantIndex] = genotype; 
       });
     });
   } else if (platform == "Germinate") {

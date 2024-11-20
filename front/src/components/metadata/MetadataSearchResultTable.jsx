@@ -112,7 +112,7 @@ const MetadataSearchResultTable = ({ filterCode }) => {
   };
 
   const handleRowClick = (index) => {
-    setExpandedRow(expandedRow === index ? null : index); // Toggle row expansion
+    setExpandedRow(expandedRow === index ? null : index);
   };
 
 

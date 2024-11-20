@@ -89,7 +89,7 @@ const MultiSelectFilter = ({ options, type }) => {
       return "40px";
     }
 
-    return "0px"; // Default no indentation if the key is not found
+    return "0px";
   };
 
 
@@ -143,7 +143,6 @@ const MultiSelectFilter = ({ options, type }) => {
     else if (type === "sampStatCheckedBoxes") {
       let newCheckedBoxes = [...sampStatCheckedBoxes];
 
-      // If the main set is checked/unchecked, toggle all its subsets
       if (hierarchy1[option]) {
         hierarchy1[option].forEach((subset) => {
           if (checked) {
@@ -169,7 +168,6 @@ const MultiSelectFilter = ({ options, type }) => {
     else if (type === "germplasmStorageCheckedBoxes") {
       let newCheckedBoxes = [...germplasmStorageCheckedBoxes];
 
-      // If the main set is checked/unchecked, toggle all its subsets
       if (hierarchy1[option]) {
         hierarchy1[option].forEach((subset) => {
           if (checked) {

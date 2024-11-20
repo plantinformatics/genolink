@@ -151,7 +151,6 @@ table thead th {
   width: auto;
 }
 
-/* Container for the genotype data section */
 .geno-data-container {
   background: #fff;
   padding: 20px;
@@ -160,15 +159,13 @@ table thead th {
   margin-bottom: 20px;
 }
 
-/* Search section styling */
 .search-container {
   display: flex;
   align-items: center;
-  gap: 10px; /* Spacing between select and button */
+  gap: 10px;
   margin-bottom: 20px;
 }
 
-/* Login form styling */
 .login-form input[type="text"],
 .login-form input[type="password"] {
   width: 100%;
@@ -203,7 +200,6 @@ table thead th {
   border-color: #0056b3;
 }
 
-/* Button primary action styling */
 .button-primary {
   background-color: #0056b3;
   color: white;
@@ -240,7 +236,7 @@ table thead th {
   width: 100%;
   border: 1px solid #ccc;
   border-radius: 4px;
-  padding: 12px 20px 12px 40px; /* Increase left padding to make space for the icon */
+  padding: 12px 20px 12px 40px;
   font-size: 16px;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: border 0.3s ease;
@@ -250,14 +246,6 @@ table thead th {
   border-color: #66afe9;
   outline: 0;
 }
-
-/* .input-container .input-icon {
-  position: absolute;
-  left: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #aaa;
-} */
 
 .input-group {
   position: relative;
@@ -312,7 +300,7 @@ table thead th {
 
 .access-mode-toggle label:hover {
   cursor: pointer;
-  color: #007bff; /* Change to your preferred highlight color */
+  color: #007bff;
 }
 
 .select-style-button {
@@ -322,7 +310,7 @@ table thead th {
   background-color: beige;
   border: 1px solid #ccc;
   cursor: pointer;
-  text-align: left; /* Align text to mimic select dropdown */
+  text-align: left;
 }
 
 .active-filters-list {
@@ -355,7 +343,7 @@ table thead th {
 
 .filter-value {
   color: #555;
-  padding-left: 10px; /* Indentation for elements */
+  padding-left: 10px; 
   line-height: 1.6;
 }
 

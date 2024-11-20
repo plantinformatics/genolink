@@ -9,10 +9,10 @@ let token = "";
 router.post("/login", (req, res) => {
   if (req.body && req.body.token) {
     token = req.body.token;
-    logger.info("Login token received and stored."); // Log successful token receipt
+    logger.info("Login token received and stored."); 
     res.send("Token received");
   } else {
-    logger.warn("Login attempt failed - No token provided."); // Log warning for no token provided
+    logger.warn("Login attempt failed - No token provided."); 
     res.status(400).json({ message: "No token provided." });
   }
 });

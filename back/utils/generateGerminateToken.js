@@ -5,7 +5,7 @@ const logger = require("../middlewares/logger");
 const generateGerminateToken = async (req) => {
   try {
     const response = await axios.post(
-      `${config.germinateServer}/api/token`, // Use the germinateServer configuration
+      `${config.germinateServer}/api/token`,
       {
         username: req.body.username,
         password: req.body.password,
@@ -13,8 +13,8 @@ const generateGerminateToken = async (req) => {
     );
 
     if (response.data && response.data.token) {
-      const token = response.data.token; // Extract only the token from the response
-      logger.info(`Token generated successfully: ${token}`); // Log the token securely
+      const token = response.data.token;
+      logger.info(`Token generated successfully: ${token}`);
       return token;
     } else {
       logger.error("Token not found in response");

@@ -99,7 +99,6 @@ const GenotypeExplorer = () => {
     setIsExportGenomDataLoading(true);
     const body = {
       variantList: variantList,
-      // sampleVcfNames: sampleVcfNames,
       selectedSamplesDetails: selectedSamplesDetails,
       variantPage: currentPage,
       linkagegroups: selectedGroups.join(";"),
@@ -124,7 +123,6 @@ const GenotypeExplorer = () => {
             accessMode === "private" ? username : "",
             accessMode === "private" ? password : ""
           );
-          // genolinkGigwaApi.setToken(token);
 
           setGenolinkGigwaApi(genolinkGigwaApi);
 
@@ -152,7 +150,6 @@ const GenotypeExplorer = () => {
             const thirdPart = item.split("§")[2];
             return uniqueSampleNames.includes(thirdPart);
           });
-          // Set filtered dataset names
           setVariantSetDbIds(variantSetDbIds);
           setSampleDbIds(sampleDbIds);
           setSampleVcfNames(vcfSamples);
@@ -178,13 +175,13 @@ const GenotypeExplorer = () => {
       if (axios.isAxiosError(error)) {
         const status = error.response ? error.response.status : null;
         switch (status) {
-          case 401: // Unauthorized
+          case 401:
             message = "Authentication failed: Incorrect username or password.";
             break;
-          case 403: // Forbidden
+          case 403:
             message = "Access denied: You do not have permission to access these resources. Please check your credentials.";
             break;
-          case 404: // No Data Found
+          case 404: 
             message = "No genotype data found in the Database!";
             break;
           default:
@@ -271,7 +268,6 @@ const GenotypeExplorer = () => {
           });
         }
 
-        // Run both fetches in parallel
         const [data, allelesData] = await Promise.all([fetchDataPromise, fetchAllelesPromise]);
 
         if (data.data.count === 0) {
@@ -308,10 +304,6 @@ const GenotypeExplorer = () => {
       setIsGenomDataLoading(false);
     }
   };
-
-  // const handleSelectChange = (event) => {
-  //   setSelectedAccession(event.target.value);
-  // };
 
   const handleReset = () => {
     setShowSearchTypeSelector(false);

@@ -32,7 +32,6 @@ const SearchFilters = () => {
   const [isResetLoading, setIsResetLoading] = useState(false);
   const [isUploadLoading, setIsUploadLoading] = useState(false);
   const [filterCode, setFilterCode] = useState(null);
-  // const [isAccessionDrawerOpen, setIsAccessionDrawerOpen] = useState(false);
   const [isDateDrawerOpen, setIsDateDrawerOpen] = useState(false);
   const [isInstituteDrawerOpen, setIsInstituteDrawerOpen] = useState(false);
   const [isCropDrawerOpen, setIsCropDrawerOpen] = useState(false);
@@ -46,7 +45,6 @@ const SearchFilters = () => {
   const [file, setFile] = useState(null);
   const [inputKey, setInputKey] = useState(Date.now());
   const [showFileInput, setShowFileInput] = useState(false);
-  // const [isSearchSubmit, setIsSearchSubmit] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [activeFilters, setActiveFilters] = useState([]);
   const [filterBody, setFilterBody] = useState({});
@@ -207,11 +205,10 @@ const SearchFilters = () => {
   };
 
   const handleSearch = async (userInput = "") => {
-    dispatch(setCheckedAccessions({})); // Clear checked accessions
+    dispatch(setCheckedAccessions({}));
     setIsLoading(true);
     setInitialRequestSent(true);
 
-    // Build the request body from Redux state if no custom body is provided
     const body = Object.keys(filterBody).length > 0 ? filterBody : {
       // Text search
       _text: userInput || (inputValue && inputValue.trim()),
@@ -244,17 +241,14 @@ const SearchFilters = () => {
       ...(germplasmStorageCheckedBoxes.length > 0 && { storage: germplasmStorageCheckedBoxes }),
     };
 
-    // Filter out any undefined fields in `body`
     Object.keys(body).forEach((key) => body[key] === undefined && delete body[key]);
 
     try {
-      // Send the API request with the built or provided `body`
       const filterCode = await genesysApi.applyFilter(body, dispatch);
-      setFilterCode(filterCode); // Save filter code in state
-      setIsLoading(false); // Stop loading spinner
+      setFilterCode(filterCode);
+      setIsLoading(false);
       setIsFilterApplied(true);
 
-      // Update active filters only if no custom body is provided (to prevent re-adding removed filters)
       if (Object.keys(filterBody).length === 0) {
         const newFilters = [];
         if (userInput) newFilters.push({ type: "Text", value: userInput });
@@ -268,7 +262,7 @@ const SearchFilters = () => {
         if (sampStatCheckedBoxes.length > 0) newFilters.push({ type: "Biological Status", value: sampStatCheckedBoxes });
         if (germplasmStorageCheckedBoxes.length > 0) newFilters.push({ type: "Germplasm Storage", value: germplasmStorageCheckedBoxes });
 
-        setActiveFilters(newFilters); // Update active filters in UI
+        setActiveFilters(newFilters);
       }
 
     } catch (error) {
@@ -288,7 +282,6 @@ const SearchFilters = () => {
     dispatch(setOriginOfMaterialCheckedBoxes([]));
     dispatch(setSampStatCheckedBoxes([]));
     dispatch(setGermplasmStorageCheckedBoxes([]));
-    // setIsAccessionDrawerOpen(false);
     setIsCropDrawerOpen(false);
     setIsDateDrawerOpen(false);
     setIsInstituteDrawerOpen(false);
@@ -301,7 +294,7 @@ const SearchFilters = () => {
   }, [resetTrigger]);
 
   const handleFileChange = (event) => {
-    setFile(event.target.files[0]); // Set the selected file
+    setFile(event.target.files[0]); 
   };
 
   const handleUploadClick = async () => {
@@ -388,7 +381,6 @@ const SearchFilters = () => {
 
   return (
     <>
-      {/* Container with Grid Layout */}
       <div
         style={{
           display: "grid",

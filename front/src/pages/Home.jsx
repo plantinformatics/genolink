@@ -23,7 +23,6 @@ const Home = () => {
               console.warn("Max retry limit reached for silent renewals. Taking action.");
               alert("Max retries for silent renewals reached. Please refresh the page.");
 
-              // Optionally take further action to stop additional requests
               window.close(); 
             }
           }

@@ -1,4 +1,4 @@
-require('dotenv').config(); // Load variables from .env file
+require('dotenv').config();
 
 module.exports = {
   gigwaServer: process.env.GIGWA_SERVER,
