@@ -7,10 +7,8 @@ dotenv.config(); // Load variables from .env file
 export default defineConfig({
   plugins: [react()],
   define: {
-    'import.meta.env.VITE_Genesys_OIDC_AUTHORITY': JSON.stringify(process.env.VITE_Genesys_OIDC_AUTHORITY),
     'import.meta.env.VITE_Genesys_OIDC_CLIENT_ID': JSON.stringify(process.env.VITE_Genesys_OIDC_CLIENT_ID),
     'import.meta.env.VITE_Genesys_OIDC_CLIENT_SECRET': JSON.stringify(process.env.VITE_Genesys_OIDC_CLIENT_SECRET),
-    'import.meta.env.VITE_Genesys_OIDC_REDIRECT_URI': JSON.stringify(process.env.VITE_Genesys_OIDC_REDIRECT_URI),
     'import.meta.env.VITE_GENOLINK_SERVER': JSON.stringify(process.env.VITE_GENOLINK_SERVER),
     'import.meta.env.VITE_GENESYS_SERVER': JSON.stringify(process.env.VITE_GENESYS_SERVER),
   },

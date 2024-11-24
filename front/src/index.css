@@ -26,7 +26,6 @@ a:hover {
 body {
   background: linear-gradient(to right, #EEF1F2,#F1F3F4, #F3F6F7);
   margin: auto;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
 }

@@ -10,6 +10,10 @@ class BaseApi {
         this.token = token; 
     }
 
+    getToken() {
+        return this.token;
+    }
+
     async post(endpoint, body = {}, customHeaders = {}, responseType = 'json') {
         try {
             const response = await axios.post(`${this.baseUrl}${endpoint}`, body, {

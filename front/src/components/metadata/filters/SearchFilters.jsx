@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import LoadingComponent from "../../LoadingComponent";
-import { useAuth } from "react-oidc-context";
 import { useDispatch, useSelector } from "react-redux";
 import { FaCircleXmark } from "react-icons/fa6";
 import {
@@ -23,10 +22,9 @@ import MetadataSearchResultTable from "../MetadataSearchResultTable";
 import DateRangeFilter from "./DateRangeFilter";
 import GenotypeExplorer from "../../genotype/GenotypeExplorer";
 import GenolinkInternalApi from "../../../api/GenolinkInternalApi";
-import GenesysApi from "../../../api/GenesysApi";
+import { genesysApi } from "../../../pages/Home";
 
 const SearchFilters = () => {
-  const auth = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [genesysHeight, setGenesysHeight] = useState("auto");
   const [isResetLoading, setIsResetLoading] = useState(false);
@@ -52,8 +50,9 @@ const SearchFilters = () => {
 
 
 
+
   const genolinkInternalApi = new GenolinkInternalApi();
-  const genesysApi = new GenesysApi(auth.user?.access_token);
+
 
   const checkedAccessions = useSelector((state) => state.checkedAccessions);
   const hasCheckedAccessions = Object.keys(checkedAccessions).length > 0;
@@ -98,18 +97,21 @@ const SearchFilters = () => {
   const wheatImage = '/Wheat.PNG';
 
   useEffect(() => {
-    if (Object.keys(activeFilters).length > 0 && searchButtonName !== "Update Search"){
+    if (Object.keys(activeFilters).length > 0 && searchButtonName !== "Update Search") {
       setSearchButtonName('Update Search')
     } else {
       setSearchButtonName('Search');
     }
-    }, [activeFilters]);
+  }, [activeFilters]);
 
 
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
+        if (!genesysApi.getToken()) {
+          await genesysApi.fetchAndSetToken();
+        }
         await genesysApi.fetchInitialFilterData(dispatch);
       } catch (error) {
         console.error("Error fetching initial data:", error);
@@ -119,7 +121,7 @@ const SearchFilters = () => {
     };
 
     fetchData();
-  }, [auth.user?.access_token, dispatch]);
+  }, [dispatch]);
 
   const removeFilter = (filterToRemove) => {
     switch (filterToRemove.type) {
@@ -294,7 +296,7 @@ const SearchFilters = () => {
   }, [resetTrigger]);
 
   const handleFileChange = (event) => {
-    setFile(event.target.files[0]); 
+    setFile(event.target.files[0]);
   };
 
   const handleUploadClick = async () => {
@@ -496,7 +498,7 @@ const SearchFilters = () => {
           {filterMode === "Passport Filter" && (
             <>
               <div>
-              <h5 style={{ visibility: activeFilters.length > 0 ? 'visible' : 'hidden' }}>Active Filters</h5>
+                <h5 style={{ visibility: activeFilters.length > 0 ? 'visible' : 'hidden' }}>Active Filters</h5>
                 {activeFilters.length > 0 ? (
                   <ul className="active-filters-list">
                     {activeFilters.map((filter, index) => (

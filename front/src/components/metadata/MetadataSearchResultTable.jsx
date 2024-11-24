@@ -2,18 +2,13 @@ import { useState } from "react";
 import "../../tableStyles.css";
 import { useSelector, useDispatch } from "react-redux";
 import LoadingComponent from "../LoadingComponent";
-import { genesysServer } from "../../config/apiConfig";
 import {
-  setCurrentPage,
-  setSearchResults,
   setCheckedAccessions,
   setCheckedAccessionNames,
 } from "../../actions";
-import axios from "axios";
-import { useAuth } from "react-oidc-context";
+import { genesysApi } from "../../pages/Home";
 
 const MetadataSearchResultTable = ({ filterCode }) => {
-  const auth = useAuth();
   const searchResults = useSelector((state) => state.searchResults);
   const totalAccessions = useSelector((state) => state.totalAccessions);
   const currentPage = useSelector((state) => state.currentPage);
@@ -28,7 +23,7 @@ const MetadataSearchResultTable = ({ filterCode }) => {
   const handleCheckboxChange = (item) => {
     const newCheckedAccessions = { ...checkedAccessions };
     const newCheckedAccessionNames = { ...checkedAccessionNames };
-  
+
     if (newCheckedAccessions[item.accessionNumber]) {
       delete newCheckedAccessions[item.accessionNumber];
       delete newCheckedAccessionNames[item.accessionNumber];
@@ -36,7 +31,7 @@ const MetadataSearchResultTable = ({ filterCode }) => {
       newCheckedAccessions[item.accessionNumber] = true;
       newCheckedAccessionNames[item.accessionNumber] = item.accessionName;
     }
-  
+
     dispatch(setCheckedAccessions(newCheckedAccessions));
     dispatch(setCheckedAccessionNames(newCheckedAccessionNames));
   };
@@ -44,7 +39,7 @@ const MetadataSearchResultTable = ({ filterCode }) => {
   const handleSelectAllChange = () => {
     const newCheckedAccessions = {};
     const newCheckedAccessionNames = {};
-  
+
     if (selectAll) {
       dispatch(setCheckedAccessions({}));
       dispatch(setCheckedAccessionNames({}));
@@ -56,49 +51,26 @@ const MetadataSearchResultTable = ({ filterCode }) => {
       dispatch(setCheckedAccessions(newCheckedAccessions));
       dispatch(setCheckedAccessionNames(newCheckedAccessionNames));
     }
-  
+
     setSelectAll(!selectAll);
   };
-  
 
-  const fetchMoreResults = () => {
-    const token = auth.user?.access_token;
-    const pageSize = 500;
-    const select = "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases";
 
-    if (currentPage !== undefined && currentPage !== null) {
-
+  const fetchMore = async () => {
+    try {
       setIsPaginating(true);
-      const GENESYS_API_URL = filterCode
-        ? `${genesysServer}/api/v1/acn/query?f=${filterCode}&p=${currentPage + 1
-        }&l=${pageSize}&select=${select}`
-        : `${genesysServer}/api/v1/acn/query?p=${currentPage + 1
-        }&l=${pageSize}&select=${select}`
-
-      axios
-        .post(GENESYS_API_URL, null, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-            Accept: "application/json, text/plain, */*",
-          },
-        })
-        .then((response) => {
-          dispatch(
-            setSearchResults({
-              ...searchResults,
-              content: [...searchResults.content, ...response.data.content],
-            })
-          );
-          dispatch(setCurrentPage(currentPage + 1));
-          setIsPaginating(false);
-        })
-        .catch((error) => {
-          console.error("Error fetching more data:", error);
-          setIsPaginating(false);
-        });
+      await genesysApi.fetchMoreResults({
+        filterCode,
+        currentPage,
+        pageSize: 500,
+        dispatch,
+        searchResults,
+      });
+    } catch (error) {
+      console.error('Error fetching more results:', error);
+    } finally {
+      setIsPaginating(false);
     }
-
   };
 
   const formatDate = (dateStr) => {
@@ -114,9 +86,6 @@ const MetadataSearchResultTable = ({ filterCode }) => {
   const handleRowClick = (index) => {
     setExpandedRow(expandedRow === index ? null : index);
   };
-
-
-
 
   return (
     <>
@@ -305,7 +274,7 @@ const MetadataSearchResultTable = ({ filterCode }) => {
         <button
           type="button"
           className="btn btn-primary"
-          onClick={fetchMoreResults}
+          onClick={fetchMore}
         >
           More Results
         </button>
