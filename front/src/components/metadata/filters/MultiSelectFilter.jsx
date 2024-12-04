@@ -195,7 +195,10 @@ const MultiSelectFilter = ({ options, type }) => {
   return (
     <div className="container-fluid mt-2">
       {options && (
-        <div className="d-flex flex-column">
+        <div className="d-flex flex-column" style={{
+          maxHeight: "600px",
+          overflowY: "auto",
+        }}>
           {options
             .filter((option) => option[0] !== "101")
             .sort((a, b) => {

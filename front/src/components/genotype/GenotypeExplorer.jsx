@@ -63,7 +63,7 @@ const GenotypeExplorer = () => {
     (state) => state.checkedAccessionNames
   );
   const checkedAccessions = Object.keys(checkedAccessionsObject);
-  const checkedResults = searchResults?.content?.filter((item) =>
+  const checkedResults = searchResults?.filter((item) =>
     checkedAccessions.includes(item.accessionNumber)
   );
   const dispatch = useDispatch();
@@ -119,7 +119,7 @@ const GenotypeExplorer = () => {
     try {
       if (selectedOption === "Gigwa") {
         if (!isGenomeSearchSubmit) {
-          const token = await genolinkGigwaApi.getGigwaToken(
+          await genolinkGigwaApi.getGigwaToken(
             accessMode === "private" ? username : "",
             accessMode === "private" ? password : ""
           );

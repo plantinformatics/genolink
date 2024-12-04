@@ -121,7 +121,7 @@ button:focus-visible {
 }
 
 .scrollable-table {
-  max-height: 600px; 
+  max-height: 1300px; 
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }

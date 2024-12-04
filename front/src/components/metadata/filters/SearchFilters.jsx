@@ -21,8 +21,9 @@ import AccessionFilter from "./AccessionFilter";
 import MetadataSearchResultTable from "../MetadataSearchResultTable";
 import DateRangeFilter from "./DateRangeFilter";
 import GenotypeExplorer from "../../genotype/GenotypeExplorer";
-import GenolinkInternalApi from "../../../api/GenolinkInternalApi";
 import { genesysApi } from "../../../pages/Home";
+import { genolinkGigwaApi } from "../../../pages/Home";
+import { genolinkInternalApi } from "../../../pages/Home";
 
 const SearchFilters = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -47,17 +48,20 @@ const SearchFilters = () => {
   const [activeFilters, setActiveFilters] = useState([]);
   const [filterBody, setFilterBody] = useState({});
   const [searchButtonName, setSearchButtonName] = useState("Search");
+  const [hasGenotype, setHasGenotype] = useState(false);
 
 
 
 
-  const genolinkInternalApi = new GenolinkInternalApi();
 
 
   const checkedAccessions = useSelector((state) => state.checkedAccessions);
   const hasCheckedAccessions = Object.keys(checkedAccessions).length > 0;
   const totalAccessions = useSelector((state) => state.totalAccessions);
   const searchResults = useSelector((state) => state.searchResults);
+  const isLoadingGenotypedAccessions = useSelector(
+    (state) => state.isLoadingGenotypedAccessions
+  );
 
   const instituteCheckedBoxes = useSelector(
     (state) => state.instituteCheckedBoxes
@@ -95,6 +99,12 @@ const SearchFilters = () => {
   const dispatch = useDispatch();
 
   const wheatImage = '/Wheat.PNG';
+
+  useEffect(() => {
+    if (Object.keys(checkedAccessions).length === 0) {
+      setGenesysHeight("auto");
+    }
+  }, [checkedAccessions]);
 
   useEffect(() => {
     if (Object.keys(activeFilters).length > 0 && searchButtonName !== "Update Search") {
@@ -206,6 +216,9 @@ const SearchFilters = () => {
     setFilterBody(updatedBody)
   };
 
+  const handleChange = () => {
+    setHasGenotype(!hasGenotype);
+  }
   const handleSearch = async (userInput = "") => {
     dispatch(setCheckedAccessions({}));
     setIsLoading(true);
@@ -246,7 +259,9 @@ const SearchFilters = () => {
     Object.keys(body).forEach((key) => body[key] === undefined && delete body[key]);
 
     try {
-      const filterCode = await genesysApi.applyFilter(body, dispatch);
+
+      const filterCode = await genesysApi.applyFilter(body, dispatch, hasGenotype);
+
       setFilterCode(filterCode);
       setIsLoading(false);
       setIsFilterApplied(true);
@@ -387,18 +402,28 @@ const SearchFilters = () => {
         style={{
           display: "grid",
           gridTemplateColumns: "minmax(280px, auto) 1fr",
-          gridTemplateRows: hasCheckedAccessions
-            ? "auto 1fr 5px 1fr"
-            : "auto 1fr 5px",
+          // gridTemplateRows: hasCheckedAccessions
+          //   ? "auto 1fr 5px 1fr auto"
+          //   : "auto 1fr auto",
+          // gridAutoRows: "min-content",
+          gridTemplateRows: (isLoading || isResetLoading)
+            ? hasCheckedAccessions
+              ? "auto 1fr 5px 1fr auto"
+              : "auto 1fr auto"
+            : "none",
+          gridAutoRows: (isLoading || isResetLoading)
+            ? "none"
+            : "min-content",
           gap: "0px",
           height: "100vh",
           padding: "10px",
+          overflowY: "auto",
         }}
       >
         {/* div1: Genolink Title */}
         <div
           style={{
-            gridColumn: "1 / 5",
+            gridColumn: "1 / 3",
             gridRow: "1",
             background: "green",
             color: "white",
@@ -408,7 +433,7 @@ const SearchFilters = () => {
         >
           <img
             src="/Genolink.png"
-            alt="Logo"
+            alt="Genolink-logo"
             style={{ marginRight: "20px", verticalAlign: "middle" }}
           />
           <h2 style={{ margin: "0", display: "inline" }}>Genolink</h2>
@@ -420,17 +445,18 @@ const SearchFilters = () => {
             maxWidth: "340px",
             overflowX: "auto",
             gridColumn: "1",
-            gridRow: "2 / 5",
+            gridRow: hasCheckedAccessions ? "2 / 5" : "2 / 4",
             background: "#50748c00",
             borderRight: "5px solid gray",
             padding: "10px",
             minWidth: "320px",
             overflow: "auto",
+            height: "100%"
           }}
         >
           <h4>Filters</h4>
-          {!isLoading && initialRequestSent &&
-            <h5>Total Accessions: {totalAccessions}</h5>
+          {initialRequestSent && ((!isLoading && !isLoadingGenotypedAccessions) ?
+            (<h5>Total Accessions: {totalAccessions}</h5>) : <LoadingComponent />)
           }
           <div style={{ marginBottom: "5px" }}>
             {initialRequestSent ? (
@@ -636,12 +662,24 @@ const SearchFilters = () => {
               </div>
             </>
           )}
+          <div>
+            <label style={{ fontWeight: 500 }}>
+              <input
+                type="checkbox"
+                checked={hasGenotype}
+                onChange={handleChange}
+                style={{ marginRight: "8px" }}
+              />
+              Check for genotype
+            </label>
+
+          </div>
         </div>
 
         {/* div2: Genesys Result */}
         <div
           style={{
-            gridColumn: "2 / 5",
+            gridColumn: "2",
             gridRow: "2",
             backgroundImage: `url(${wheatImage})`,
             backgroundSize: "cover",
@@ -649,7 +687,7 @@ const SearchFilters = () => {
             padding: "10px",
             overflow: "auto",
             minHeight: "100px",
-            height: genesysHeight,
+            height: hasCheckedAccessions ? genesysHeight : "100%",
           }}
         >
           {(isLoading || isResetLoading) ? (
@@ -704,24 +742,25 @@ const SearchFilters = () => {
 
               <div style={{ flex: '1 1 auto' }}>
                 {Object.keys(searchResults).length !== 0 ? (
-                  <MetadataSearchResultTable filterCode={filterCode} />
+                  <MetadataSearchResultTable filterCode={filterCode} hasGenotype={hasGenotype} genolinkGigwaApi={genolinkGigwaApi} />
                 ) : null}
               </div>
             </div>
           )}
         </div>
         {/* Horizontal Divider */}
-        <div
-          style={{
-            gridColumn: "2 / 5",
-            gridRow: "3",
-            background: "gray",
-            height: "5px",
-            cursor: "row-resize",
-          }}
-          onMouseDown={handleHorizontalDrag}
-        ></div>
-
+        {Object.keys(checkedAccessions).length > 0 && (
+          <div
+            style={{
+              gridColumn: "2",
+              gridRow: "3",
+              background: "gray",
+              height: "5px",
+              cursor: "row-resize",
+            }}
+            onMouseDown={handleHorizontalDrag}
+          ></div>
+        )}
         {/* div4: Genotype Result */}
         {Object.keys(checkedAccessions).length > 0 && (
           <div
@@ -739,6 +778,45 @@ const SearchFilters = () => {
           </div>
         )}
 
+        {/* New About Section */}
+        <div
+          style={{
+            gridColumn: "1 / 3", // Takes both columns
+            gridRow: hasCheckedAccessions ? "5" : "4",
+            background: "green",
+            color: "white",
+            padding: "20px",
+            flexDirection: "column",
+            alignItems: "center",
+            textAlign: "center",
+          }}
+        >
+          <p style={{ textAlign: "center", margin: "0 0 10px 0", fontSize: "15px" }}>
+            Genolink is a middleware connecting genotype databases with Genesys-PGR. Funded by the $30M Australian Grains Genebank Partnership, it enhances genetic resource potential for Australian grain growers.            <a
+              href="https://agriculture.vic.gov.au/crops-and-horticulture/the-australian-grains-genebank"
+              style={{ color: "white", textDecoration: "underline" }}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Learn More
+            </a>
+          </p>
+          <div
+            style={{
+              display: "flex",
+              gap: "20px",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <img src="/agriculture-victoria-logo.png" alt="Agriculture-Victoria-logo" style={{ height: "60px" }} />
+            <img src="/Australian-Grains-Genebank-logo.jpg" alt="Australian-Grains-Genebank-logo" style={{ height: "60px" }} />
+            <img src="/Genesys-logo.jpg" alt="Genesys-logo.jpg" style={{ height: "60px" }} />
+            <img src="/Germinate-logo.png" alt="Germinate-logo" style={{ height: "60px" }} />
+            <img src="/Gigwa-logo.png" alt="Gigwa-logo" style={{ height: "60px" }} />
+            <img src="/GRDC-logo.jpg" alt="GRDC-logo" style={{ height: "60px" }} />
+          </div>
+        </div>
       </div>
     </>
   );

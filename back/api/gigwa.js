@@ -344,17 +344,17 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
       Accessions: accessions,
     }).then((response) => response.data);
 
-    const samples = samplesObj.Samples.map((obj) => obj.Sample);
-    const Accessions = samplesObj.Samples.map((obj) => obj.Accession);
+    const samples = samplesObj.Samples.map((obj) => obj.Sample || []);
+    const Accessions = samplesObj.Samples.map((obj) => obj.Accession || []);
 
-    const accessionPlusAccessionName = Object.entries(accessionNames)
-      .filter(([key]) => Accessions.includes(key))
-      .flatMap(([key, value]) => {
-        return samplesObj.Samples
-          .filter((obj) => obj.Accession === key)
-          .map((obj) => `${value}§${key}§${obj.Sample}`);
-      });
-        
+    const accessionPlusAccessionName = Object.keys(accessionNames).length > 0 ?
+      Object.entries(accessionNames).filter(([key]) => Accessions.includes(key))
+        .flatMap(([key, value]) => {
+          return samplesObj.Samples
+            .filter((obj) => obj.Accession === key)
+            .map((obj) => `${value}§${key}§${obj.Sample}`);
+        }) : [];
+
     const numberOfMappedAccessions = Array.from(new Set(Accessions)).length;
     const numberOfGenesysAccessions = accessions.length;
 
@@ -368,7 +368,7 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
     const studyDbIds = variantSets.map((vs) => vs.studyDbId);
     const sampleNames = [];
     for (const vs of variantSets) {
-      const parts = vs.variantSetDbId.split("§").slice(1); 
+      const parts = vs.variantSetDbId.split("§").slice(1);
       for (const sample of samples) {
         sampleNames.push(`${sample}-${parts.join("-")}`);
       }

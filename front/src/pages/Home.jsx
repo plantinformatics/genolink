@@ -2,8 +2,14 @@ import { useEffect } from "react";
 import GenolinkApi from "../api/GenolinkApi";
 import GenesysApi from "../api/GenesysApi";
 import SearchFilters from "../components/metadata/filters/SearchFilters";
+import GenolinkGigwaApi from "../api/GenolinkGigwaApi";
+import GenolinkInternalApi from "../api/GenolinkInternalApi";
+
 
 export const genesysApi = new GenesysApi();
+export const genolinkGigwaApi = new GenolinkGigwaApi();
+export const genolinkInternalApi = new GenolinkInternalApi();
+
 
 const Home = () => {
   let genesysToken;
@@ -14,8 +20,15 @@ const Home = () => {
       try {
         await genesysApi.fetchAndSetToken();
         genesysToken = genesysApi.getToken();
-        genolinkApi.setToken(genesysToken);
+        // genolinkApi.setToken(genesysToken);
         passTokenToServer(genesysToken);
+
+        const accessionResult = await genolinkInternalApi.getAllAccessions();
+        genesysApi.setGenotypedAccessions(accessionResult.genotypedAccessions);
+        // await genolinkGigwaApi.getGigwaToken(
+        //   "",
+        //   ""
+        // );
       } catch (error) {
         console.error("Error in setting Genesys Token:", error);
       }

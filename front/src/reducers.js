@@ -19,12 +19,14 @@ const initialState = {
   currentPage: 0,
   accessionNumbers: [],
   totalAccessions: 0,
+  totalPreGenotypedAccessions: 0,
   searchAcc: "",
   creationStartDate: null,
   creationEndDate: null,
   checkedAccessions: {},
   checkedAccessionNames: {},
   platform: "Gigwa",
+  isLoadingGenotypedAccessions: false,
 };
 
 const rootReducer = (state = initialState, action) => {
@@ -113,11 +115,11 @@ const rootReducer = (state = initialState, action) => {
         ...state,
         sampStatList: action.payload,
       };
-      case "SET_GERMPLASM_STORAGE_LIST":
-        return {
-          ...state,
-          germplasmStorageList: action.payload,
-        };
+    case "SET_GERMPLASM_STORAGE_LIST":
+      return {
+        ...state,
+        germplasmStorageList: action.payload,
+      };
     case "SET_ACCESSION_NUMBER":
       return {
         ...state,
@@ -144,6 +146,11 @@ const rootReducer = (state = initialState, action) => {
         ...state,
         totalAccessions: action.payload,
       };
+    case "SET_TOTAL_PRE_GENOTYPED_ACCESSIONS":
+      return {
+        ...state,
+        totalPreGenotypedAccessions: action.payload,
+      };
     case "SET_SEARCH_ACC":
       return {
         ...state,
@@ -163,6 +170,11 @@ const rootReducer = (state = initialState, action) => {
       return {
         ...state,
         platform: action.payload,
+      };
+    case "SET_LOADING_GENOTYPED_ACCESSIONS":
+      return {
+        ...state,
+        isLoadingGenotypedAccessions: action.payload,
       };
     default:
       return state;

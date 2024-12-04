@@ -19,6 +19,16 @@ class GenolinkInternalApi extends BaseApi {
       throw error;
     }
   }
+
+  async getAllAccessions() {
+    try {
+      const response = await this.get('/api/internalApi/getAllAccessions');
+      return response; 
+    } catch (error) {
+      console.error('Error fetching all accessions:', error);
+      throw error;
+    }
+  }
 }
 
 export default GenolinkInternalApi;

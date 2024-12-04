@@ -88,6 +88,10 @@ export const setTotalAccessions = (totalAccessions) => ({
   type: "SET_TOTAL_ACCESSIONS",
   payload: totalAccessions,
 });
+export const setTotalPreGenotypedAccessions = (totalPreGenotypedAccessions) => ({
+  type: "SET_TOTAL_PRE_GENOTYPED_ACCESSIONS",
+  payload: totalPreGenotypedAccessions,
+});
 export const setSearchAcc = (searchAcc) => ({
   type: "SET_SEARCH_ACC",
   payload: searchAcc,
@@ -111,4 +115,8 @@ export const setCheckedAccessionNames = (accessionNames) => ({
 export const setPlatform = (platform) => ({
   type: "SET_PLATFORM",
   payload: platform,
+});
+export const setLoadingGenotypedAccessions = (isLoading) => ({
+  type: "SET_LOADING_GENOTYPED_ACCESSIONS",
+  payload: isLoading,
 });

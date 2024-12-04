@@ -8,17 +8,24 @@ import {
 } from "../../actions";
 import { genesysApi } from "../../pages/Home";
 
-const MetadataSearchResultTable = ({ filterCode }) => {
+const MetadataSearchResultTable = ({ filterCode, hasGenotype }) => {
   const searchResults = useSelector((state) => state.searchResults);
   const totalAccessions = useSelector((state) => state.totalAccessions);
+  const totalPreGenotypedAccessions = useSelector((state) => state.totalPreGenotypedAccessions);
   const currentPage = useSelector((state) => state.currentPage);
 
   const [isPaginating, setIsPaginating] = useState(false);
   const [selectAll, setSelectAll] = useState(false);
   const [expandedRow, setExpandedRow] = useState(null);
+  const [remainingPages, setRemainingPages] = useState(
+    Math.floor((hasGenotype ? totalPreGenotypedAccessions : totalAccessions) / (hasGenotype ? 10000 : 500))
+  );
   const dispatch = useDispatch();
   const checkedAccessions = useSelector((state) => state.checkedAccessions);
   const checkedAccessionNames = useSelector((state) => state.checkedAccessionNames);
+  const isLoadingGenotypedAccessions = useSelector(
+    (state) => state.isLoadingGenotypedAccessions
+  );
 
   const handleCheckboxChange = (item) => {
     const newCheckedAccessions = { ...checkedAccessions };
@@ -44,7 +51,7 @@ const MetadataSearchResultTable = ({ filterCode }) => {
       dispatch(setCheckedAccessions({}));
       dispatch(setCheckedAccessionNames({}));
     } else {
-      searchResults?.content.forEach((item) => {
+      searchResults?.forEach((item) => {
         newCheckedAccessions[item.accessionNumber] = true;
         newCheckedAccessionNames[item.accessionNumber] = item.accessionName;
       });
@@ -62,10 +69,12 @@ const MetadataSearchResultTable = ({ filterCode }) => {
       await genesysApi.fetchMoreResults({
         filterCode,
         currentPage,
-        pageSize: 500,
+        pageSize: hasGenotype ? 10000 : 500,
         dispatch,
         searchResults,
+        hasGenotype,
       });
+      setRemainingPages((prev) => Math.max(prev - 1, 0));
     } catch (error) {
       console.error('Error fetching more results:', error);
     } finally {
@@ -115,7 +124,7 @@ const MetadataSearchResultTable = ({ filterCode }) => {
             </tr>
           </thead>
           <tbody>
-            {searchResults?.content.map((item, index) => (
+            {searchResults?.map((item, index) => (
               <tr
                 key={item.uuid || item.id || index}
                 style={{
@@ -268,17 +277,16 @@ const MetadataSearchResultTable = ({ filterCode }) => {
         </table>
       </div>
 
-      {isPaginating ? (
-        <LoadingComponent />
-      ) : totalAccessions > 50 ? (
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={fetchMore}
-        >
-          More Results
-        </button>
-      ) : null}
+      {(!isPaginating && !isLoadingGenotypedAccessions) &&
+        (remainingPages > 0 ? (
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={fetchMore}
+          >
+            More Results ({remainingPages})
+          </button>
+        ) : null)}
     </>
   );
 };

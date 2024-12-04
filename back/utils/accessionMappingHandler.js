@@ -29,6 +29,13 @@ const accessionMappingHandler = async (req, res) => {
       return;
     }
 
+    if (sampleAccessions.length === 0) {
+      // Return an empty response if no mappings are found
+      logger.info("No sample accessions found for the provided list.");
+      res.status(200).send({ Samples: [] });
+      return;
+    }
+
     // Map the results to an array of sample names
     const samples = sampleAccessions.map((sa) => ({
       Accession: sa.Accession,

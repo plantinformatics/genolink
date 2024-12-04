@@ -17,13 +17,14 @@ class GenolinkGigwaApi extends BaseApi {
     }
   }
 
-  async searchSamplesInDatasets(accessions, accessionNames) {
+  async searchSamplesInDatasets(accessions, accessionNames, onlyAccessions = false) {
     try {
       if (!this.token) throw new Error("Token not available. Please authenticate first.");
       const body = {
         gigwaToken: this.token,
         accessions: accessions,
         accessionNames: accessionNames,
+        onlyAccessions: onlyAccessions
       };
       return await this.post("/api/gigwa/searchSamplesInDatasets", body);
     } catch (error) {
