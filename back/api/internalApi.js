@@ -17,20 +17,23 @@ router.post("/accessionMapping", accessionMappingHandler);
 
 router.get("/getAllAccessions", async (req, res) => {
   try {
-
     const totalAccessions = await db.SampleAccession.count();
 
-    const sampleAccessions = await db.SampleAccession.findAll({
-      attributes: ['Accession'], 
+    const accessionsWithSamples = await db.SampleAccession.findAll({
+      attributes: ['Accession', 'Sample'], // Include Sample alongside Accession
     });
-    const accessions = sampleAccessions.map(sa =>
-      sa.Accession
-    );
 
-    res.status(200).send({ genotypedAccessions: accessions, totalAccessions });
-    logger.info("Fetched all accessions successfully.");
+    const accessions = accessionsWithSamples.map(sa => sa.Accession);
+    const samples = accessionsWithSamples.map(sa => sa.Sample);
+
+    res.status(200).send({ 
+      genotypedAccessions: accessions, 
+      samples, 
+      totalAccessions 
+    });
+    logger.info("Fetched all accessions and samples successfully.");
   } catch (error) {
-    logger.error("Error fetching all accessions:", error);
+    logger.error("Error fetching all accessions and samples:", error);
     res.status(500).send({ message: "Internal server error" });
   }
 });

@@ -21,6 +21,7 @@ class GenesysApi extends BaseApi {
   constructor() {
     super(genesysServer);
     this.genotypedAccessions = [];
+    this.genotypedSamples = [];
   }
 
   setGenotypedAccessions(genotypedAccessions) {
@@ -29,6 +30,14 @@ class GenesysApi extends BaseApi {
 
   getGenotypedAccessions() {
     return this.genotypedAccessions;
+  }
+
+  setGenotypedSamples(genotypedSamples) {
+    this.genotypedSamples = genotypedSamples;
+  }
+
+  getGenotypedSamples() {
+    return this.genotypedSamples;
   }
 
   async fetchAndSetToken() {
@@ -108,7 +117,6 @@ class GenesysApi extends BaseApi {
         this.post(endpointQuery, filterData),
         this.post(endpointFilter, filterData),
       ]);
-
       if (hasGenotype) {
         const genesysAccessions = queryData.content.map(item => item.accessionNumber);
         let genotypedResult = [];
@@ -273,6 +281,144 @@ class GenesysApi extends BaseApi {
       throw error;
     }
   }
+
+  async downloadFilteredData(filterData, hasGenotype) {
+    try {
+      const pageSize = 10000;
+      const batchSize = 50;
+      const select = "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases";
+
+      const firstGenesysEndpoint = `/api/v1/acn/query?p=0&l=${pageSize}&select=${select}`;
+      const firstGenesysResult = await this.post(firstGenesysEndpoint, filterData);
+      let allResults = firstGenesysResult.content || [];
+      const filterCode = firstGenesysResult.filterCode;
+
+      if (!firstGenesysResult || !firstGenesysResult.totalElements) {
+        console.error("No data available or totalElements missing.");
+        return;
+      }
+
+      const totalPages = Math.ceil(firstGenesysResult.totalElements / pageSize);
+
+      const genesysRequests = [];
+      for (let genesysPage = 1; genesysPage < totalPages; genesysPage++) {
+        const endpoint = `/api/v1/acn/query?f=${filterCode}&p=${genesysPage}&l=${pageSize}&select=${select}`;
+        genesysRequests.push(async () => {
+          const response = await this.post(endpoint, null);
+          return response;
+        });
+      }
+
+      for (let i = 0; i < genesysRequests.length; i += batchSize) {
+        const batch = genesysRequests.slice(i, i + batchSize);
+        const batchResults = await Promise.all(batch.map(req => req()));
+
+        batchResults.forEach(genesysResult => {
+          if (genesysResult && genesysResult.content) {
+            allResults.push(...genesysResult.content);
+          }
+        });
+      }
+
+      if (allResults.length > 0) {
+        if (hasGenotype) {
+          allResults = allResults.filter(result => this.genotypedAccessions.includes(result.accessionNumber));
+        }
+        const fieldsToExport = {
+          "Institute Code": "instituteCode",
+          "Holding Institute": "institute.fullName",
+          "Accession Number": "accessionNumber",
+          "Accession Name": "accessionName",
+          "Aliases": "aliases",
+          "Taxonomy": "taxonomy.taxonName",
+          "Crop Name": "cropName",
+          "Provenance of Material": "countryOfOrigin.name",
+          "Acquisition Date": "acquisitionDate",
+          "DOI": "doi",
+          "Last Updated": "lastModifiedDate",
+          "isGenotyped": "isGenotyped",
+          "GenotypeID": "GenotypeID",
+        };
+
+        const tsvContent = this.generateTSV(allResults, fieldsToExport);
+
+        this.downloadFile(tsvContent, "filtered_data_all_pages.tsv", "text/tab-separated-values");
+      } else {
+        console.error("No data available to export.");
+      }
+    } catch (error) {
+      console.error("Error downloading filtered data:", error);
+    }
+  }
+
+
+  generateTSV(data, fieldsMap) {
+    const header = Object.keys(fieldsMap).join("\t");
+
+    const rows = data.map(item => {
+      return Object.entries(fieldsMap)
+        .map(([_, fieldPath]) => {
+
+          if (fieldPath === "isGenotyped") {
+            return this.genotypedAccessions.includes(item.accessionNumber) ? "Yes" : "No";
+          }
+
+          if (fieldPath === "GenotypeID") {
+            const index = this.genotypedAccessions.indexOf(item.accessionNumber);
+            return index !== -1 ? this.genotypedSamples[index] : "N/A";
+          }
+          if (fieldPath === "institute.fullName") {
+            return item["institute.fullName"] || "";
+          }
+
+          if (fieldPath === "countryOfOrigin.name") {
+            return item["countryOfOrigin.name"] || "";
+          }
+
+          if (fieldPath === "taxonomy.taxonName") {
+            return item["taxonomy.taxonName"] || "";
+          }
+
+          if (fieldPath === "aliases") {
+            return item.aliases && item.aliases.length > 0
+              ? item.aliases
+                .filter(alias => alias.aliasType !== "ACCENAME")
+                .map(alias => `${alias.name}${alias.usedBy ? ` ${alias.usedBy}` : ''}`)
+                .join(", ")
+              : "";
+          }
+
+          if (fieldPath === "acquisitionDate") {
+            const dateStr = item.acquisitionDate;
+            if (dateStr && dateStr.length === 8) {
+              const year = dateStr.substring(0, 4);
+              const month = dateStr.substring(4, 6);
+              const day = dateStr.substring(6, 8);
+              return `${day}-${month}-${year}`;
+            }
+            return dateStr || "";
+          }
+
+          return item[fieldPath] || "";
+        })
+        .join("\t");
+    });
+
+    return [header, ...rows].join("\n");
+  }
+
+  downloadFile(content, filename, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  }
+
 }
 
 export default GenesysApi;

@@ -25,6 +25,7 @@ const Home = () => {
 
         const accessionResult = await genolinkInternalApi.getAllAccessions();
         genesysApi.setGenotypedAccessions(accessionResult.genotypedAccessions);
+        genesysApi.setGenotypedSamples(accessionResult.samples);
         // await genolinkGigwaApi.getGigwaToken(
         //   "",
         //   ""

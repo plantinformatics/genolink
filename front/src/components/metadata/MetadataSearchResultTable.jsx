@@ -8,13 +8,14 @@ import {
 } from "../../actions";
 import { genesysApi } from "../../pages/Home";
 
-const MetadataSearchResultTable = ({ filterCode, hasGenotype }) => {
+const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
   const searchResults = useSelector((state) => state.searchResults);
   const totalAccessions = useSelector((state) => state.totalAccessions);
   const totalPreGenotypedAccessions = useSelector((state) => state.totalPreGenotypedAccessions);
   const currentPage = useSelector((state) => state.currentPage);
 
   const [isPaginating, setIsPaginating] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [selectAll, setSelectAll] = useState(false);
   const [expandedRow, setExpandedRow] = useState(null);
   const [remainingPages, setRemainingPages] = useState(
@@ -96,6 +97,22 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype }) => {
     setExpandedRow(expandedRow === index ? null : index);
   };
 
+  const handleExportPassportData = async () => {
+    try {
+      setIsDownloading(true);
+      if (Object.keys(filterBody).length === 0) {
+        alert("Please apply filters before exporting data.");
+        return;
+      }
+      await genesysApi.downloadFilteredData(filterBody, hasGenotype);
+      setIsDownloading(false);
+    } catch (error) {
+      setIsDownloading(false);
+      console.error("Error exporting passport data:", error);
+      alert("Failed to export passport data. Please try again.");
+    }
+  };
+
   return (
     <>
       <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
@@ -121,158 +138,175 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype }) => {
               <th scope="col">Acquisition Date</th>
               <th scope="col">DOI</th>
               <th scope="col">Last Updated</th>
+              <th scope="col">isGenotyped</th>
+              <th scope="col">GenotypeID</th>
             </tr>
           </thead>
           <tbody>
-            {searchResults?.map((item, index) => (
-              <tr
-                key={item.uuid || item.id || index}
-                style={{
-                  backgroundColor: 'white',
-                  cursor: 'pointer',
-                }}
-                onClick={() => handleRowClick(index)}
-              >
-                <td
-                  className="cell"
+            {searchResults?.map((item, index) => {
+              const genotypedIndex = genesysApi.genotypedAccessions.indexOf(item.accessionNumber);
+              const isGenotyped = genotypedIndex !== -1;
+              const genotypeID = isGenotyped
+                ? genesysApi.genotypedSamples[genotypedIndex]
+                : "N/A";
+              return (
+                <tr
+                  key={item.uuid || item.id || index}
                   style={{
-                    overflow: expandedRow === index ? 'visible' : 'hidden',
-                    whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
+                    backgroundColor: 'white',
+                    cursor: 'pointer',
                   }}
+                  onClick={() => handleRowClick(index)}
                 >
-                  <input
-                    type="checkbox"
-                    checked={checkedAccessions[item.accessionNumber] || false}
-                    onChange={() => handleCheckboxChange(item)}
-                  />
-                </td>
-                <td
-                  className="cell"
-                  style={{
-                    overflow: expandedRow === index ? 'visible' : 'hidden',
-                    whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
-                  }}
-                >
-                  {index + 1}
-                </td>
-                <td
-                  className="cell"
-                  style={{
-                    overflow: expandedRow === index ? 'visible' : 'hidden',
-                    whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
-                  }}
-                >
-                  {item.instituteCode || ""}
-                </td>
-                <td
-                  className="cell"
-                  style={{
-                    overflow: expandedRow === index ? 'visible' : 'hidden',
-                    whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
-                  }}
-                >
-                  {item["institute.fullName"] ? (
-                    item["institute.fullName"]
-                  ) : (
-                    ""
-                  )}
-                </td>
-                <td
-                  className="cell"
-                  style={{
-                    overflow: expandedRow === index ? 'visible' : 'hidden',
-                    whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
-                  }}
-                >
-                  <a
-                    href={`https://www.genesys-pgr.org/a/${item.uuid}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <td
+                    className="cell"
+                    style={{
+                      overflow: expandedRow === index ? 'visible' : 'hidden',
+                      whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
+                    }}
                   >
-                    {item.accessionNumber || ""}
-                  </a>
-                </td>
+                    <input
+                      type="checkbox"
+                      checked={checkedAccessions[item.accessionNumber] || false}
+                      onChange={() => handleCheckboxChange(item)}
+                    />
+                  </td>
+                  <td
+                    className="cell"
+                    style={{
+                      overflow: expandedRow === index ? 'visible' : 'hidden',
+                      whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
+                    }}
+                  >
+                    {index + 1}
+                  </td>
+                  <td
+                    className="cell"
+                    style={{
+                      overflow: expandedRow === index ? 'visible' : 'hidden',
+                      whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
+                    }}
+                  >
+                    {item.instituteCode || ""}
+                  </td>
+                  <td
+                    className="cell"
+                    style={{
+                      overflow: expandedRow === index ? 'visible' : 'hidden',
+                      whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
+                    }}
+                  >
+                    {item["institute.fullName"] ? (
+                      item["institute.fullName"]
+                    ) : (
+                      ""
+                    )}
+                  </td>
+                  <td
+                    className="cell"
+                    style={{
+                      overflow: expandedRow === index ? 'visible' : 'hidden',
+                      whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
+                    }}
+                  >
+                    <a
+                      href={`https://www.genesys-pgr.org/a/${item.uuid}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {item.accessionNumber || ""}
+                    </a>
+                  </td>
 
-                <td
-                  className="cell"
-                  style={{
+                  <td
+                    className="cell"
+                    style={{
+                      overflow: expandedRow === index ? 'visible' : 'hidden',
+                      whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
+                    }}
+                  >
+                    {item.accessionName || ""}
+                  </td>
+                  <td
+                    className="cell"
+                    style={{
+                      overflow: expandedRow === index ? 'visible' : 'hidden',
+                      whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
+                    }}
+                  >
+                    {item.aliases && item.aliases.length > 0
+                      ? item.aliases
+                        .filter(alias => alias.aliasType !== "ACCENAME")
+                        .map(alias => (
+                          `${alias.name}${alias.usedBy ? ` ${alias.usedBy}` : ''}`
+                        )).join(', ')
+                      : ""}
+                  </td>
+                  <td
+                    className="cell"
+                    style={{
+                      overflow: expandedRow === index ? 'visible' : 'hidden',
+                      whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
+                    }}
+                  >
+                    {item["taxonomy.taxonName"] || ""}
+                  </td>
+                  <td
+                    className="cell"
+                    style={{
+                      overflow: expandedRow === index ? 'visible' : 'hidden',
+                      whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
+                    }}
+                  >
+                    {item.cropName || ""}
+                  </td>
+                  <td
+                    className="cell"
+                    style={{
+                      overflow: expandedRow === index ? 'visible' : 'hidden',
+                      whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
+                    }}
+                  >
+                    {item["countryOfOrigin.name"] || ""}
+                  </td>
+                  <td
+                    className="cell"
+                    style={{
+                      overflow: expandedRow === index ? 'visible' : 'hidden',
+                      whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
+                    }}
+                  >
+                    {formatDate(item.acquisitionDate)}
+                  </td>
+                  <td
+                    className="cell"
+                    style={{
+                      overflow: expandedRow === index ? 'visible' : 'hidden',
+                      whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
+                    }}
+                  >
+                    {item.doi || ""}
+                  </td>
+                  <td
+                    className="cell"
+                    style={{
+                      overflow: expandedRow === index ? 'visible' : 'hidden',
+                      whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
+                    }}
+                  >
+                    {item.lastModifiedDate || ""}
+                  </td>
+                  <td className="cell" style={{
                     overflow: expandedRow === index ? 'visible' : 'hidden',
                     whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
-                  }}
-                >
-                  {item.accessionName || ""}
-                </td>
-                <td
-                  className="cell"
-                  style={{
+                  }}>{isGenotyped ? "Yes" : "No"}</td>
+                  <td className="cell" style={{
                     overflow: expandedRow === index ? 'visible' : 'hidden',
                     whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
-                  }}
-                >
-                  {item.aliases && item.aliases.length > 0
-                    ? item.aliases
-                      .filter(alias => alias.aliasType !== "ACCENAME")
-                      .map(alias => (
-                        `${alias.name}${alias.usedBy ? ` ${alias.usedBy}` : ''}`
-                      )).join(', ')
-                    : ""}
-                </td>
-                <td
-                  className="cell"
-                  style={{
-                    overflow: expandedRow === index ? 'visible' : 'hidden',
-                    whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
-                  }}
-                >
-                  {item["taxonomy.taxonName"] || ""}
-                </td>
-                <td
-                  className="cell"
-                  style={{
-                    overflow: expandedRow === index ? 'visible' : 'hidden',
-                    whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
-                  }}
-                >
-                  {item.cropName || ""}
-                </td>
-                <td
-                  className="cell"
-                  style={{
-                    overflow: expandedRow === index ? 'visible' : 'hidden',
-                    whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
-                  }}
-                >
-                  {item["countryOfOrigin.name"] || ""}
-                </td>
-                <td
-                  className="cell"
-                  style={{
-                    overflow: expandedRow === index ? 'visible' : 'hidden',
-                    whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
-                  }}
-                >
-                  {formatDate(item.acquisitionDate)}
-                </td>
-                <td
-                  className="cell"
-                  style={{
-                    overflow: expandedRow === index ? 'visible' : 'hidden',
-                    whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
-                  }}
-                >
-                  {item.doi || ""}
-                </td>
-                <td
-                  className="cell"
-                  style={{
-                    overflow: expandedRow === index ? 'visible' : 'hidden',
-                    whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
-                  }}
-                >
-                  {item.lastModifiedDate || ""}
-                </td>
-              </tr>
-            ))}
+                  }}>{genotypeID}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -287,6 +321,10 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype }) => {
             More Results ({remainingPages})
           </button>
         ) : null)}
+      {isDownloading ? (
+        <LoadingComponent />
+      ) :
+        <button onClick={handleExportPassportData} className="btn btn-primary" style={{ marginLeft: "10px" }}>Export All Passport Data</button>}
     </>
   );
 };

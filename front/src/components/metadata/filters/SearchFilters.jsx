@@ -49,12 +49,6 @@ const SearchFilters = () => {
   const [filterBody, setFilterBody] = useState({});
   const [searchButtonName, setSearchButtonName] = useState("Search");
   const [hasGenotype, setHasGenotype] = useState(false);
-
-
-
-
-
-
   const checkedAccessions = useSelector((state) => state.checkedAccessions);
   const hasCheckedAccessions = Object.keys(checkedAccessions).length > 0;
   const totalAccessions = useSelector((state) => state.totalAccessions);
@@ -224,8 +218,10 @@ const SearchFilters = () => {
     setIsLoading(true);
     setInitialRequestSent(true);
 
-    const body = Object.keys(filterBody).length > 0 ? filterBody : {
+    const body = {
       // Text search
+      ...filterBody,
+
       _text: userInput || (inputValue && inputValue.trim()),
 
       // Accession Numbers
@@ -255,33 +251,30 @@ const SearchFilters = () => {
       // Germplasm Storage
       ...(germplasmStorageCheckedBoxes.length > 0 && { storage: germplasmStorageCheckedBoxes }),
     };
-
     Object.keys(body).forEach((key) => body[key] === undefined && delete body[key]);
 
     try {
-
       const filterCode = await genesysApi.applyFilter(body, dispatch, hasGenotype);
 
       setFilterCode(filterCode);
       setIsLoading(false);
       setIsFilterApplied(true);
 
-      if (Object.keys(filterBody).length === 0) {
-        const newFilters = [];
-        if (userInput) newFilters.push({ type: "Text", value: userInput });
-        if (accessionNumbers.length > 0) newFilters.push({ type: "Accession Numbers", value: accessionNumbers });
-        if (instituteCheckedBoxes.length > 0) newFilters.push({ type: "Institute Code", value: instituteCheckedBoxes });
-        if (creationStartDate) newFilters.push({ type: "Start Date", value: creationStartDate });
-        if (creationEndDate) newFilters.push({ type: "End Date", value: creationEndDate });
-        if (cropCheckedBoxes.length > 0) newFilters.push({ type: "Crop", value: cropCheckedBoxes });
-        if (taxonomyCheckedBoxes.length > 0) newFilters.push({ type: "Taxonomy", value: taxonomyCheckedBoxes });
-        if (originOfMaterialCheckedBoxes.length > 0) newFilters.push({ type: "Origin of Material", value: originOfMaterialCheckedBoxes });
-        if (sampStatCheckedBoxes.length > 0) newFilters.push({ type: "Biological Status", value: sampStatCheckedBoxes });
-        if (germplasmStorageCheckedBoxes.length > 0) newFilters.push({ type: "Germplasm Storage", value: germplasmStorageCheckedBoxes });
+      const newFilters = [];
+      if (userInput) newFilters.push({ type: "Text", value: userInput });
+      if (accessionNumbers.length > 0) newFilters.push({ type: "Accession Numbers", value: accessionNumbers });
+      if (instituteCheckedBoxes.length > 0) newFilters.push({ type: "Institute Code", value: instituteCheckedBoxes });
+      if (creationStartDate) newFilters.push({ type: "Start Date", value: creationStartDate });
+      if (creationEndDate) newFilters.push({ type: "End Date", value: creationEndDate });
+      if (cropCheckedBoxes.length > 0) newFilters.push({ type: "Crop", value: cropCheckedBoxes });
+      if (taxonomyCheckedBoxes.length > 0) newFilters.push({ type: "Taxonomy", value: taxonomyCheckedBoxes });
+      if (originOfMaterialCheckedBoxes.length > 0) newFilters.push({ type: "Origin of Material", value: originOfMaterialCheckedBoxes });
+      if (sampStatCheckedBoxes.length > 0) newFilters.push({ type: "Biological Status", value: sampStatCheckedBoxes });
+      if (germplasmStorageCheckedBoxes.length > 0) newFilters.push({ type: "Germplasm Storage", value: germplasmStorageCheckedBoxes });
 
-        setActiveFilters(newFilters);
-      }
+      setActiveFilters(newFilters);
 
+      setFilterBody(body);
     } catch (error) {
       console.error("Error applying filter:", error);
       setIsLoading(false);
@@ -742,7 +735,7 @@ const SearchFilters = () => {
 
               <div style={{ flex: '1 1 auto' }}>
                 {Object.keys(searchResults).length !== 0 ? (
-                  <MetadataSearchResultTable filterCode={filterCode} hasGenotype={hasGenotype} genolinkGigwaApi={genolinkGigwaApi} />
+                  <MetadataSearchResultTable filterCode={filterCode} hasGenotype={hasGenotype} genolinkGigwaApi={genolinkGigwaApi} filterBody={filterBody} />
                 ) : null}
               </div>
             </div>
