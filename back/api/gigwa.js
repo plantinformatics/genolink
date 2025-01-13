@@ -4,6 +4,7 @@ const axios = require("axios");
 const checkCredentials = require("../middlewares/checkCredentials");
 const logger = require('../middlewares/logger');
 const config = require("../config/appConfig");
+const generateGigwaToken = require("../utils/generateGigwaToken");
 
 
 // Generate Gigwa Token
@@ -408,8 +409,12 @@ router.post(
   "/brapi/v2/search/allelematrix",
   async (req, res) => {
     try {
-      const token = req.body.gigwaToken;
-
+      let token = "";
+      if (req.body.gigwaToken) {
+        token = req.body.gigwaToken;
+      } else {
+        token = await generateGigwaToken();
+      }
       const response = await axios.post(
         `${config.gigwaServer}/gigwa/rest/brapi/v2/search/allelematrix`,
         req.body,
