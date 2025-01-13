@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const upload = multer({ dest: "uploads/" });
 const db = require("../models");
+const logger = require("../middlewares/logger");
 
 const createSampleAccessionsHandler = require('../utils/createSampleAccessionsHandler');
 const accessionMappingHandler = require('../utils/accessionMappingHandler');
