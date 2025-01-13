@@ -4,6 +4,8 @@ const axios = require("axios");
 const config = require("../config/appConfig");
 const logger = require("../middlewares/logger");
 const generateGenesysToken = require("../utils/generateGenesysToken");
+const sampleNameToAccession = require("../utils/sampleNameToAccession");
+
 
 const getToken = async () => {
   try {
@@ -54,6 +56,17 @@ router.post("/accession/filters", async (req, res) => {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 router.post("/accession/query", async (req, res) => {
   try {
+    let body = req.body
+    const {genotypeIds} = body;
+    if (genotypeIds.length > 0) {
+      body = {
+        ...body,
+        accessionNumbers: [
+          ...(body.accessionNumbers || []), 
+          ...genotypeIds.map(Id => sampleNameToAccession(Id))
+        ]
+      };
+          }
     const token = await getToken();
     let url = `${config.genesysServer}/api/v1/acn/query`;
     const queryParams = [];
