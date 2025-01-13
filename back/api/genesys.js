@@ -3,23 +3,23 @@ const router = express.Router();
 const axios = require("axios");
 const config = require("../config/appConfig");
 const logger = require("../middlewares/logger");
-let token = "";
+const generateGenesysToken = require("../utils/generateGenesysToken");
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-router.post("/login", (req, res) => {
-  if (req.body && req.body.token) {
-    token = req.body.token;
-    logger.info("Login token received and stored."); 
-    res.send("Token received");
-  } else {
-    logger.warn("Login attempt failed - No token provided."); 
-    res.status(400).json({ message: "No token provided." });
+const getToken = async () => {
+  try {
+      const token = await generateGenesysToken();
+      return token;
+  } catch (error) {
+      console.error("Failed to get token:", error.message);
   }
-});
+};
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 router.post("/accession/filters", async (req, res) => {
-  let url = `${config.genesysServer}/filter`;
+  let url = `${config.genesysServer}/api/v1/acn/filter`;
+
+  const token = await getToken();
 
   const queryParams = [];
 
@@ -54,8 +54,8 @@ router.post("/accession/filters", async (req, res) => {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 router.post("/accession/query", async (req, res) => {
   try {
-
-    let url = `${config.genesysServer}/query`;
+    const token = await getToken();
+    let url = `${config.genesysServer}/api/v1/acn/query`;
     const queryParams = [];
 
     if (req.query.p) queryParams.push(`p=${req.query.p}`);
