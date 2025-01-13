@@ -144,11 +144,14 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
           </thead>
           <tbody>
             {searchResults?.map((item, index) => {
-              const genotypedIndex = genesysApi.genotypedAccessions.indexOf(item.accessionNumber);
+              const genotypedIndex = Array.isArray(genesysApi.genotypedAccessions)
+                ? genesysApi.genotypedAccessions.indexOf(item.accessionNumber)
+                : -1;
               const isGenotyped = genotypedIndex !== -1;
-              const genotypeID = isGenotyped
+              const genotypeID = isGenotyped && Array.isArray(genesysApi.genotypedSamples)
                 ? genesysApi.genotypedSamples[genotypedIndex]
                 : "N/A";
+                
               return (
                 <tr
                   key={item.uuid || item.id || index}
