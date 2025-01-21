@@ -7,21 +7,27 @@ const generateGenesysToken = require("../utils/generateGenesysToken");
 const sampleNameToAccession = require("../utils/sampleNameToAccession");
 
 
+let cachedToken = null;
+
 const getToken = async () => {
   try {
-      const token = await generateGenesysToken();
-      return token;
+    const token = await generateGenesysToken();
+    return token;
   } catch (error) {
-      console.error("Failed to get token:", error.message);
+    console.error("Failed to get token:", error.message);
   }
 };
 
+const getCachedToken = async () => {
+  if (!cachedToken) {
+    cachedToken = await getToken();
+  }
+  return cachedToken;
+};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 router.post("/accession/filters", async (req, res) => {
   let url = `${config.genesysServer}/api/v1/acn/filter`;
-
-  const token = await getToken();
 
   const queryParams = [];
 
@@ -35,40 +41,68 @@ router.post("/accession/filters", async (req, res) => {
     url += `?${queryParams.join("&")}`;
   }
 
-  const header = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-      Accept: "application/json, text/plain, */*",
-      Origin: config.genolinkServer,
-    },
+  const sendRequestWithRetry = async () => {
+    try {
+      const token = await getCachedToken();
+      const header = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Accept: "application/json, text/plain, */*",
+          Origin: config.genolinkServer,
+        },
+      };
+
+      // Attempt the request
+      return await axios.post(url, req.body, header);
+    } catch (error) {
+      if (error.response && error.response.status === 401) {
+        // If token is invalid, fetch a new token and retry
+        cachedToken = await getToken(); // Refresh token
+        const header = {
+          headers: {
+            Authorization: `Bearer ${cachedToken}`,
+            "Content-Type": "application/json",
+            Accept: "application/json, text/plain, */*",
+            Origin: config.genolinkServer,
+          },
+        };
+        return await axios.post(url, req.body, header); // Retry with new token
+      }
+      throw error; // Rethrow other errors
+    }
   };
 
   try {
-    const response = await axios.post(url, req.body, header);
+    const response = await sendRequestWithRetry();
     res.send(response.data);
   } catch (error) {
     logger.error(`API Error in /accession/filters: ${error}`);
-    res.status(500).send("API request failed: " + error);
+    res.status(500).send("API request failed: " + error.message);
   }
 });
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 router.post("/accession/query", async (req, res) => {
   try {
     let body = req.body
-    const {genotypeIds} = body;
-    if (genotypeIds.length > 0) {
+    const { genotypeIds } = body;
+    if (Array.isArray(genotypeIds) && genotypeIds.length > 0) {
       body = {
         ...body,
         accessionNumbers: [
-          ...(body.accessionNumbers || []), 
+          ...(body.accessionNumbers || []),
           ...genotypeIds.map(Id => sampleNameToAccession(Id))
         ]
       };
-          }
-    const token = await getToken();
-    let url = `${config.genesysServer}/api/v1/acn/query`;
+    } else if (!genotypeIds && body.accessionNumbers) {
+      body = {
+        ...body,
+        accessionNumbers: [...(body.accessionNumbers || [])]
+      };
+    } else {
+      throw new Error('Either genotypeIds or accessionNumbers must be provided.');
+    }
+
     const queryParams = [];
 
     if (req.query.p) queryParams.push(`p=${req.query.p}`);
@@ -80,19 +114,43 @@ router.post("/accession/query", async (req, res) => {
     else {
       queryParams.push("select=instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases")
     }
-    
+
+    let url = `${config.genesysServer}/api/v1/acn/query`;
+
     if (queryParams.length > 0) {
       url += `?${queryParams.join("&")}`;
     }
-    const header = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-        Accept: "application/json, text/plain, */*",
-        Origin: config.genolinkServer,
-      },
+    const sendRequestWithRetry = async () => {
+      try {
+        const token = await getCachedToken();
+        const header = {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            Accept: "application/json, text/plain, */*",
+            Origin: config.genolinkServer,
+          },
+        };
+
+        return await axios.post(url, body, header);
+      } catch (error) {
+        if (error.response && error.response.status === 401) {
+          cachedToken = await getToken();
+          const header = {
+            headers: {
+              Authorization: `Bearer ${cachedToken}`,
+              "Content-Type": "application/json",
+              Accept: "application/json, text/plain, */*",
+              Origin: config.genolinkServer,
+            },
+          };
+          return await axios.post(url, body, header);
+        }
+        throw error;
+      }
     };
-    let response = await axios.post(url, body, header);
+
+    const response = await sendRequestWithRetry();
     res.send(response.data);
   } catch (error) {
     logger.error(`API Error in /accession/query: ${error}`);
