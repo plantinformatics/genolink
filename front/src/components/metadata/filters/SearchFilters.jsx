@@ -214,44 +214,44 @@ const SearchFilters = () => {
     setHasGenotype(!hasGenotype);
   }
   const handleSearch = async (userInput = "") => {
+    dispatch(setResetTrigger(false));
     dispatch(setCheckedAccessions({}));
     setIsLoading(true);
     setInitialRequestSent(true);
-
     const body = {
-      // Text search
       ...filterBody,
 
       _text: userInput || (inputValue && inputValue.trim()),
 
-      // Accession Numbers
-      ...(accessionNumbers.length > 0 && { accessionNumbers }),
+      accessionNumbers,
 
-      // Institute Code
-      ...(instituteCheckedBoxes.length > 0 && { institute: { code: instituteCheckedBoxes } }),
+      institute: instituteCheckedBoxes.length > 0 ? { code: instituteCheckedBoxes } : [],
 
-      // Creation Date Range
       createdDate: {
-        ...(creationStartDate && { ge: creationStartDate }),
-        ...(creationEndDate && { le: creationEndDate }),
+        ...(creationStartDate !== null ? { ge: creationStartDate } : {}),
+        ...(creationEndDate !== null ? { le: creationEndDate } : {}),
       },
 
-      // Crop
-      ...(cropCheckedBoxes.length > 0 && { crop: cropCheckedBoxes }),
+      crop: cropCheckedBoxes.length > 0 ? cropCheckedBoxes : [],
 
-      // Taxonomy
-      ...(taxonomyCheckedBoxes.length > 0 && { taxonomy: { genus: taxonomyCheckedBoxes } }),
+      taxonomy: taxonomyCheckedBoxes.length > 0 ? { genus: taxonomyCheckedBoxes } : {},
 
-      // Origin of Material
-      ...(originOfMaterialCheckedBoxes.length > 0 && { countryOfOrigin: { code3: originOfMaterialCheckedBoxes } }),
+      countryOfOrigin: originOfMaterialCheckedBoxes.length > 0 ? { code3: originOfMaterialCheckedBoxes } : {},
 
-      // Biological Status (SampStat)
-      ...(sampStatCheckedBoxes.length > 0 && { sampStat: sampStatCheckedBoxes }),
+      sampStat: sampStatCheckedBoxes.length > 0 ? sampStatCheckedBoxes : [],
 
-      // Germplasm Storage
-      ...(germplasmStorageCheckedBoxes.length > 0 && { storage: germplasmStorageCheckedBoxes }),
+      storage: germplasmStorageCheckedBoxes.length > 0 ? germplasmStorageCheckedBoxes : [],
     };
-    Object.keys(body).forEach((key) => body[key] === undefined && delete body[key]);
+
+    Object.keys(body).forEach((key) => {
+      if (
+        body[key] === undefined ||
+        (typeof body[key] === 'object' && !Object.keys(body[key]).length)
+      ) {
+        delete body[key];
+      }
+    });
+
 
     try {
       const filterCode = await genesysApi.applyFilter(body, dispatch, hasGenotype);
@@ -281,26 +281,26 @@ const SearchFilters = () => {
       setIsFilterApplied(false);
     }
   };
-
   useEffect(() => {
-    dispatch(setInstituteCheckedBoxes([]));
-    dispatch(setAccessionNumbers([]));
-    dispatch(setCreationEndDate(null));
-    dispatch(setCreationStartDate(null));
-    dispatch(setCropCheckedBoxes([]));
-    dispatch(setTaxonomyCheckedBoxes([]));
-    dispatch(setOriginOfMaterialCheckedBoxes([]));
-    dispatch(setSampStatCheckedBoxes([]));
-    dispatch(setGermplasmStorageCheckedBoxes([]));
-    setIsCropDrawerOpen(false);
-    setIsDateDrawerOpen(false);
-    setIsInstituteDrawerOpen(false);
-    setIsOriginDrawerOpen(false);
-    setIsTaxonomyDrawerOpen(false);
-    setIsSampStatDrawerOpen(false);
-    setIsGermplasmStorageDrawerOpen(false);
-    dispatch(setResetTrigger(false));
-    dispatch(setCheckedAccessions({}));
+    if (resetTrigger) {
+      dispatch(setInstituteCheckedBoxes([]));
+      dispatch(setAccessionNumbers([]));
+      dispatch(setCreationEndDate(null));
+      dispatch(setCreationStartDate(null));
+      dispatch(setCropCheckedBoxes([]));
+      dispatch(setTaxonomyCheckedBoxes([]));
+      dispatch(setOriginOfMaterialCheckedBoxes([]));
+      dispatch(setSampStatCheckedBoxes([]));
+      dispatch(setGermplasmStorageCheckedBoxes([]));
+      setIsCropDrawerOpen(false);
+      setIsDateDrawerOpen(false);
+      setIsInstituteDrawerOpen(false);
+      setIsOriginDrawerOpen(false);
+      setIsTaxonomyDrawerOpen(false);
+      setIsSampStatDrawerOpen(false);
+      setIsGermplasmStorageDrawerOpen(false);
+      dispatch(setCheckedAccessions({}));
+    }
   }, [resetTrigger]);
 
   const handleFileChange = (event) => {
@@ -353,6 +353,7 @@ const SearchFilters = () => {
       setIsFilterApplied(false);
       setGenesysHeight("auto");
       setActiveFilters([]);
+      dispatch(setResetTrigger(true));
     } catch (error) {
       setIsResetLoading(false);
       console.error("Error handling reset filter:", error);
@@ -387,7 +388,6 @@ const SearchFilters = () => {
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
   };
-
 
   return (
     <>
@@ -514,25 +514,32 @@ const SearchFilters = () => {
               </select>
             ) : null}
           </div>
+          <div>
+            <h5 style={{ visibility: activeFilters.length > 0 ? 'visible' : 'hidden' }}>Active Filters</h5>
+            {activeFilters.length > 0 ? (
+              <ul className="active-filters-list">
+                {activeFilters.map((filter, index) => (
+                  <li key={index} className="active-filter-item">
+                    <div className="filter-label">{filter.type}:</div>
+                    <div className="filter-value">
+                      {Array.isArray(filter.value) && filter.type === "Accession Numbers" && filter.value.length > 2
+                        ? `${filter.value[0]}, ..., ${filter.value[filter.value.length - 1]}`
+                        : Array.isArray(filter.value)
+                          ? filter.value.join(", ")
+                          : filter.value}
+                    </div>
+                    <button className="remove-filter-button" onClick={() => removeFilter(filter)}>
+                      <FaCircleXmark color="red" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+
           {filterMode === "Passport Filter" && (
             <>
               <div>
-                <h5 style={{ visibility: activeFilters.length > 0 ? 'visible' : 'hidden' }}>Active Filters</h5>
-                {activeFilters.length > 0 ? (
-                  <ul className="active-filters-list">
-                    {activeFilters.map((filter, index) => (
-                      <li key={index} className="active-filter-item">
-                        <div className="filter-label">{filter.type}:</div>
-                        <div className="filter-value">
-                          {Array.isArray(filter.value) ? filter.value.join(", ") : filter.value}
-                        </div>
-                        <button className="remove-filter-button" onClick={() => removeFilter(filter)}>
-                          <FaCircleXmark color="red" />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
                 <button
                   className="btn btn-info"
                   onClick={() => setIsDateDrawerOpen(!isDateDrawerOpen)}
