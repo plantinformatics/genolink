@@ -30,9 +30,11 @@ const AccessionFilter = () => {
       reader.onload = (e) => {
         const fileContents = e.target.result;
         const fileAccessions = fileContents
-          .split('\n')
+          .replace(/[\n\t;|]+/g, ',')
+          .split(',')
           .map((acc) => acc.trim())
           .filter((acc) => acc !== '');
+
         dispatch(setAccessionNumbers(fileAccessions));
       };
       reader.readAsText(file);
