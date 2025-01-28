@@ -125,9 +125,8 @@ router.post("/brapi/v2/callset/calls", checkCredentials, async (req, res) => {
           .filter((sample) => sample.callSetName == sampleName)
           .map((sample) => sample.callSetDbId)[0];
       });
-
     const response = await axios.get(
-      `${config.germinateServer}/api/brapi/v2/callsets/${desiredCallSetDbId}/calls/mapid/2`,
+      `${config.germinateServer}/api/brapi/v2/callsets/${desiredCallSetDbId}/calls`,
       {
         headers: {
           authorization: `Bearer ${token}`,
@@ -370,5 +369,46 @@ router.post("/brapi/v2/maps", checkCredentials, async (req, res) => {
     res.status(500).send("API request failed: " + error);
   }
 });
+
+router.post('/brapi/v2/callsets/chromosomes', async (req, res) => {
+  try {
+    const token = await generateGerminateToken(req);
+
+    const sampleObj = await axios
+      .post(`${config.genolinkServer}/api/internalApi/accessionMapping`, {
+        Accessions: req.body.accession,
+      })
+      .then((response) => response.data);
+    const sampleName = sampleObj.Samples.map((obj) => obj.Sample);
+
+    const desiredCallSetDbId = await axios
+      .get(`${config.germinateServer}/api/brapi/v2/callsets`, {
+        headers: {
+          authorization: `Bearer ${token}`,
+        },
+      })
+      .then(
+        (response) =>
+          response.data.result.data
+            .filter((sample) => sampleName.includes(sample.callSetName))
+            .map((sample) => sample.callSetDbId)[0]
+      );
+    const response = await axios.get(
+      `${config.germinateServer}/api/brapi/v2/callsets/${desiredCallSetDbId}/chromosomes`,
+      {
+        headers: {
+          authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    res.send({ chromosomes: response.data});
+  } catch (error) {
+    logger.error(
+      `API Error in /brapi/v2/callset/chromosomes: ${error.message}`
+    );
+    res.status(500).send("API request failed: " + error);
+  }
+}
+)
 
 module.exports = router;

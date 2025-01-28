@@ -147,10 +147,10 @@ const GenotypeSearchResultsTable = ({
           <table className="table table-bordered table-striped">
             <thead>
               <tr>
-                <th className="vertical-header" onClick={() => handleSort('index')}>#</th>
-                <th className="vertical-header" onClick={() => handleSort('variantName.split("§")[2]')}>CHROM</th>
-                <th className="vertical-header" onClick={() => handleSort('variantName.split("§")[1]')}>POS</th>
-                <th className="vertical-header" onClick={() => handleSort('variantName.split("§")[0]')}>ID</th>
+                <th className="vertical-header">#</th>
+                <th className="vertical-header">CHROM</th>
+                <th className="vertical-header">POS</th>
+                <th className="vertical-header">ID</th>
                 {samples.map((sample) => (
                   <th className="vertical-header" key={sample}>
                     {sample}
@@ -160,7 +160,7 @@ const GenotypeSearchResultsTable = ({
             </thead>
             <tbody>
               {data &&
-                sortedData
+                data[0].result.data
                   .slice(
                     (currentPage - 1) * itemsPerPage,
                     currentPage * itemsPerPage
@@ -168,9 +168,9 @@ const GenotypeSearchResultsTable = ({
                   .map((item, index1) => (
                     <tr key={index1}>
                       <td>{index1 + 1 + (currentPage - 1) * itemsPerPage}</td>
-                      <td>{CHROMConverter(item.variantName.split('§')[2])}</td>
-                      <td>{item.variantName.split('§')[1]}</td>
-                      <td>{item.variantName.split('§')[0]}</td>
+                      <td>{CHROMConverter(item.variantName.split('-')[2])}</td>
+                      <td>{item.variantName.split('-')[1]}</td>
+                      <td>{item.variantName.split('-')[0]}</td>
                       {samples.map((sample, index2) => (
                         <td key={index2}>
                           {data[index2].result.data[index1].genotypeValue}

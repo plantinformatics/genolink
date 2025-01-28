@@ -164,11 +164,17 @@ const GenotypeExplorer = () => {
           setShowPrivacyRadio(false);
         }
         if (selectedSamplesDetails.length > 0) {
-          fetchData(1);
+          await fetchData(1);
           setCurrentPage(1);
         }
       } else if (selectedOption === "Germinate") {
-        fetchData(1);
+        if (isGenomeSearchSubmit) {
+          await fetchData(1);
+        } else {
+          setIsGenomeSearchSubmit(true);
+          setShowLogin(false);
+        }
+        setShowPrivacyRadio(false);
       }
     } catch (error) {
       let message = "An unexpected error occurred.";
@@ -181,7 +187,7 @@ const GenotypeExplorer = () => {
           case 403:
             message = "Access denied: You do not have permission to access these resources. Please check your credentials.";
             break;
-          case 404: 
+          case 404:
             message = "No genotype data found in the Database!";
             break;
           default:
@@ -295,6 +301,8 @@ const GenotypeExplorer = () => {
           )
         );
         const allGenomicData = responses.map((response) => response.data);
+        const callsetNames = responses.map((response) => response.sample)
+        setSampleNames(callsetNames);
         setGenomData(allGenomicData);
       }
     } catch (error) {
@@ -317,6 +325,8 @@ const GenotypeExplorer = () => {
     setPosStart("");
     setPosEnd("");
     setShowPrivacyRadio(true);
+    setAccessMode("private");
+    setShowLogin(true);
   }
 
   const handleOptionChange = (event) => {
@@ -324,6 +334,8 @@ const GenotypeExplorer = () => {
     const newSelectedOption = event.target.value;
     setSelectedOption(newSelectedOption);
     dispatch(setPlatform(newSelectedOption));
+    setShowLogin(true);
+    setShowPrivacyRadio(true);
   };
 
   const handleSearchTypeChange = (newType) => {
@@ -489,12 +501,12 @@ const GenotypeExplorer = () => {
                   </div>
                 )}
 
-              {selectedDataset && (
+              {selectedOption === "Gigwa" && selectedDataset && (
                 <>
                   {showSearchTypeSelector && (
                     <select
                       value={searchType || ""}
-                      onChange={(e) => handleSearchTypeChange(e.target.value)} // Step 3: Handle changes
+                      onChange={(e) => handleSearchTypeChange(e.target.value)}
                       style={{ backgroundColor: "beige" }}
                     >
                       <option value="" disabled>
@@ -526,9 +538,28 @@ const GenotypeExplorer = () => {
                     ) : null)}
                 </>
               )}
+              {selectedOption === "Germinate" && !showPrivacyRadio && (
+                <>
+                  <PositionRangeFilter
+                    posStart={posStart}
+                    setPosStart={setPosStart}
+                    posEnd={posEnd}
+                    setPosEnd={setPosEnd}
+                  />
+                  <LinkageGroupFilter
+                    germinateUsername={username}
+                    germinatePassword={password}
+                    selectedStudyDbId={selectedStudyDbId}
+                    selectedGroups={selectedGroups}
+                    setSelectedGroups={setSelectedGroups}
+                    genolinkGigwaApi={genolinkGigwaApi}
+                    genolinkGerminateApi={genolinkGerminateApi}
+                  />
+                </>
+              )}
 
               {isGenomDataLoading && <LoadingComponent />}
-              {genomData && alleleData && !isGenomDataLoading ? (
+              {genomData && alleleData && !isGenomDataLoading && selectedOption === "Gigwa" ? (
                 <>
                   <GenotypeSearchResultsTable
                     data={genomData}
@@ -547,7 +578,13 @@ const GenotypeExplorer = () => {
                   )}
 
                 </>
-              ) : null}
+              ) : selectedOption === "Germinate" && genomData && !isGenomDataLoading ? (<GenotypeSearchResultsTable
+                data={genomData}
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
+                samples={sampleNames}
+                platform={selectedOption}
+              />) : null}
             </div>
           )}
         </div>
