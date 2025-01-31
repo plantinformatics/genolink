@@ -31,6 +31,14 @@ const GenotypeSearchResultsTable = ({
 
   const maxPageNumbersToShow = 3;
 
+  let isPhased = false;
+  for (const sampleGenotypes of Object.values(genotypeMap)) {
+    if (sampleGenotypes.some((genotype) => genotype.includes("|"))) {
+      isPhased = true;
+      break; 
+    }
+  }
+
   const CHROMConverter = (CHROM) => {
     const mapping = {
       1: "chr1A",
@@ -129,9 +137,9 @@ const GenotypeSearchResultsTable = ({
                             {genotypeMap[sample][variantIndex] === "."
                               ? "."
                               : genotypeMap[sample][variantIndex] === "0"
-                                ? "0/0"
+                                ? isPhased ? "0|0" : "0/0"
                                 : genotypeMap[sample][variantIndex] === "1"
-                                  ? "1/1"
+                                  ? isPhased ? "1|1" : "1/1"
                                   : genotypeMap[sample][variantIndex]}
                           </>
                         ) : (
