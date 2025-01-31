@@ -18,11 +18,11 @@ const GenotypeSearchResultsTable = ({
     const dataMatrix = alleles.result.dataMatrices[0].dataMatrix;
     dataMatrix.forEach((genotypes, variantIndex) => {
       genotypes.forEach((genotype, sampleIndex) => {
-        const sampleId = samples[sampleIndex]; 
+        const sampleId = samples[sampleIndex];
         if (!genotypeMap[sampleId]) {
           genotypeMap[sampleId] = [];
         }
-        genotypeMap[sampleId][variantIndex] = genotype; 
+        genotypeMap[sampleId][variantIndex] = genotype;
       });
     });
   } else if (platform == "Germinate") {
@@ -32,13 +32,18 @@ const GenotypeSearchResultsTable = ({
   const maxPageNumbersToShow = 3;
 
   let isPhased = false;
-  for (const sampleGenotypes of Object.values(genotypeMap)) {
-    if (sampleGenotypes.some((genotype) => genotype.includes("|"))) {
-      isPhased = true;
-      break; 
+  if (alleles.result.variantSetDbIds[0].split('§')[2]?.toLowerCase().includes("filledin")) {
+    isPhased = true;
+  }
+  else {
+    for (const sampleGenotypes of Object.values(genotypeMap)) {
+      if (sampleGenotypes.some((genotype) => genotype.includes("|"))) {
+        isPhased = true;
+        break;
+      }
     }
   }
-
+  
   const CHROMConverter = (CHROM) => {
     const mapping = {
       1: "chr1A",
