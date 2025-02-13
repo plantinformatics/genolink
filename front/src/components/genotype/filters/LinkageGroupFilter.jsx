@@ -109,7 +109,7 @@ const LinkageGroupFilter = ({
                   onChange={() => handleInputChange(group)}
                 />
                 <label className="form-check-label" htmlFor={group}>
-                  {CHROMConverter(group)}
+                {platform === "Germinate" ? CHROMConverter(group) : group}
                 </label>
               </div>
             ))}
