@@ -120,3 +120,12 @@ export const setLoadingGenotypedAccessions = (isLoading) => ({
   type: "SET_LOADING_GENOTYPED_ACCESSIONS",
   payload: isLoading,
 });
+export const setActiveFilters = (activeFilters) => ({
+  type: "SET_ACTIVE_FILTERS",
+  payload: activeFilters,
+});
+
+
+
+
+

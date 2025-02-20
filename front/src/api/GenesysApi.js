@@ -2,6 +2,8 @@ import BaseApi from './BaseApi';
 import { genesysServer } from '../config/apiConfig';
 import oidcConfig from '../config/oidcConfig';
 import {
+  setInstituteCheckedBoxes,
+  setActiveFilters,
   setSearchResults,
   setInstituteCode,
   setCropList,
@@ -87,9 +89,20 @@ class GenesysApi extends BaseApi {
     }
   }
 
+
+
   async fetchInitialQueryData(dispatch, userInput = " ") {
     try {
-      const body = { _text: userInput };
+      const body = {
+        _text: userInput, "institute": {
+          "code": [
+            "AUS165"
+          ]
+        }
+      };
+      dispatch(setInstituteCheckedBoxes(["AUS165"]));
+      dispatch(setActiveFilters([{ type: "Institute Code", value: ["AUS165"] }]));
+      
       const pageSize = 500;
       const select = "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases";
       const endpoint = `/api/v1/acn/query?p=0&l=${pageSize}&select=${select}`;

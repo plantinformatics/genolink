@@ -14,6 +14,7 @@ import {
   setSampStatCheckedBoxes,
   setGermplasmStorageCheckedBoxes,
   setCheckedAccessions,
+  setActiveFilters,
 } from "../../../actions";
 
 import MultiSelectFilter from "./MultiSelectFilter";
@@ -22,7 +23,6 @@ import MetadataSearchResultTable from "../MetadataSearchResultTable";
 import DateRangeFilter from "./DateRangeFilter";
 import GenotypeExplorer from "../../genotype/GenotypeExplorer";
 import { genesysApi } from "../../../pages/Home";
-import { genolinkGigwaApi } from "../../../pages/Home";
 import { genolinkInternalApi } from "../../../pages/Home";
 
 const SearchFilters = () => {
@@ -45,7 +45,6 @@ const SearchFilters = () => {
   const [inputKey, setInputKey] = useState(Date.now());
   const [showFileInput, setShowFileInput] = useState(false);
   const [inputValue, setInputValue] = useState("");
-  const [activeFilters, setActiveFilters] = useState([]);
   const [filterBody, setFilterBody] = useState({});
   const [searchButtonName, setSearchButtonName] = useState("Search");
   const [hasGenotype, setHasGenotype] = useState(false);
@@ -57,6 +56,9 @@ const SearchFilters = () => {
     (state) => state.isLoadingGenotypedAccessions
   );
 
+  const activeFilters = useSelector(
+    (state) => state.activeFilters
+  );
   const instituteCheckedBoxes = useSelector(
     (state) => state.instituteCheckedBoxes
   );
@@ -101,7 +103,7 @@ const SearchFilters = () => {
   }, [checkedAccessions]);
 
   useEffect(() => {
-    if (Object.keys(activeFilters).length > 0 && searchButtonName !== "Update Search") {
+    if (activeFilters.length > 0 && searchButtonName !== "Update Search") {
       setSearchButtonName('Update Search')
     } else {
       setSearchButtonName('Search');
@@ -116,7 +118,14 @@ const SearchFilters = () => {
         if (!genesysApi.getToken()) {
           await genesysApi.fetchAndSetToken();
         }
-        await genesysApi.fetchInitialFilterData(dispatch);
+
+        const [_, filterCode] = await Promise.all([
+          genesysApi.fetchInitialFilterData(dispatch),
+          genesysApi.fetchInitialQueryData(dispatch)
+        ]);
+
+        setFilterCode(filterCode);
+        setInitialRequestSent(true);
       } catch (error) {
         console.error("Error fetching initial data:", error);
       } finally {
@@ -163,9 +172,7 @@ const SearchFilters = () => {
         break;
     }
 
-    setActiveFilters((prevFilters) =>
-      prevFilters.filter((filter) => filter !== filterToRemove)
-    );
+    dispatch(setActiveFilters(activeFilters.filter((filter) => filter !== filterToRemove)));
 
     let updatedBody = {};
     activeFilters
@@ -217,7 +224,6 @@ const SearchFilters = () => {
     dispatch(setResetTrigger(false));
     dispatch(setCheckedAccessions({}));
     setIsLoading(true);
-    setInitialRequestSent(true);
     const body = {
       ...filterBody,
 
@@ -272,7 +278,7 @@ const SearchFilters = () => {
       if (sampStatCheckedBoxes.length > 0) newFilters.push({ type: "Biological Status", value: sampStatCheckedBoxes });
       if (germplasmStorageCheckedBoxes.length > 0) newFilters.push({ type: "Germplasm Storage", value: germplasmStorageCheckedBoxes });
 
-      setActiveFilters(newFilters);
+      dispatch(setActiveFilters(newFilters));
 
       setFilterBody(body);
     } catch (error) {
@@ -352,7 +358,7 @@ const SearchFilters = () => {
       setIsResetLoading(false);
       setIsFilterApplied(false);
       setGenesysHeight("auto");
-      setActiveFilters([]);
+      dispatch(setActiveFilters([]));
       dispatch(setResetTrigger(true));
     } catch (error) {
       setIsResetLoading(false);
@@ -742,7 +748,7 @@ const SearchFilters = () => {
 
               <div style={{ flex: '1 1 auto' }}>
                 {Object.keys(searchResults).length !== 0 ? (
-                  <MetadataSearchResultTable filterCode={filterCode} hasGenotype={hasGenotype} genolinkGigwaApi={genolinkGigwaApi} filterBody={filterBody} />
+                  <MetadataSearchResultTable filterCode={filterCode} hasGenotype={hasGenotype} filterBody={filterBody} />
                 ) : null}
               </div>
             </div>

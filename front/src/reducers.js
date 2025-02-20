@@ -27,6 +27,7 @@ const initialState = {
   checkedAccessionNames: {},
   platform: "Gigwa",
   isLoadingGenotypedAccessions: false,
+  activeFilters: [],
 };
 
 const rootReducer = (state = initialState, action) => {
@@ -175,6 +176,11 @@ const rootReducer = (state = initialState, action) => {
       return {
         ...state,
         isLoadingGenotypedAccessions: action.payload,
+      };
+    case "SET_ACTIVE_FILTERS":
+      return {
+        ...state,
+        activeFilters: action.payload,
       };
     default:
       return state;
