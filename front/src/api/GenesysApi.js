@@ -91,17 +91,24 @@ class GenesysApi extends BaseApi {
 
 
 
-  async fetchInitialQueryData(dispatch, userInput = " ") {
+  async fetchInitialQueryData(dispatch, userInput = " ", isReset = false) {
     try {
-      const body = {
-        _text: userInput, "institute": {
-          "code": [
-            "AUS165"
-          ]
-        }
-      };
-      dispatch(setInstituteCheckedBoxes(["AUS165"]));
-      dispatch(setActiveFilters([{ type: "Institute Code", value: ["AUS165"] }]));
+      let body;
+      if (!isReset){
+        body = {
+          _text: userInput, "institute": {
+            "code": [
+              "AUS165"
+            ]
+          }
+        };
+        dispatch(setInstituteCheckedBoxes(["AUS165"]));
+        dispatch(setActiveFilters([{ type: "Institute Code", value: ["AUS165"] }]));
+      } else {
+        body = {
+          _text: userInput
+        };
+      }
       
       const pageSize = 500;
       const select = "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases";
@@ -238,9 +245,8 @@ class GenesysApi extends BaseApi {
     try {
       const [filtercode, initialData] = await Promise.all([
         this.fetchInitialFilterData(dispatch),
-        this.fetchInitialQueryData(dispatch),
+        this.fetchInitialQueryData(dispatch, " ", true),
       ]);
-
       dispatch(setResetTrigger(true));
       return filtercode;
     } catch (error) {

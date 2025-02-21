@@ -309,6 +309,10 @@ const SearchFilters = () => {
     }
   }, [resetTrigger]);
 
+  useEffect(() => {
+    setIsFilterApplied(activeFilters.length > 0);
+  }, [activeFilters]);
+
   const handleFileChange = (event) => {
     setFile(event.target.files[0]);
   };
@@ -356,10 +360,9 @@ const SearchFilters = () => {
       const filterCode = await genesysApi.resetFilter(dispatch);
       setFilterCode(filterCode);
       setIsResetLoading(false);
-      setIsFilterApplied(false);
       setGenesysHeight("auto");
-      dispatch(setActiveFilters([]));
       dispatch(setResetTrigger(true));
+      dispatch(setActiveFilters([]));
     } catch (error) {
       setIsResetLoading(false);
       console.error("Error handling reset filter:", error);
