@@ -404,10 +404,6 @@ const SearchFilters = () => {
         style={{
           display: "grid",
           gridTemplateColumns: "minmax(280px, auto) 1fr",
-          // gridTemplateRows: hasCheckedAccessions
-          //   ? "auto 1fr 5px 1fr auto"
-          //   : "auto 1fr auto",
-          // gridAutoRows: "min-content",
           gridTemplateRows: (isLoading || isResetLoading)
             ? hasCheckedAccessions
               ? "auto 1fr 5px 1fr auto"
@@ -431,15 +427,39 @@ const SearchFilters = () => {
             color: "white",
             textAlign: "center",
             padding: "10px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "column"
           }}
         >
-          <img
-            src="/Genolink.png"
-            alt="Genolink-logo"
-            style={{ marginRight: "20px", verticalAlign: "middle" }}
-          />
-          <h2 style={{ margin: "0", display: "inline" }}>Genolink</h2>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <img
+              src="/Genolink.png"
+              alt="Genolink-logo"
+              style={{ marginRight: "10px", verticalAlign: "middle", height: "40px" }}
+            />
+            <h2 style={{ margin: "0", fontSize: "24px", fontWeight: "bold" }}>Genolink</h2>
+          </div>
+
+          <p style={{ margin: "5px 0 0", fontSize: "14px", color: "rgba(255, 255, 255, 0.8)" }}>
+            Powered by <a
+              href="https://www.genesys-pgr.org/"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                color: "white",
+                textDecoration: "none",
+                fontWeight: "bold"
+              }}
+              onMouseOver={(e) => e.target.style.textDecoration = "underline"}
+              onMouseOut={(e) => e.target.style.textDecoration = "none"}
+            >
+              Genesys-PGR
+            </a>
+          </p>
         </div>
+
 
         {/* div3: Genesys Filter */}
         <div
