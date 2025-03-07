@@ -119,12 +119,13 @@ const SearchFilters = () => {
           await genesysApi.fetchAndSetToken();
         }
 
-        const [_, filterCode] = await Promise.all([
+        const [_, { filterCode, body }] = await Promise.all([
           genesysApi.fetchInitialFilterData(dispatch),
           genesysApi.fetchInitialQueryData(dispatch)
         ]);
-
+  
         setFilterCode(filterCode);
+        setFilterBody(body);
         setInitialRequestSent(true);
       } catch (error) {
         console.error("Error fetching initial data:", error);

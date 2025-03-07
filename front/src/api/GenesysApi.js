@@ -63,9 +63,22 @@ class GenesysApi extends BaseApi {
   }
 
 
-  async fetchInitialFilterData(dispatch, userInput = " ") {
+  async fetchInitialFilterData(dispatch, userInput = " ", isReset = false) {
     try {
-      const body = { _text: userInput };
+      let body;
+      if (!isReset) {
+        body = {
+          _text: userInput, "institute": {
+            "code": [
+              "AUS165"
+            ]
+          }
+        };
+      } else {
+        body = {
+          _text: userInput
+        };
+      }
       const endpoint = "/api/v1/acn/filter?l=1";
       const searchData = await this.post(endpoint, body);
 
@@ -94,7 +107,7 @@ class GenesysApi extends BaseApi {
   async fetchInitialQueryData(dispatch, userInput = " ", isReset = false) {
     try {
       let body;
-      if (!isReset){
+      if (!isReset) {
         body = {
           _text: userInput, "institute": {
             "code": [
@@ -109,16 +122,16 @@ class GenesysApi extends BaseApi {
           _text: userInput
         };
       }
-      
+
       const pageSize = 500;
-      const select = "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases";
+      const select = "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases,donorName";
       const endpoint = `/api/v1/acn/query?p=0&l=${pageSize}&select=${select}`;
       const searchData = await this.post(endpoint, body);
 
       dispatch(setSearchResults(searchData.content));
       dispatch(setTotalAccessions(searchData.totalElements));
       dispatch(setCurrentPage(0));
-      return searchData.filterCode;
+      return { filterCode: searchData.filterCode, body };
     } catch (error) {
       console.error("Error fetching initial data:", error);
       throw error;
@@ -129,7 +142,7 @@ class GenesysApi extends BaseApi {
   async applyFilter(filterData, dispatch, hasGenotype) {
     try {
       const pageSize = hasGenotype ? 10000 : 500;
-      const select = "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases";
+      const select = "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases,donorName";
       const endpointQuery = `/api/v1/acn/query?p=0&l=${pageSize}&select=${select}`;
       const endpointFilter = "/api/v1/acn/filter";
 
@@ -244,7 +257,7 @@ class GenesysApi extends BaseApi {
   async resetFilter(dispatch) {
     try {
       const [filtercode, initialData] = await Promise.all([
-        this.fetchInitialFilterData(dispatch),
+        this.fetchInitialFilterData(dispatch, " ", true),
         this.fetchInitialQueryData(dispatch, " ", true),
       ]);
       dispatch(setResetTrigger(true));
@@ -266,7 +279,7 @@ class GenesysApi extends BaseApi {
   async fetchMoreResults({ filterCode, currentPage, pageSize, dispatch, searchResults, hasGenotype }) {
     try {
       const select =
-        'instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases';
+        'instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases,donorName';
 
       const endpoint = filterCode
         ? `/api/v1/acn/query?f=${filterCode}&p=${currentPage + 1}&l=${pageSize}&select=${select}`
@@ -305,7 +318,7 @@ class GenesysApi extends BaseApi {
     try {
       const pageSize = 10000;
       const batchSize = 50;
-      const select = "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases";
+      const select = "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases,donorName";
 
       const firstGenesysEndpoint = `/api/v1/acn/query?p=0&l=${pageSize}&select=${select}`;
       const firstGenesysResult = await this.post(firstGenesysEndpoint, filterData);
@@ -351,6 +364,7 @@ class GenesysApi extends BaseApi {
           "Aliases": "aliases",
           "Taxonomy": "taxonomy.taxonName",
           "Crop Name": "cropName",
+          "Donor Institute": "donorName",
           "Provenance of Material": "countryOfOrigin.name",
           "Acquisition Date": "acquisitionDate",
           "DOI": "doi",

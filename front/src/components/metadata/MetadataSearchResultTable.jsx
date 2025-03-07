@@ -134,6 +134,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
               <th scope="col">Aliases</th>
               <th scope="col">Taxonomy</th>
               <th scope="col">Crop Name</th>
+              <th scope="col">Donor Institute</th>
               <th scope="col">Provenance of Material</th>
               <th scope="col">Acquisition Date</th>
               <th scope="col">DOI</th>
@@ -151,7 +152,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
               const genotypeID = isGenotyped && Array.isArray(genesysApi.genotypedSamples)
                 ? genesysApi.genotypedSamples[genotypedIndex]
                 : "N/A";
-                
+
               return (
                 <tr
                   key={item.uuid || item.id || index}
@@ -262,6 +263,15 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
                     }}
                   >
                     {item.cropName || ""}
+                  </td>
+                  <td
+                    className="cell"
+                    style={{
+                      overflow: expandedRow === index ? 'visible' : 'hidden',
+                      whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
+                    }}
+                  >
+                    {item.donorName || ""}
                   </td>
                   <td
                     className="cell"
