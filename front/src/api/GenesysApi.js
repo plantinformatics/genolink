@@ -141,16 +141,25 @@ class GenesysApi extends BaseApi {
 
   async applyFilter(filterData, dispatch, hasGenotype) {
     try {
-      const pageSize = hasGenotype ? 10000 : 500;
+      const pageSize = 500;
       const select = "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases,donorName";
       const endpointQuery = `/api/v1/acn/query?p=0&l=${pageSize}&select=${select}`;
       const endpointFilter = "/api/v1/acn/filter";
 
-      const [queryData, filterDataResponse] = await Promise.all([
-        this.post(endpointQuery, filterData),
-        this.post(endpointFilter, filterData),
-      ]);
       if (hasGenotype) {
+        if (filterData.hasOwnProperty("accessionNumbers")) {
+          filterData.accessionNumbers = Array.from(
+            new Set([...filterData.accessionNumbers, ...this.genotypedAccessions])
+          );
+        } else {
+          filterData.accessionNumbers = this.genotypedAccessions;
+        }
+      
+        const [queryData, filterDataResponse] = await Promise.all([
+          this.post(endpointQuery, filterData),
+          this.post(endpointFilter, filterData),
+        ]);
+
         const genesysAccessions = queryData.content.map(item => item.accessionNumber);
         let genotypedResult = [];
 
@@ -161,20 +170,23 @@ class GenesysApi extends BaseApi {
         genotypedResult = genotypedResult.concat(
           queryData.content.filter(item => matchedAccessions.includes(item.accessionNumber))
         );
-
-        // Fetch total genotyped accessions asynchronously
         this.fetchTotalGenotypedAccessionsInBackground(filterData, dispatch);
 
         dispatch(setSearchResults(genotypedResult));
         dispatch(setTotalPreGenotypedAccessions(queryData.totalElements));
-        dispatch(setInstituteCode([]));
-        dispatch(setCropList([]));
-        dispatch(setTaxonomyList([]));
-        dispatch(setOriginOfMaterialList([]));
-        dispatch(setSampStatList([]));
-        dispatch(setGermplasmStorageList([]));
-
+        dispatch(setInstituteCode(this.extractSuggestions(filterDataResponse, "institute.code")));
+        dispatch(setCropList(this.extractSuggestions(filterDataResponse, "crop.shortName")));
+        dispatch(setTaxonomyList(this.extractSuggestions(filterDataResponse, "taxonomy.genus")));
+        dispatch(setOriginOfMaterialList(this.extractSuggestions(filterDataResponse, "countryOfOrigin.code3")));
+        dispatch(setSampStatList(this.extractSuggestions(filterDataResponse, "sampStat")));
+        dispatch(setGermplasmStorageList(this.extractSuggestions(filterDataResponse, "storage")));
+        dispatch(setCurrentPage(0));
+        return queryData.filterCode;
       } else {
+        const [queryData, filterDataResponse] = await Promise.all([
+          this.post(endpointQuery, filterData),
+          this.post(endpointFilter, filterData),
+        ]);
         dispatch(setSearchResults(queryData.content));
         dispatch(setTotalAccessions(queryData.totalElements));
         dispatch(setInstituteCode(this.extractSuggestions(filterDataResponse, "institute.code")));
@@ -183,11 +195,9 @@ class GenesysApi extends BaseApi {
         dispatch(setOriginOfMaterialList(this.extractSuggestions(filterDataResponse, "countryOfOrigin.code3")));
         dispatch(setSampStatList(this.extractSuggestions(filterDataResponse, "sampStat")));
         dispatch(setGermplasmStorageList(this.extractSuggestions(filterDataResponse, "storage")));
+        dispatch(setCurrentPage(0));
+        return queryData.filterCode;
       }
-
-      dispatch(setCurrentPage(0));
-      dispatch(setSearchAcc(""));
-      return queryData.filterCode;
     } catch (error) {
       console.error("Error applying filter:", error);
       throw error;
