@@ -28,6 +28,36 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
     (state) => state.isLoadingGenotypedAccessions
   );
 
+  function getSampleStatus(number) {
+    const sampStatMapping = {
+      "100": "Wild",
+      "110": "Natural",
+      "120": "Semi-natural/wild",
+      "130": "Semi-natural/sown",
+      "200": "Weedy",
+      "300": "Traditional cultivar/Landrace",
+      "400": "Breeding/Research Material",
+      "410": "Breeders Line",
+      "411": "Synthetic population",
+      "412": "Hybrid",
+      "413": "Founder stock/base population",
+      "414": "Inbred line",
+      "415": "Segregating population",
+      "416": "Clonal selection",
+      "420": "Genetic stock",
+      "421": "Mutant",
+      "422": "Cytogenetic stocks",
+      "423": "Other genetic stocks",
+      "500": "Advanced/improved cultivar",
+      "600": "GMO",
+      "999": "Other",
+    };
+  
+    const key = String(number);
+  
+    return sampStatMapping[key] || "Unknown status";
+  }
+
   const handleCheckboxChange = (item) => {
     const newCheckedAccessions = { ...checkedAccessions };
     const newCheckedAccessionNames = { ...checkedAccessionNames };
@@ -134,6 +164,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
               <th scope="col">Aliases</th>
               <th scope="col">Taxonomy</th>
               <th scope="col">Crop Name</th>
+              <th scope="col">Biological status of accession</th>
               <th scope="col">Donor Institute</th>
               <th scope="col">Provenance of Material</th>
               <th scope="col">Acquisition Date</th>
@@ -263,6 +294,15 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
                     }}
                   >
                     {item.cropName || ""}
+                  </td>
+                  <td
+                    className="cell"
+                    style={{
+                      overflow: expandedRow === index ? 'visible' : 'hidden',
+                      whiteSpace: expandedRow === index ? 'normal' : 'nowrap',
+                    }}
+                  >
+                    {getSampleStatus(item.sampStat) || ""}
                   </td>
                   <td
                     className="cell"
