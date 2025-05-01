@@ -6,7 +6,6 @@ const logger = require("../middlewares/logger");
 const generateGenesysToken = require("../utils/generateGenesysToken");
 const sampleNameToAccession = require("../utils/sampleNameToAccession");
 
-
 let cachedToken = null;
 
 const getToken = async () => {
@@ -24,6 +23,86 @@ const getCachedToken = async () => {
   }
   return cachedToken;
 };
+
+const transformInitialToFinal = (initialbody) => {
+  const finalbody = {};
+
+  finalbody["_text"] = initialbody["_text"] || "";
+
+  if (initialbody.institute) {
+    finalbody.institute = { code: initialbody.institute };
+  }
+
+  if (initialbody.startCreatedDate || initialbody.endCreatedDate) {
+    finalbody.createdDate = {};
+    if (initialbody.startCreatedDate) {
+      finalbody.createdDate.ge = initialbody.startCreatedDate;
+    }
+    if (initialbody.endCreatedDate) {
+      finalbody.createdDate.le = initialbody.endCreatedDate;
+    }
+  }
+
+  if (initialbody.crop) {
+    finalbody.crop = initialbody.crop;
+  }
+
+  if (initialbody.taxonomy) {
+    finalbody.taxonomy = { genus: initialbody.taxonomy };
+  }
+
+  if (initialbody.countryOfOrigin) {
+    finalbody.countryOfOrigin = { code3: initialbody.countryOfOrigin };
+  }
+
+  if (initialbody.sampStat) {
+    finalbody.sampStat = [...initialbody.sampStat];
+  }
+
+  if (initialbody.storage) {
+    finalbody.storage = initialbody.storage;
+  }
+
+  return finalbody;
+};
+
+async function fetchAllAccessionNumbers(finalbody, header) {
+  const baseUrl = `${config.genesysServer}/api/v1/acn/query`;
+  const limit = 10000;
+  let allAccessionNumbers = [];
+
+  try {
+    // Fetch the first page to get totalPages
+    const firstResponse = await axios.post(
+      `${baseUrl}?p=0&l=${limit}&select=accessionNumber`,
+      finalbody,
+      header
+    );
+    const totalPages = firstResponse.data.totalPages || 1;
+
+    // Extract accessionNumbers from the first page
+    const pageData = firstResponse.data.content || [];
+    allAccessionNumbers.push(...pageData.map((entry) => entry.accessionNumber));
+
+    // Fetch remaining pages if any
+    for (let page = 1; page < totalPages; page++) {
+      const response = await axios.post(
+        `${baseUrl}?p=${page}&l=${limit}&select=accessionNumber`,
+        finalbody,
+        header
+      );
+      const content = response.data.content || [];
+      allAccessionNumbers.push(
+        ...content.map((entry) => entry.accessionNumber)
+      );
+    }
+
+    return allAccessionNumbers;
+  } catch (error) {
+    console.error("Error fetching accession numbers:", error.message);
+    return [];
+  }
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 router.post("/accession/filters", async (req, res) => {
@@ -84,23 +163,25 @@ router.post("/accession/filters", async (req, res) => {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 router.post("/accession/query", async (req, res) => {
   try {
-    let body = req.body
+    let body = req.body;
     const { genotypeIds } = body;
     if (Array.isArray(genotypeIds) && genotypeIds.length > 0) {
       body = {
         ...body,
         accessionNumbers: [
           ...(body.accessionNumbers || []),
-          ...genotypeIds.map(Id => sampleNameToAccession(Id))
-        ]
+          ...genotypeIds.map((Id) => sampleNameToAccession(Id)),
+        ],
       };
     } else if (!genotypeIds && body.accessionNumbers) {
       body = {
         ...body,
-        accessionNumbers: [...(body.accessionNumbers || [])]
+        accessionNumbers: [...(body.accessionNumbers || [])],
       };
     } else {
-      throw new Error('Either genotypeIds or accessionNumbers must be provided.');
+      throw new Error(
+        "Either genotypeIds or accessionNumbers must be provided."
+      );
     }
 
     const queryParams = [];
@@ -112,7 +193,9 @@ router.post("/accession/query", async (req, res) => {
     if (req.query.f) queryParams.push(`d=${req.query.f}`);
     if (req.query.select) queryParams.push(`select=${req.query.select}`);
     else {
-      queryParams.push("select=instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases,donorName, sampStat")
+      queryParams.push(
+        "select=instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases,donorName, sampStat"
+      );
     }
 
     let url = `${config.genesysServer}/api/v1/acn/query`;
@@ -154,6 +237,37 @@ router.post("/accession/query", async (req, res) => {
     res.send(response.data);
   } catch (error) {
     logger.error(`API Error in /accession/query: ${error}`);
+    res.status(500).send("API request failed: " + error);
+  }
+});
+///////////////////////////////////////////////////////////////////////////////////////////////
+router.post("/passportQuery", async (req, res) => {
+  try {
+    const genesysToken = await getCachedToken();
+    const initialbody = req.body;
+    const finalbody = transformInitialToFinal(initialbody);
+    const header = {
+      headers: {
+        Authorization: `Bearer ${genesysToken}`,
+        "Content-Type": "application/json",
+        Accept: "application/json, text/plain, */*",
+        Origin: config.genolinkServer,
+      },
+    };
+    const allAccessionNumbers = await fetchAllAccessionNumbers(
+      finalbody,
+      header
+    );
+
+    const samplesObj = await axios
+      .post(`${config.genolinkServer}/api/internalApi/accessionMapping`, {
+        Accessions: allAccessionNumbers,
+      })
+      .then((response) => response.data);
+
+    res.send(samplesObj);
+  } catch (error) {
+    logger.error(`API Error in /passportQuery: ${error}`);
     res.status(500).send("API request failed: " + error);
   }
 });

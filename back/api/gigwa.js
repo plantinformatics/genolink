@@ -2,17 +2,17 @@ const express = require("express");
 const router = express.Router();
 const axios = require("axios");
 const checkCredentials = require("../middlewares/checkCredentials");
-const logger = require('../middlewares/logger');
+const logger = require("../middlewares/logger");
 const config = require("../config/appConfig");
 const generateGigwaToken = require("../utils/generateGigwaToken");
-
 
 // Generate Gigwa Token
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 router.post("/generateGigwaToken", async (req, res) => {
   try {
     const { username, password } = req.body;
-    const requestBody = username && password ? { username, password } : undefined;
+    const requestBody =
+      username && password ? { username, password } : undefined;
 
     const tokenResponse = await axios.post(
       `${config.gigwaServer}/gigwa/rest/gigwa/generateToken`,
@@ -71,7 +71,6 @@ router.post(
   checkCredentials,
   async (req, res) => {
     try {
-
       const tokenResponse = await axios.post(
         `${config.gigwaServer}/gigwa/rest/gigwa/generateToken`,
         {
@@ -94,7 +93,9 @@ router.post(
 
       res.send(response.data);
     } catch (error) {
-      logger.error(`API Error in /brapi/v2/search/variantsets: ${error.message}`);
+      logger.error(
+        `API Error in /brapi/v2/search/variantsets: ${error.message}`
+      );
       res.status(500).send("API request failed: " + error);
     }
   }
@@ -104,7 +105,6 @@ router.post(
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 router.post("/brapi/v2/search/samples", checkCredentials, async (req, res) => {
   try {
-
     const tokenResponse = await axios.post(
       `${config.gigwaServer}/gigwa/rest/gigwa/generateToken`,
       {
@@ -120,7 +120,7 @@ router.post("/brapi/v2/search/samples", checkCredentials, async (req, res) => {
       {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
       }
     );
@@ -128,16 +128,24 @@ router.post("/brapi/v2/search/samples", checkCredentials, async (req, res) => {
     res.send(response.data);
   } catch (error) {
     if (error.response) {
-      logger.error(`API Error in /brapi/v2/search/samples: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
+      logger.error(
+        `API Error in /brapi/v2/search/samples: ${
+          error.response.status
+        } - ${JSON.stringify(error.response.data)}`
+      );
 
-      const errorMessage = error.response.data.metadata?.status.map(status => status.message).join(', ');
+      const errorMessage = error.response.data.metadata?.status
+        .map((status) => status.message)
+        .join(", ");
 
       res.status(error.response.status).send({
         message: errorMessage,
-        status: error.response.status
+        status: error.response.status,
       });
     } else if (error.request) {
-      logger.error('API Error in /brapi/v2/search/samples: No response received');
+      logger.error(
+        "API Error in /brapi/v2/search/samples: No response received"
+      );
       res.status(500).send("API request failed: No response received");
     } else {
       logger.error(`API Error in /brapi/v2/search/samples: ${error.message}`);
@@ -150,7 +158,6 @@ router.post("/brapi/v2/search/samples", checkCredentials, async (req, res) => {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 router.get("/brapi/v2/references", async (req, res) => {
   try {
-
     const params = req.query;
 
     const token = req.query.gigwaToken;
@@ -168,16 +175,22 @@ router.get("/brapi/v2/references", async (req, res) => {
     res.send(response.data);
   } catch (error) {
     if (error.response) {
-      logger.error(`API Error in /brapi/v2/references: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
+      logger.error(
+        `API Error in /brapi/v2/references: ${
+          error.response.status
+        } - ${JSON.stringify(error.response.data)}`
+      );
 
-      const errorMessage = error.response.data.metadata?.status.map(status => status.message).join(', ');
+      const errorMessage = error.response.data.metadata?.status
+        .map((status) => status.message)
+        .join(", ");
 
       res.status(error.response.status).send({
         message: errorMessage,
-        status: error.response.status
+        status: error.response.status,
       });
     } else if (error.request) {
-      logger.error('API Error in /brapi/v2/references: No response received');
+      logger.error("API Error in /brapi/v2/references: No response received");
       res.status(500).send("API request failed: No response received");
     } else {
       logger.error(`API Error in /brapi/v2/references: ${error.message}`);
@@ -190,7 +203,6 @@ router.get("/brapi/v2/references", async (req, res) => {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 router.get("/brapi/v2/referencesets", async (req, res) => {
   try {
-
     const params = req.query;
     const token = params.gigwaToken;
 
@@ -207,16 +219,24 @@ router.get("/brapi/v2/referencesets", async (req, res) => {
     res.send(response.data);
   } catch (error) {
     if (error.response) {
-      logger.error(`API Error in /brapi/v2/referencesets: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
+      logger.error(
+        `API Error in /brapi/v2/referencesets: ${
+          error.response.status
+        } - ${JSON.stringify(error.response.data)}`
+      );
 
-      const errorMessage = error.response.data.metadata?.status.map(status => status.message).join(', ');
+      const errorMessage = error.response.data.metadata?.status
+        .map((status) => status.message)
+        .join(", ");
 
       res.status(error.response.status).send({
         message: errorMessage,
-        status: error.response.status
+        status: error.response.status,
       });
     } else if (error.request) {
-      logger.error('API Error in /brapi/v2/referencesets: No response received');
+      logger.error(
+        "API Error in /brapi/v2/referencesets: No response received"
+      );
       res.status(500).send("API request failed: No response received");
     } else {
       logger.error(`API Error in /brapi/v2/referencesets: ${error.message}`);
@@ -252,7 +272,9 @@ router.post(
       );
       res.send(response.data);
     } catch (error) {
-      logger.error(`API Error in /ga4gh/variants/variantid/:variantid: ${error.message}`);
+      logger.error(
+        `API Error in /ga4gh/variants/variantid/:variantid: ${error.message}`
+      );
       res.status(500).send("API request failed: " + error);
     }
   }
@@ -260,7 +282,6 @@ router.post(
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 router.post("/ga4gh/variants/search", async (req, res) => {
   try {
-
     const token = req.body.gigwaToken;
     const samplesDetails = req.body.selectedSamplesDetails;
     const sampleList = req.body.sampleVcfNames;
@@ -341,27 +362,35 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
 
   try {
     const token = req.body.gigwaToken;
-    const samplesObj = await axios.post(`${config.genolinkServer}/api/internalApi/accessionMapping`, {
-      Accessions: accessions,
-    }).then((response) => response.data);
+    const samplesObj = await axios
+      .post(`${config.genolinkServer}/api/internalApi/accessionMapping`, {
+        Accessions: accessions,
+      })
+      .then((response) => response.data);
 
     const samples = samplesObj.Samples.map((obj) => obj.Sample || []);
     const Accessions = samplesObj.Samples.map((obj) => obj.Accession || []);
 
-    const accessionPlusAccessionName = Object.keys(accessionNames).length > 0 ?
-      Object.entries(accessionNames).filter(([key]) => Accessions.includes(key))
-        .flatMap(([key, value]) => {
-          return samplesObj.Samples
-            .filter((obj) => obj.Accession === key)
-            .map((obj) => `${value}§${key}§${obj.Sample}`);
-        }) : [];
+    const accessionPlusAccessionName =
+      Object.keys(accessionNames).length > 0
+        ? Object.entries(accessionNames)
+            .filter(([key]) => Accessions.includes(key))
+            .flatMap(([key, value]) => {
+              return samplesObj.Samples.filter(
+                (obj) => obj.Accession === key
+              ).map((obj) => `${value}§${key}§${obj.Sample}`);
+            })
+        : [];
 
     const numberOfMappedAccessions = Array.from(new Set(Accessions)).length;
     const numberOfGenesysAccessions = accessions.length;
 
-    const variantSetsResponse = await axios.get(`${config.gigwaServer}/gigwa/rest/brapi/v2/variantsets`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const variantSetsResponse = await axios.get(
+      `${config.gigwaServer}/gigwa/rest/brapi/v2/variantsets`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
 
     const variantSets = variantSetsResponse.data.result.data;
     const datasetNames = variantSets.map((vs) => vs.variantSetName);
@@ -374,88 +403,136 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
         sampleNames.push(`${sample}-${parts.join("-")}`);
       }
     }
-    const searchResponse = await axios.post(`${config.gigwaServer}/gigwa/rest/brapi/v2/search/samples`, {
-      sampleNames,
-      studyDbIds,
-    }, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const searchResponse = await axios.post(
+      `${config.gigwaServer}/gigwa/rest/brapi/v2/search/samples`,
+      {
+        sampleNames,
+        studyDbIds,
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
     const response = searchResponse.data;
-    const sampleDbIds = response.result.data.map(individual => individual.sampleDbId);
+    const sampleDbIds = response.result.data.map(
+      (individual) => individual.sampleDbId
+    );
 
     const uniqueSamplePresence = new Set(
-      response.result.data.map(individual => individual.germplasmDbId.split('§')[1])
+      response.result.data.map(
+        (individual) => individual.germplasmDbId.split("§")[1]
+      )
     );
 
     const numberOfPresentAccessions = uniqueSamplePresence.size;
 
-    res.send({ response, variantSetDbIds, sampleDbIds, datasetNames, vcfSamples: samples, numberOfGenesysAccessions, numberOfPresentAccessions, numberOfMappedAccessions, accessionPlusAccessionName });
+    res.send({
+      response,
+      variantSetDbIds,
+      sampleDbIds,
+      datasetNames,
+      vcfSamples: samples,
+      numberOfGenesysAccessions,
+      numberOfPresentAccessions,
+      numberOfMappedAccessions,
+      accessionPlusAccessionName,
+    });
   } catch (error) {
     if (error.response && error.response.data && error.response.data.message) {
       logger.error(`Error in dataset search - ${error.response.data.message}`);
-      return res.status(error.response.status).send({ message: error.response.data.message });
+      return res
+        .status(error.response.status)
+        .send({ message: error.response.data.message });
     } else if (error.response && error.response.status === 403) {
       logger.warn("Access denied during dataset search. Credentials issue.");
-      return res.status(403).send({ message: "Access denied. Please check your credentials." });
+      return res
+        .status(403)
+        .send({ message: "Access denied. Please check your credentials." });
     } else {
-      logger.error(`Unhandled API error in /searchSamplesInDatasets: ${error.message}`);
+      logger.error(
+        `Unhandled API error in /searchSamplesInDatasets: ${error.message}`
+      );
       res.status(500).send("API request failed: " + error.message);
     }
   }
 });
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-router.post(
-  "/brapi/v2/search/allelematrix",
-  async (req, res) => {
-    try {
-      let token = "";
-      if (req.body.gigwaToken) {
-        token = req.body.gigwaToken;
-      } else {
-        token = await generateGigwaToken();
-      }
-      const response = await axios.post(
-        `${config.gigwaServer}/gigwa/rest/brapi/v2/search/allelematrix`,
-        req.body,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-        }
-      );
-      res.send(response.data);
-    } catch (error) {
-      if (error.response) {
-        logger.error(`API Error in /brapi/v2/search/allelematrix: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
+router.post("/brapi/v2/search/allelematrix", async (req, res) => {
+  try {
+    let token = "";
+    if (req.body.gigwaToken) {
+      token = req.body.gigwaToken;
+    } else {
+      token = await generateGigwaToken();
+    }
 
-        const errorMessage = error.response.data.metadata?.status.map(status => status.message).join(', ');
-
-        res.status(error.response.status).send({
-          message: errorMessage,
-          status: error.response.status
-        });
-      } else if (error.request) {
-        logger.error('API Error in /brapi/v2/search/allelematrix: No response received');
-        res.status(500).send("API request failed: No response received");
+    if (!req.body.dataMatrixAbbreviations) {
+      req.body.dataMatrixAbbreviations = ["GT"];
+    }
+    if (!req.body.pagination) {
+      if (req.body.page) {
+        req.body.pagination = [
+          { dimension: "variants", page: req.body.page, pageSize: 1000 },
+          { dimension: "callsets", page: 0, pageSize: 10000 },
+        ];
       } else {
-        logger.error(`API Error in /brapi/v2/search/allelematrix: ${error.message}`);
-        res.status(500).send("API request failed: " + error.message);
+        req.body.pagination = [
+          { dimension: "variants", page: 0, pageSize: 1000 },
+          { dimension: "callsets", page: 0, pageSize: 10000 },
+        ];
       }
     }
+    const response = await axios.post(
+      `${config.gigwaServer}/gigwa/rest/brapi/v2/search/allelematrix`,
+      req.body,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    res.send(response.data);
+  } catch (error) {
+    if (error.response) {
+      logger.error(
+        `API Error in /brapi/v2/search/allelematrix: ${
+          error.response.status
+        } - ${JSON.stringify(error.response.data)}`
+      );
+
+      const errorMessage = error.response.data.metadata?.status
+        .map((status) => status.message)
+        .join(", ");
+
+      res.status(error.response.status).send({
+        message: errorMessage,
+        status: error.response.status,
+      });
+    } else if (error.request) {
+      logger.error(
+        "API Error in /brapi/v2/search/allelematrix: No response received"
+      );
+      res.status(500).send("API request failed: No response received");
+    } else {
+      logger.error(
+        `API Error in /brapi/v2/search/allelematrix: ${error.message}`
+      );
+      res.status(500).send("API request failed: " + error.message);
+    }
   }
-);
+});
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-router.post('/exportData', async (req, res) => {
+router.post("/exportData", async (req, res) => {
   try {
-
     const token = req.body.gigwaToken;
-    const { variantList, selectedSamplesDetails, linkagegroups, start, end } = req.body;
+    const { variantList, selectedSamplesDetails, linkagegroups, start, end } =
+      req.body;
     logger.info(JSON.stringify(selectedSamplesDetails));
-    const sampleList = selectedSamplesDetails.map(sample =>
-      sample.germplasmDbId.split("§")[1]
+    const sampleList = selectedSamplesDetails.map(
+      (sample) => sample.germplasmDbId.split("§")[1]
     );
 
     const joinedVariantList = variantList.join(";");
@@ -502,18 +579,88 @@ router.post('/exportData', async (req, res) => {
       variantEffect: "",
       variantSetId: `${selectedSamplesDetails[0]?.studyDbId}`,
     };
-    const response = await axios.post(`${config.gigwaServer}/gigwa/rest/gigwa/exportData`, body, {
-      headers: {
-        assembly: "0",
-        Authorization: `Bearer ${token}`,
-      },
-      responseType: 'arraybuffer'
-    });
+    const response = await axios.post(
+      `${config.gigwaServer}/gigwa/rest/gigwa/exportData`,
+      body,
+      {
+        headers: {
+          assembly: "0",
+          Authorization: `Bearer ${token}`,
+        },
+        responseType: "arraybuffer",
+      }
+    );
 
     res.send(response.data);
   } catch (error) {
     logger.error(`API Error in /exportData: ${error.message}`);
-    res.status(500).send('API request failed: ' + error.message);
+    res.status(500).send("API request failed: " + error.message);
+  }
+});
+//////////////////////////////////////////////////////////////////////////
+router.post("/samplesDatasetInfo", async (req, res) => {
+  try {
+    let gigwaToken = "";
+    let samples;
+    if (req.body.gigwaToken) {
+      gigwaToken = req.body.gigwaToken;
+    } else {
+      gigwaToken = await generateGigwaToken();
+    }
+    if (!req.body.Samples) {
+      throw new Error("Please provide Samples object");
+    } else if (Array.isArray(req.body.Samples)) {
+      if (typeof req.body.Samples[0] === "string") {
+        samples = req.body.Samples;
+      } else if (typeof req.body.Samples[0] === "object") {
+        samples = req.body.Samples.map((obj) => obj.Sample || []);
+      } else {
+        throw new Error("Invalid Samples format");
+      }
+    } else {
+      throw new Error("Samples must be an array");
+    }
+
+    const variantSetsResponse = await axios.get(
+      `https://gigwa.plantinformatics.io/gigwa/rest/brapi/v2/variantsets`,
+      {
+        headers: { Authorization: `Bearer ${gigwaToken}` },
+      }
+    );
+
+    const variantSets = variantSetsResponse.data.result.data;
+    const variantSetDbIds = variantSets.map((vs) => vs.variantSetDbId);
+    const studyDbIds = variantSets.map((vs) => vs.studyDbId);
+    const sampleNames = [];
+    for (const vs of variantSets) {
+      const parts = vs.variantSetDbId.split("§").slice(1);
+      for (const sample of samples) {
+        sampleNames.push(`${sample}-${parts.join("-")}`);
+      }
+    }
+    const searchResponse = await axios.post(
+      `https://gigwa.plantinformatics.io/gigwa/rest/brapi/v2/search/samples`,
+      {
+        sampleNames,
+        studyDbIds,
+      },
+      {
+        headers: { Authorization: `Bearer ${gigwaToken}` },
+      }
+    );
+    const SamplesDatasetInfo = searchResponse.data.result.data.map((sample) => {
+      const sampleName = sample.sampleName;
+      const callSetDbId = sample.sampleDbId;
+      const variantSetDbId = variantSetDbIds.filter((variantSetDbId) =>
+        variantSetDbId.includes(sample.studyDbId)
+      );
+
+      return { sampleName, callSetDbId, variantSetDbId };
+    });
+    res.send(SamplesDatasetInfo);
+  } catch (error) {
+    logger.error(`API Error in /passportQuery: ${error}`);
+    res.status(500).send("API request failed: " + error);
   }
 });
 
