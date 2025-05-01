@@ -37,7 +37,8 @@ const SearchFilters = () => {
   const [isTaxonomyDrawerOpen, setIsTaxonomyDrawerOpen] = useState(false);
   const [isOriginDrawerOpen, setIsOriginDrawerOpen] = useState(false);
   const [isSampStatDrawerOpen, setIsSampStatDrawerOpen] = useState(false);
-  const [isGermplasmStorageDrawerOpen, setIsGermplasmStorageDrawerOpen] = useState(false);
+  const [isGermplasmStorageDrawerOpen, setIsGermplasmStorageDrawerOpen] =
+    useState(false);
   const [filterMode, setFilterMode] = useState("Passport Filter");
   const [isFilterApplied, setIsFilterApplied] = useState(false);
   const [initialRequestSent, setInitialRequestSent] = useState(false);
@@ -56,9 +57,7 @@ const SearchFilters = () => {
     (state) => state.isLoadingGenotypedAccessions
   );
 
-  const activeFilters = useSelector(
-    (state) => state.activeFilters
-  );
+  const activeFilters = useSelector((state) => state.activeFilters);
   const instituteCheckedBoxes = useSelector(
     (state) => state.instituteCheckedBoxes
   );
@@ -86,15 +85,13 @@ const SearchFilters = () => {
   const originOfMaterialList = useSelector(
     (state) => state.originOfMaterialList
   );
-  const sampStatList = useSelector(
-    (state) => state.sampStatList
-  );
+  const sampStatList = useSelector((state) => state.sampStatList);
   const germplasmStorageList = useSelector(
     (state) => state.germplasmStorageList
   );
   const dispatch = useDispatch();
 
-  const wheatImage = '/Wheat.PNG';
+  const wheatImage = "/Wheat.PNG";
 
   useEffect(() => {
     if (Object.keys(checkedAccessions).length === 0) {
@@ -104,12 +101,11 @@ const SearchFilters = () => {
 
   useEffect(() => {
     if (activeFilters.length > 0 && searchButtonName !== "Update Search") {
-      setSearchButtonName('Update Search')
+      setSearchButtonName("Update Search");
     } else {
-      setSearchButtonName('Search');
+      setSearchButtonName("Search");
     }
   }, [activeFilters]);
-
 
   useEffect(() => {
     const fetchData = async () => {
@@ -121,9 +117,9 @@ const SearchFilters = () => {
 
         const [_, { filterCode, body }] = await Promise.all([
           genesysApi.fetchInitialFilterData(dispatch),
-          genesysApi.fetchInitialQueryData(dispatch)
+          genesysApi.fetchInitialQueryData(dispatch),
         ]);
-  
+
         setFilterCode(filterCode);
         setFilterBody(body);
         setInitialRequestSent(true);
@@ -173,7 +169,11 @@ const SearchFilters = () => {
         break;
     }
 
-    dispatch(setActiveFilters(activeFilters.filter((filter) => filter !== filterToRemove)));
+    dispatch(
+      setActiveFilters(
+        activeFilters.filter((filter) => filter !== filterToRemove)
+      )
+    );
 
     let updatedBody = {};
     activeFilters
@@ -190,10 +190,16 @@ const SearchFilters = () => {
             updatedBody.institute = { code: filter.value };
             break;
           case "Start Date":
-            updatedBody.createdDate = { ...updatedBody.createdDate, ge: filter.value };
+            updatedBody.createdDate = {
+              ...updatedBody.createdDate,
+              ge: filter.value,
+            };
             break;
           case "End Date":
-            updatedBody.createdDate = { ...updatedBody.createdDate, le: filter.value };
+            updatedBody.createdDate = {
+              ...updatedBody.createdDate,
+              le: filter.value,
+            };
             break;
           case "Crop":
             updatedBody.crop = filter.value;
@@ -215,12 +221,12 @@ const SearchFilters = () => {
         }
       });
 
-    setFilterBody(updatedBody)
+    setFilterBody(updatedBody);
   };
 
   const handleChange = () => {
     setHasGenotype(!hasGenotype);
-  }
+  };
   const handleSearch = async (userInput = "") => {
     dispatch(setResetTrigger(false));
     dispatch(setCheckedAccessions({}));
@@ -232,7 +238,8 @@ const SearchFilters = () => {
 
       accessionNumbers,
 
-      institute: instituteCheckedBoxes.length > 0 ? { code: instituteCheckedBoxes } : [],
+      institute:
+        instituteCheckedBoxes.length > 0 ? { code: instituteCheckedBoxes } : [],
 
       createdDate: {
         ...(creationStartDate !== null ? { ge: creationStartDate } : {}),
@@ -241,27 +248,37 @@ const SearchFilters = () => {
 
       crop: cropCheckedBoxes.length > 0 ? cropCheckedBoxes : [],
 
-      taxonomy: taxonomyCheckedBoxes.length > 0 ? { genus: taxonomyCheckedBoxes } : {},
+      taxonomy:
+        taxonomyCheckedBoxes.length > 0 ? { genus: taxonomyCheckedBoxes } : {},
 
-      countryOfOrigin: originOfMaterialCheckedBoxes.length > 0 ? { code3: originOfMaterialCheckedBoxes } : {},
+      countryOfOrigin:
+        originOfMaterialCheckedBoxes.length > 0
+          ? { code3: originOfMaterialCheckedBoxes }
+          : {},
 
       sampStat: sampStatCheckedBoxes.length > 0 ? sampStatCheckedBoxes : [],
 
-      storage: germplasmStorageCheckedBoxes.length > 0 ? germplasmStorageCheckedBoxes : [],
+      storage:
+        germplasmStorageCheckedBoxes.length > 0
+          ? germplasmStorageCheckedBoxes
+          : [],
     };
 
     Object.keys(body).forEach((key) => {
       if (
         body[key] === undefined ||
-        (typeof body[key] === 'object' && !Object.keys(body[key]).length)
+        (typeof body[key] === "object" && !Object.keys(body[key]).length)
       ) {
         delete body[key];
       }
     });
 
-
     try {
-      const filterCode = await genesysApi.applyFilter(body, dispatch, hasGenotype);
+      const filterCode = await genesysApi.applyFilter(
+        body,
+        dispatch,
+        hasGenotype
+      );
 
       setFilterCode(filterCode);
       setIsLoading(false);
@@ -269,15 +286,36 @@ const SearchFilters = () => {
 
       const newFilters = [];
       if (userInput) newFilters.push({ type: "Text", value: userInput });
-      if (accessionNumbers.length > 0) newFilters.push({ type: "Accession Numbers", value: accessionNumbers });
-      if (instituteCheckedBoxes.length > 0) newFilters.push({ type: "Institute Code", value: instituteCheckedBoxes });
-      if (creationStartDate) newFilters.push({ type: "Start Date", value: creationStartDate });
-      if (creationEndDate) newFilters.push({ type: "End Date", value: creationEndDate });
-      if (cropCheckedBoxes.length > 0) newFilters.push({ type: "Crop", value: cropCheckedBoxes });
-      if (taxonomyCheckedBoxes.length > 0) newFilters.push({ type: "Taxonomy", value: taxonomyCheckedBoxes });
-      if (originOfMaterialCheckedBoxes.length > 0) newFilters.push({ type: "Origin of Material", value: originOfMaterialCheckedBoxes });
-      if (sampStatCheckedBoxes.length > 0) newFilters.push({ type: "Biological Status", value: sampStatCheckedBoxes });
-      if (germplasmStorageCheckedBoxes.length > 0) newFilters.push({ type: "Germplasm Storage", value: germplasmStorageCheckedBoxes });
+      if (accessionNumbers.length > 0)
+        newFilters.push({ type: "Accession Numbers", value: accessionNumbers });
+      if (instituteCheckedBoxes.length > 0)
+        newFilters.push({
+          type: "Institute Code",
+          value: instituteCheckedBoxes,
+        });
+      if (creationStartDate)
+        newFilters.push({ type: "Start Date", value: creationStartDate });
+      if (creationEndDate)
+        newFilters.push({ type: "End Date", value: creationEndDate });
+      if (cropCheckedBoxes.length > 0)
+        newFilters.push({ type: "Crop", value: cropCheckedBoxes });
+      if (taxonomyCheckedBoxes.length > 0)
+        newFilters.push({ type: "Taxonomy", value: taxonomyCheckedBoxes });
+      if (originOfMaterialCheckedBoxes.length > 0)
+        newFilters.push({
+          type: "Origin of Material",
+          value: originOfMaterialCheckedBoxes,
+        });
+      if (sampStatCheckedBoxes.length > 0)
+        newFilters.push({
+          type: "Biological Status",
+          value: sampStatCheckedBoxes,
+        });
+      if (germplasmStorageCheckedBoxes.length > 0)
+        newFilters.push({
+          type: "Germplasm Storage",
+          value: germplasmStorageCheckedBoxes,
+        });
 
       dispatch(setActiveFilters(newFilters));
 
@@ -340,13 +378,13 @@ const SearchFilters = () => {
   };
 
   const handleDownloadTemplate = () => {
-    const headers = 'sample,accession\n';
-    const blob = new Blob([headers], { type: 'text/csv;charset=utf-8;' });
+    const headers = "sample,accession\n";
+    const blob = new Blob([headers], { type: "text/csv;charset=utf-8;" });
 
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = url;
-    link.download = 'sample_accessions_template.csv';
+    link.download = "sample_accessions_template.csv";
     document.body.appendChild(link);
     link.click();
 
@@ -405,14 +443,13 @@ const SearchFilters = () => {
         style={{
           display: "grid",
           gridTemplateColumns: "minmax(280px, auto) 1fr",
-          gridTemplateRows: (isLoading || isResetLoading)
-            ? hasCheckedAccessions
-              ? "auto 1fr 5px 1fr auto"
-              : "auto 1fr auto"
-            : "none",
-          gridAutoRows: (isLoading || isResetLoading)
-            ? "none"
-            : "min-content",
+          gridTemplateRows:
+            isLoading || isResetLoading
+              ? hasCheckedAccessions
+                ? "auto 1fr 5px 1fr auto"
+                : "auto 1fr auto"
+              : "none",
+          gridAutoRows: isLoading || isResetLoading ? "none" : "min-content",
           gap: "0px",
           height: "100vh",
           padding: "10px",
@@ -431,36 +468,59 @@ const SearchFilters = () => {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            flexDirection: "column"
+            flexDirection: "column",
           }}
         >
           <div style={{ display: "flex", alignItems: "center" }}>
             <img
               src="/Genolink.png"
               alt="Genolink-logo"
-              style={{ marginRight: "10px", verticalAlign: "middle", height: "40px" }}
+              style={{
+                marginRight: "10px",
+                verticalAlign: "middle",
+                height: "40px",
+              }}
             />
-            <h2 style={{ margin: "0", fontSize: "24px", fontWeight: "bold" }}>Genolink</h2>
+            <h2 style={{ margin: "0", fontSize: "24px", fontWeight: "bold" }}>
+              Genolink
+            </h2>
           </div>
-
-          <p style={{ margin: "5px 0 0", fontSize: "14px", color: "rgba(255, 255, 255, 0.8)" }}>
-            Powered by <a
-              href="https://www.genesys-pgr.org/"
+          <p>
+            All passport data is sourced from{" "}
+            <a
+              href="https://www.genesys-pgr.org"
               target="_blank"
               rel="noopener noreferrer"
               style={{
                 color: "white",
                 textDecoration: "none",
-                fontWeight: "bold"
+                fontWeight: "bold",
               }}
-              onMouseOver={(e) => e.target.style.textDecoration = "underline"}
-              onMouseOut={(e) => e.target.style.textDecoration = "none"}
+              onMouseOver={(e) => (e.target.style.textDecoration = "underline")}
+              onMouseOut={(e) => (e.target.style.textDecoration = "none")}
             >
-              Genesys-PGR
+               Genesys-PGR
             </a>
+            , and by using this service, you agree to comply with the
+            Genesys-PGR{" "}
+            <a
+              href="https://www.genesys-pgr.org/content/legal/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                color: "white",
+                textDecoration: "none",
+                fontWeight: "bold",
+              }}
+              onMouseOver={(e) => (e.target.style.textDecoration = "underline")}
+              onMouseOut={(e) => (e.target.style.textDecoration = "none")}
+            >
+              Terms and Conditions
+            </a>
+            ; when using passport data via Genolink, Genesys-PGR must be
+            acknowledged as the source
           </p>
         </div>
-
 
         {/* div3: Genesys Filter */}
         <div
@@ -474,13 +534,16 @@ const SearchFilters = () => {
             padding: "10px",
             minWidth: "320px",
             overflow: "auto",
-            height: "100%"
+            height: "100%",
           }}
         >
           <h4>Filters</h4>
-          {initialRequestSent && ((!isLoading && !isLoadingGenotypedAccessions) ?
-            (<h5>Total Accessions: {totalAccessions}</h5>) : <LoadingComponent />)
-          }
+          {initialRequestSent &&
+            (!isLoading && !isLoadingGenotypedAccessions ? (
+              <h5>Total Accessions: {totalAccessions}</h5>
+            ) : (
+              <LoadingComponent />
+            ))}
           <div style={{ marginBottom: "5px" }}>
             {initialRequestSent ? (
               isUploadLoading ? (
@@ -491,10 +554,20 @@ const SearchFilters = () => {
                     className="btn btn-info"
                     onClick={() => setShowFileInput(!showFileInput)}
                     style={{
-                      display: "inline-block", width: "280px", textAlign: "left", position: "relative", border: "2px solid #ebba35", margin: "15px 0 5px 0", backgroundColor: "beige", fontWeight: "500"
+                      display: "inline-block",
+                      width: "280px",
+                      textAlign: "left",
+                      position: "relative",
+                      border: "2px solid #ebba35",
+                      margin: "15px 0 5px 0",
+                      backgroundColor: "beige",
+                      fontWeight: "500",
                     }}
                   >
-                    Upload Metadata <span style={{ float: "right" }}>{showFileInput ? "\u25B2" : "\u25BC"}</span> {" "}
+                    Upload Metadata{" "}
+                    <span style={{ float: "right" }}>
+                      {showFileInput ? "\u25B2" : "\u25BC"}
+                    </span>{" "}
                   </button>
                   {showFileInput && (
                     <div style={{ marginBottom: "20px" }}>
@@ -545,20 +618,33 @@ const SearchFilters = () => {
             ) : null}
           </div>
           <div>
-            <h5 style={{ visibility: activeFilters.length > 0 ? 'visible' : 'hidden' }}>Active Filters</h5>
+            <h5
+              style={{
+                visibility: activeFilters.length > 0 ? "visible" : "hidden",
+              }}
+            >
+              Active Filters
+            </h5>
             {activeFilters.length > 0 ? (
               <ul className="active-filters-list">
                 {activeFilters.map((filter, index) => (
                   <li key={index} className="active-filter-item">
                     <div className="filter-label">{filter.type}:</div>
                     <div className="filter-value">
-                      {Array.isArray(filter.value) && filter.type === "Accession Numbers" && filter.value.length > 2
-                        ? `${filter.value[0]}, ..., ${filter.value[filter.value.length - 1]}`
+                      {Array.isArray(filter.value) &&
+                      filter.type === "Accession Numbers" &&
+                      filter.value.length > 2
+                        ? `${filter.value[0]}, ..., ${
+                            filter.value[filter.value.length - 1]
+                          }`
                         : Array.isArray(filter.value)
-                          ? filter.value.join(", ")
-                          : filter.value}
+                        ? filter.value.join(", ")
+                        : filter.value}
                     </div>
-                    <button className="remove-filter-button" onClick={() => removeFilter(filter)}>
+                    <button
+                      className="remove-filter-button"
+                      onClick={() => removeFilter(filter)}
+                    >
                       <FaCircleXmark color="red" />
                     </button>
                   </li>
@@ -574,10 +660,20 @@ const SearchFilters = () => {
                   className="btn btn-info"
                   onClick={() => setIsDateDrawerOpen(!isDateDrawerOpen)}
                   style={{
-                    display: "inline-block", width: "280px", textAlign: "left", position: "relative", border: "2px solid #ebba35", backgroundColor: "beige", marginBottom: "5px", fontWeight: "500"
+                    display: "inline-block",
+                    width: "280px",
+                    textAlign: "left",
+                    position: "relative",
+                    border: "2px solid #ebba35",
+                    backgroundColor: "beige",
+                    marginBottom: "5px",
+                    fontWeight: "500",
                   }}
                 >
-                  Date   <span style={{ float: "right" }}>{isDateDrawerOpen ? "\u25B2" : "\u25BC"}</span>
+                  Date{" "}
+                  <span style={{ float: "right" }}>
+                    {isDateDrawerOpen ? "\u25B2" : "\u25BC"}
+                  </span>
                 </button>
                 {isDateDrawerOpen && (
                   <>
@@ -593,10 +689,20 @@ const SearchFilters = () => {
                     setIsInstituteDrawerOpen(!isInstituteDrawerOpen)
                   }
                   style={{
-                    display: "inline-block", width: "280px", textAlign: "left", position: "relative", border: "2px solid #ebba35", backgroundColor: "beige", marginBottom: "5px", fontWeight: "500"
+                    display: "inline-block",
+                    width: "280px",
+                    textAlign: "left",
+                    position: "relative",
+                    border: "2px solid #ebba35",
+                    backgroundColor: "beige",
+                    marginBottom: "5px",
+                    fontWeight: "500",
                   }}
                 >
-                  Holding Institute <span style={{ float: "right" }}>{isInstituteDrawerOpen ? "\u25B2" : "\u25BC"}</span>
+                  Holding Institute{" "}
+                  <span style={{ float: "right" }}>
+                    {isInstituteDrawerOpen ? "\u25B2" : "\u25BC"}
+                  </span>
                 </button>
                 {isInstituteDrawerOpen && (
                   <MultiSelectFilter
@@ -610,10 +716,20 @@ const SearchFilters = () => {
                   className="btn btn-info"
                   onClick={() => setIsCropDrawerOpen(!isCropDrawerOpen)}
                   style={{
-                    display: "inline-block", width: "280px", textAlign: "left", position: "relative", border: "2px solid #ebba35", backgroundColor: "beige", marginBottom: "5px", fontWeight: "500"
+                    display: "inline-block",
+                    width: "280px",
+                    textAlign: "left",
+                    position: "relative",
+                    border: "2px solid #ebba35",
+                    backgroundColor: "beige",
+                    marginBottom: "5px",
+                    fontWeight: "500",
                   }}
                 >
-                  Crops <span style={{ float: "right" }}>{isCropDrawerOpen ? "\u25B2" : "\u25BC"}</span>
+                  Crops{" "}
+                  <span style={{ float: "right" }}>
+                    {isCropDrawerOpen ? "\u25B2" : "\u25BC"}
+                  </span>
                 </button>
                 {isCropDrawerOpen && (
                   <MultiSelectFilter
@@ -627,10 +743,20 @@ const SearchFilters = () => {
                   className="btn btn-info"
                   onClick={() => setIsTaxonomyDrawerOpen(!isTaxonomyDrawerOpen)}
                   style={{
-                    display: "inline-block", width: "280px", textAlign: "left", position: "relative", border: "2px solid #ebba35", backgroundColor: "beige", marginBottom: "5px", fontWeight: "500"
+                    display: "inline-block",
+                    width: "280px",
+                    textAlign: "left",
+                    position: "relative",
+                    border: "2px solid #ebba35",
+                    backgroundColor: "beige",
+                    marginBottom: "5px",
+                    fontWeight: "500",
                   }}
                 >
-                  Taxonomy <span style={{ float: "right" }}>{isTaxonomyDrawerOpen ? "\u25B2" : "\u25BC"}</span>
+                  Taxonomy{" "}
+                  <span style={{ float: "right" }}>
+                    {isTaxonomyDrawerOpen ? "\u25B2" : "\u25BC"}
+                  </span>
                 </button>
                 {isTaxonomyDrawerOpen && (
                   <MultiSelectFilter
@@ -644,10 +770,20 @@ const SearchFilters = () => {
                   className="btn btn-info"
                   onClick={() => setIsOriginDrawerOpen(!isOriginDrawerOpen)}
                   style={{
-                    display: "inline-block", width: "280px", textAlign: "left", position: "relative", border: "2px solid #ebba35", backgroundColor: "beige", marginBottom: "5px", fontWeight: "500"
+                    display: "inline-block",
+                    width: "280px",
+                    textAlign: "left",
+                    position: "relative",
+                    border: "2px solid #ebba35",
+                    backgroundColor: "beige",
+                    marginBottom: "5px",
+                    fontWeight: "500",
                   }}
                 >
-                  Origin Of Material <span style={{ float: "right" }}>{isOriginDrawerOpen ? "\u25B2" : "\u25BC"}</span>
+                  Origin Of Material{" "}
+                  <span style={{ float: "right" }}>
+                    {isOriginDrawerOpen ? "\u25B2" : "\u25BC"}
+                  </span>
                 </button>
                 {isOriginDrawerOpen && (
                   <MultiSelectFilter
@@ -661,10 +797,20 @@ const SearchFilters = () => {
                   className="btn btn-info"
                   onClick={() => setIsSampStatDrawerOpen(!isSampStatDrawerOpen)}
                   style={{
-                    display: "inline-block", width: "280px", textAlign: "left", position: "relative", border: "2px solid #ebba35", backgroundColor: "beige", marginBottom: "5px", fontWeight: "500"
+                    display: "inline-block",
+                    width: "280px",
+                    textAlign: "left",
+                    position: "relative",
+                    border: "2px solid #ebba35",
+                    backgroundColor: "beige",
+                    marginBottom: "5px",
+                    fontWeight: "500",
                   }}
                 >
-                  Biological Status Of Accession <span style={{ float: "right" }}>{isSampStatDrawerOpen ? "\u25B2" : "\u25BC"}</span>
+                  Biological Status Of Accession{" "}
+                  <span style={{ float: "right" }}>
+                    {isSampStatDrawerOpen ? "\u25B2" : "\u25BC"}
+                  </span>
                 </button>
                 {isSampStatDrawerOpen && (
                   <MultiSelectFilter
@@ -676,12 +822,26 @@ const SearchFilters = () => {
               <div>
                 <button
                   className="btn btn-info"
-                  onClick={() => setIsGermplasmStorageDrawerOpen(!isGermplasmStorageDrawerOpen)}
+                  onClick={() =>
+                    setIsGermplasmStorageDrawerOpen(
+                      !isGermplasmStorageDrawerOpen
+                    )
+                  }
                   style={{
-                    display: "inline-block", width: "280px", textAlign: "left", position: "relative", border: "2px solid #ebba35", backgroundColor: "beige", marginBottom: "5px", fontWeight: "500"
+                    display: "inline-block",
+                    width: "280px",
+                    textAlign: "left",
+                    position: "relative",
+                    border: "2px solid #ebba35",
+                    backgroundColor: "beige",
+                    marginBottom: "5px",
+                    fontWeight: "500",
                   }}
                 >
-                  Type Of Germplasm Storage <span style={{ float: "right" }}>{isGermplasmStorageDrawerOpen ? "\u25B2" : "\u25BC"}</span>
+                  Type Of Germplasm Storage{" "}
+                  <span style={{ float: "right" }}>
+                    {isGermplasmStorageDrawerOpen ? "\u25B2" : "\u25BC"}
+                  </span>
                 </button>
                 {isGermplasmStorageDrawerOpen && (
                   <MultiSelectFilter
@@ -702,7 +862,6 @@ const SearchFilters = () => {
               />
               Check for genotype
             </label>
-
           </div>
         </div>
 
@@ -720,35 +879,39 @@ const SearchFilters = () => {
             height: hasCheckedAccessions ? genesysHeight : "100%",
           }}
         >
-          {(isLoading || isResetLoading) ? (
+          {isLoading || isResetLoading ? (
             <LoadingComponent />
           ) : (
             <div
               className="container"
               style={{
-                display: 'flex',
-                flexDirection: 'column',
-                height: '100vh',
-                overflowY: 'auto',
+                display: "flex",
+                flexDirection: "column",
+                height: "100vh",
+                overflowY: "auto",
               }}
             >
               <div
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  margin: '20px',
-                  top: '0',
-                  position: 'sticky',
+                  display: "flex",
+                  alignItems: "center",
+                  margin: "20px",
+                  top: "0",
+                  position: "sticky",
                   zIndex: 1,
                 }}
               >
-                {filterMode === 'Passport Filter' ? (
+                {filterMode === "Passport Filter" ? (
                   <input
                     type="text"
-                    value={inputValue || ''}
+                    value={inputValue || ""}
                     onChange={(e) => setInputValue(e.target.value)}
                     placeholder="Wild Search"
-                    style={{ width: '500px', padding: '8px', marginLeft: "250px" }}
+                    style={{
+                      width: "500px",
+                      padding: "8px",
+                      marginLeft: "250px",
+                    }}
                   />
                 ) : (
                   <AccessionFilter />
@@ -758,21 +921,25 @@ const SearchFilters = () => {
                   className="button-primary"
                   onClick={() => handleSearch(inputValue)}
                   style={{
-                    backgroundColor: '#0056b3',
-                    color: 'white',
-                    padding: '8px 16px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    marginLeft: '10px',
+                    backgroundColor: "#0056b3",
+                    color: "white",
+                    padding: "8px 16px",
+                    border: "none",
+                    cursor: "pointer",
+                    marginLeft: "10px",
                   }}
                 >
                   {searchButtonName}
                 </button>
               </div>
 
-              <div style={{ flex: '1 1 auto' }}>
+              <div style={{ flex: "1 1 auto" }}>
                 {Object.keys(searchResults).length !== 0 ? (
-                  <MetadataSearchResultTable filterCode={filterCode} hasGenotype={hasGenotype} filterBody={filterBody} />
+                  <MetadataSearchResultTable
+                    filterCode={filterCode}
+                    hasGenotype={hasGenotype}
+                    filterBody={filterBody}
+                  />
                 ) : null}
               </div>
             </div>
@@ -821,8 +988,18 @@ const SearchFilters = () => {
             textAlign: "center",
           }}
         >
-          <p style={{ textAlign: "center", margin: "0 0 10px 0", fontSize: "15px" }}>
-            Genolink is a middleware connecting genotype databases with Genesys-PGR. Funded by the $30M Australian Grains Genebank Partnership, it enhances genetic resource potential for Australian grain growers.            <a
+          <p
+            style={{
+              textAlign: "center",
+              margin: "0 0 10px 0",
+              fontSize: "15px",
+            }}
+          >
+            Genolink is a middleware connecting genotype databases with
+            Genesys-PGR. Funded by the $30M Australian Grains Genebank
+            Partnership, it enhances genetic resource potential for Australian
+            grain growers.{" "}
+            <a
               href="https://agriculture.vic.gov.au/crops-and-horticulture/the-australian-grains-genebank"
               style={{ color: "white", textDecoration: "underline" }}
               target="_blank"
@@ -839,18 +1016,41 @@ const SearchFilters = () => {
               alignItems: "center",
             }}
           >
-            <img src="/agriculture-victoria-logo.png" alt="Agriculture-Victoria-logo" style={{ height: "60px" }} />
-            <img src="/Australian-Grains-Genebank-logo.jpg" alt="Australian-Grains-Genebank-logo" style={{ height: "60px" }} />
-            <img src="/Genesys-logo.jpg" alt="Genesys-logo.jpg" style={{ height: "60px" }} />
-            <img src="/Germinate-logo.png" alt="Germinate-logo" style={{ height: "60px" }} />
-            <img src="/Gigwa-logo.png" alt="Gigwa-logo" style={{ height: "60px" }} />
-            <img src="/GRDC-logo.jpg" alt="GRDC-logo" style={{ height: "60px" }} />
+            <img
+              src="/agriculture-victoria-logo.png"
+              alt="Agriculture-Victoria-logo"
+              style={{ height: "60px" }}
+            />
+            <img
+              src="/Australian-Grains-Genebank-logo.jpg"
+              alt="Australian-Grains-Genebank-logo"
+              style={{ height: "60px" }}
+            />
+            <img
+              src="/Genesys-logo.jpg"
+              alt="Genesys-logo.jpg"
+              style={{ height: "60px" }}
+            />
+            <img
+              src="/Germinate-logo.png"
+              alt="Germinate-logo"
+              style={{ height: "60px" }}
+            />
+            <img
+              src="/Gigwa-logo.png"
+              alt="Gigwa-logo"
+              style={{ height: "60px" }}
+            />
+            <img
+              src="/GRDC-logo.jpg"
+              alt="GRDC-logo"
+              style={{ height: "60px" }}
+            />
           </div>
         </div>
       </div>
     </>
   );
-
 };
 
 export default SearchFilters;
