@@ -84,11 +84,17 @@ export const setAccessionNumbers = (accessions) => ({
   type: "SET_ACCESSION_NUMBERS",
   payload: accessions,
 });
+export const setGenotypeIds = (genotypeIds) => ({
+  type: "SET_GENOTYPE_IDS",
+  payload: genotypeIds,
+});
 export const setTotalAccessions = (totalAccessions) => ({
   type: "SET_TOTAL_ACCESSIONS",
   payload: totalAccessions,
 });
-export const setTotalPreGenotypedAccessions = (totalPreGenotypedAccessions) => ({
+export const setTotalPreGenotypedAccessions = (
+  totalPreGenotypedAccessions
+) => ({
   type: "SET_TOTAL_PRE_GENOTYPED_ACCESSIONS",
   payload: totalPreGenotypedAccessions,
 });
@@ -124,8 +130,7 @@ export const setActiveFilters = (activeFilters) => ({
   type: "SET_ACTIVE_FILTERS",
   payload: activeFilters,
 });
-
-
-
-
-
+export const setWildSearchValue = (wildSearchValue) => ({
+  type: "SET_WILD_SEARCH_VALUE",
+  payload: wildSearchValue,
+});

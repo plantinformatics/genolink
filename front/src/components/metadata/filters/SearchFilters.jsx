@@ -6,6 +6,7 @@ import {
   setInstituteCheckedBoxes,
   setResetTrigger,
   setAccessionNumbers,
+  setGenotypeIds,
   setCreationStartDate,
   setCreationEndDate,
   setCropCheckedBoxes,
@@ -15,10 +16,12 @@ import {
   setGermplasmStorageCheckedBoxes,
   setCheckedAccessions,
   setActiveFilters,
+  setWildSearchValue,
 } from "../../../actions";
 
 import MultiSelectFilter from "./MultiSelectFilter";
 import AccessionFilter from "./AccessionFilter";
+import GenotypeIdFilter from "./GenotypeIdFilter";
 import MetadataSearchResultTable from "../MetadataSearchResultTable";
 import DateRangeFilter from "./DateRangeFilter";
 import GenotypeExplorer from "../../genotype/GenotypeExplorer";
@@ -45,7 +48,6 @@ const SearchFilters = () => {
   const [file, setFile] = useState(null);
   const [inputKey, setInputKey] = useState(Date.now());
   const [showFileInput, setShowFileInput] = useState(false);
-  const [inputValue, setInputValue] = useState("");
   const [filterBody, setFilterBody] = useState({});
   const [searchButtonName, setSearchButtonName] = useState("Search");
   const [hasGenotype, setHasGenotype] = useState(false);
@@ -58,6 +60,7 @@ const SearchFilters = () => {
   );
 
   const activeFilters = useSelector((state) => state.activeFilters);
+  const wildSearchValue = useSelector((state) => state.wildSearchValue);
   const instituteCheckedBoxes = useSelector(
     (state) => state.instituteCheckedBoxes
   );
@@ -78,6 +81,7 @@ const SearchFilters = () => {
 
   const resetTrigger = useSelector((state) => state.resetTrigger);
   const accessionNumbers = useSelector((state) => state.accessionNumbers);
+  const genotypeIds = useSelector((state) => state.genotypeIds);
   const creationStartDate = useSelector((state) => state.creationStartDate);
   const creationEndDate = useSelector((state) => state.creationEndDate);
   const cropList = useSelector((state) => state.cropList);
@@ -136,10 +140,13 @@ const SearchFilters = () => {
   const removeFilter = (filterToRemove) => {
     switch (filterToRemove.type) {
       case "Text":
-        setInputValue("");
+        dispatch(setWildSearchValue(""));
         break;
       case "Accession Numbers":
         dispatch(setAccessionNumbers([]));
+        break;
+      case "Genotype Ids":
+        dispatch(setGenotypeIds([]));
         break;
       case "Institute Code":
         dispatch(setInstituteCheckedBoxes([]));
@@ -186,6 +193,9 @@ const SearchFilters = () => {
           case "Accession Numbers":
             updatedBody.accessionNumbers = filter.value;
             break;
+          case "Genotype Ids":
+            updatedBody.genotypeIds = filter.value;
+            break;
           case "Institute Code":
             updatedBody.institute = { code: filter.value };
             break;
@@ -228,15 +238,25 @@ const SearchFilters = () => {
     setHasGenotype(!hasGenotype);
   };
   const handleSearch = async (userInput = "") => {
+    let accessionNums = [];
+    if (filterMode === "GenotypeId Filter") {
+      if (genotypeIds && genotypeIds.length > 0) {
+        accessionNums = await genolinkInternalApi.genotypeIdMapping(
+          genotypeIds
+        );
+      }
+    }
+
     dispatch(setResetTrigger(false));
     dispatch(setCheckedAccessions({}));
     setIsLoading(true);
     const body = {
       ...filterBody,
 
-      _text: userInput || (inputValue && inputValue.trim()),
+      _text: userInput || (wildSearchValue && wildSearchValue.trim()),
 
-      accessionNumbers,
+      accessionNumbers:
+        accessionNums.length > 0 ? accessionNums : accessionNumbers,
 
       institute:
         instituteCheckedBoxes.length > 0 ? { code: instituteCheckedBoxes } : [],
@@ -288,6 +308,8 @@ const SearchFilters = () => {
       if (userInput) newFilters.push({ type: "Text", value: userInput });
       if (accessionNumbers.length > 0)
         newFilters.push({ type: "Accession Numbers", value: accessionNumbers });
+      if (genotypeIds.length > 0)
+        newFilters.push({ type: "Genotype Ids", value: genotypeIds });
       if (instituteCheckedBoxes.length > 0)
         newFilters.push({
           type: "Institute Code",
@@ -330,6 +352,7 @@ const SearchFilters = () => {
     if (resetTrigger) {
       dispatch(setInstituteCheckedBoxes([]));
       dispatch(setAccessionNumbers([]));
+      dispatch(setGenotypeIds([]));
       dispatch(setCreationEndDate(null));
       dispatch(setCreationStartDate(null));
       dispatch(setCropCheckedBoxes([]));
@@ -400,8 +423,8 @@ const SearchFilters = () => {
       setFilterCode(filterCode);
       setIsResetLoading(false);
       setGenesysHeight("auto");
-      dispatch(setResetTrigger(true));
       dispatch(setActiveFilters([]));
+      dispatch(setResetTrigger(true));
     } catch (error) {
       setIsResetLoading(false);
       console.error("Error handling reset filter:", error);
@@ -499,7 +522,7 @@ const SearchFilters = () => {
               onMouseOver={(e) => (e.target.style.textDecoration = "underline")}
               onMouseOut={(e) => (e.target.style.textDecoration = "none")}
             >
-               Genesys-PGR
+              Genesys-PGR
             </a>
             , and by using this service, you agree to comply with the
             Genesys-PGR{" "}
@@ -614,6 +637,7 @@ const SearchFilters = () => {
               >
                 <option value="Passport Filter">Passport Filter</option>
                 <option value="Accession Filter">Accession Filter</option>
+                <option value="GenotypeId Filter">GenotypeId Filter</option>
               </select>
             ) : null}
           </div>
@@ -904,8 +928,10 @@ const SearchFilters = () => {
                 {filterMode === "Passport Filter" ? (
                   <input
                     type="text"
-                    value={inputValue || ""}
-                    onChange={(e) => setInputValue(e.target.value)}
+                    value={wildSearchValue || ""}
+                    onChange={(e) =>
+                      dispatch(setWildSearchValue(e.target.value))
+                    }
                     placeholder="Wild Search"
                     style={{
                       width: "500px",
@@ -913,13 +939,15 @@ const SearchFilters = () => {
                       marginLeft: "250px",
                     }}
                   />
-                ) : (
+                ) : filterMode === "Accession Filter" ? (
                   <AccessionFilter />
+                ) : (
+                  <GenotypeIdFilter />
                 )}
                 <button
                   type="button"
                   className="button-primary"
-                  onClick={() => handleSearch(inputValue)}
+                  onClick={() => handleSearch(wildSearchValue)}
                   style={{
                     backgroundColor: "#0056b3",
                     color: "white",

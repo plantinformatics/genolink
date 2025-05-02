@@ -18,6 +18,7 @@ const initialState = {
   resetTrigger: false,
   currentPage: 0,
   accessionNumbers: [],
+  genotypeIds: [],
   totalAccessions: 0,
   totalPreGenotypedAccessions: 0,
   searchAcc: "",
@@ -28,6 +29,7 @@ const initialState = {
   platform: "Gigwa",
   isLoadingGenotypedAccessions: false,
   activeFilters: [],
+  wildSearchValue: "",
 };
 
 const rootReducer = (state = initialState, action) => {
@@ -141,7 +143,11 @@ const rootReducer = (state = initialState, action) => {
         ...state,
         accessionNumbers: action.payload,
       };
-
+    case "SET_GENOTYPE_IDS":
+      return {
+        ...state,
+        genotypeIds: action.payload,
+      };
     case "SET_TOTAL_ACCESSIONS":
       return {
         ...state,
@@ -181,6 +187,11 @@ const rootReducer = (state = initialState, action) => {
       return {
         ...state,
         activeFilters: action.payload,
+      };
+    case "SET_WILD_SEARCH_VALUE":
+      return {
+        ...state,
+        wildSearchValue: action.payload,
       };
     default:
       return state;
