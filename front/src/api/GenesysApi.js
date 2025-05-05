@@ -1,6 +1,6 @@
-import BaseApi from './BaseApi';
-import { genesysServer } from '../config/apiConfig';
-import oidcConfig from '../config/oidcConfig';
+import BaseApi from "./BaseApi";
+import { genesysServer } from "../config/apiConfig";
+import oidcConfig from "../config/oidcConfig";
 import {
   setInstituteCheckedBoxes,
   setActiveFilters,
@@ -17,7 +17,7 @@ import {
   setSearchAcc,
   setResetTrigger,
   setLoadingGenotypedAccessions,
-} from '../actions';
+} from "../actions";
 
 class GenesysApi extends BaseApi {
   constructor() {
@@ -44,45 +44,45 @@ class GenesysApi extends BaseApi {
 
   getSampleStatus(number) {
     const sampStatMapping = {
-      "100": "Wild",
-      "110": "Natural",
-      "120": "Semi-natural/wild",
-      "130": "Semi-natural/sown",
-      "200": "Weedy",
-      "300": "Traditional cultivar/Landrace",
-      "400": "Breeding/Research Material",
-      "410": "Breeders Line",
-      "411": "Synthetic population",
-      "412": "Hybrid",
-      "413": "Founder stock/base population",
-      "414": "Inbred line",
-      "415": "Segregating population",
-      "416": "Clonal selection",
-      "420": "Genetic stock",
-      "421": "Mutant",
-      "422": "Cytogenetic stocks",
-      "423": "Other genetic stocks",
-      "500": "Advanced/improved cultivar",
-      "600": "GMO",
-      "999": "Other",
+      100: "Wild",
+      110: "Natural",
+      120: "Semi-natural/wild",
+      130: "Semi-natural/sown",
+      200: "Weedy",
+      300: "Traditional cultivar/Landrace",
+      400: "Breeding/Research Material",
+      410: "Breeders Line",
+      411: "Synthetic population",
+      412: "Hybrid",
+      413: "Founder stock/base population",
+      414: "Inbred line",
+      415: "Segregating population",
+      416: "Clonal selection",
+      420: "Genetic stock",
+      421: "Mutant",
+      422: "Cytogenetic stocks",
+      423: "Other genetic stocks",
+      500: "Advanced/improved cultivar",
+      600: "GMO",
+      999: "Other",
     };
-  
+
     const key = String(number);
-  
+
     return sampStatMapping[key] || "Unknown status";
   }
 
   async fetchAndSetToken() {
     try {
-      const endpoint = '/oauth/token'
+      const endpoint = "/oauth/token";
       const body = {
-        grant_type: 'client_credentials',
+        grant_type: "client_credentials",
         client_id: oidcConfig.client_id,
         client_secret: oidcConfig.client_secret,
-      }
-      const response = await this.post(endpoint, body,
-        { "Content-Type": "application/x-www-form-urlencoded" }
-      );
+      };
+      const response = await this.post(endpoint, body, {
+        "Content-Type": "application/x-www-form-urlencoded",
+      });
 
       const { access_token } = response;
       this.setToken(access_token);
@@ -92,21 +92,19 @@ class GenesysApi extends BaseApi {
     }
   }
 
-
   async fetchInitialFilterData(dispatch, userInput = " ", isReset = false) {
     try {
       let body;
       if (!isReset) {
         body = {
-          _text: userInput, "institute": {
-            "code": [
-              "AUS165"
-            ]
-          }
+          _text: userInput,
+          institute: {
+            code: ["AUS165"],
+          },
         };
       } else {
         body = {
-          _text: userInput
+          _text: userInput,
         };
       }
       const endpoint = "/api/v1/acn/filter?l=1";
@@ -115,7 +113,10 @@ class GenesysApi extends BaseApi {
       const codes = this.extractSuggestions(searchData, "institute.code");
       const crops = this.extractSuggestions(searchData, "crop.shortName");
       const taxons = this.extractSuggestions(searchData, "taxonomy.genus");
-      const origins = this.extractSuggestions(searchData, "countryOfOrigin.code3");
+      const origins = this.extractSuggestions(
+        searchData,
+        "countryOfOrigin.code3"
+      );
       const sampStat = this.extractSuggestions(searchData, "sampStat");
       const germplasmStorage = this.extractSuggestions(searchData, "storage");
 
@@ -132,29 +133,29 @@ class GenesysApi extends BaseApi {
     }
   }
 
-
-
   async fetchInitialQueryData(dispatch, userInput = " ", isReset = false) {
     try {
       let body;
       if (!isReset) {
         body = {
-          _text: userInput, "institute": {
-            "code": [
-              "AUS165"
-            ]
-          }
+          _text: userInput,
+          institute: {
+            code: ["AUS165"],
+          },
         };
         dispatch(setInstituteCheckedBoxes(["AUS165"]));
-        dispatch(setActiveFilters([{ type: "Institute Code", value: ["AUS165"] }]));
+        dispatch(
+          setActiveFilters([{ type: "Institute Code", value: ["AUS165"] }])
+        );
       } else {
         body = {
-          _text: userInput
+          _text: userInput,
         };
       }
 
       const pageSize = 500;
-      const select = "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases,donorName, sampStat";
+      const select =
+        "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases,donorName, donorCode, sampStat";
       const endpoint = `/api/v1/acn/query?p=0&l=${pageSize}&select=${select}`;
       const searchData = await this.post(endpoint, body);
 
@@ -168,48 +169,79 @@ class GenesysApi extends BaseApi {
     }
   }
 
-
   async applyFilter(filterData, dispatch, hasGenotype) {
     try {
       const pageSize = 500;
-      const select = "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases,donorName, sampStat";
+      const select =
+        "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases,donorName, donorCode, sampStat";
       const endpointQuery = `/api/v1/acn/query?p=0&l=${pageSize}&select=${select}`;
       const endpointFilter = "/api/v1/acn/filter";
 
       if (hasGenotype) {
         if (filterData.hasOwnProperty("accessionNumbers")) {
           filterData.accessionNumbers = Array.from(
-            new Set([...filterData.accessionNumbers, ...this.genotypedAccessions])
+            new Set([
+              ...filterData.accessionNumbers,
+              ...this.genotypedAccessions,
+            ])
           );
         } else {
           filterData.accessionNumbers = this.genotypedAccessions;
         }
-      
+
         const [queryData, filterDataResponse] = await Promise.all([
           this.post(endpointQuery, filterData),
           this.post(endpointFilter, filterData),
         ]);
 
-        const genesysAccessions = queryData.content.map(item => item.accessionNumber);
+        const genesysAccessions = queryData.content.map(
+          (item) => item.accessionNumber
+        );
         let genotypedResult = [];
 
-        const matchedAccessions = this.genotypedAccessions.filter(accession =>
+        const matchedAccessions = this.genotypedAccessions.filter((accession) =>
           genesysAccessions.includes(accession)
         );
 
         genotypedResult = genotypedResult.concat(
-          queryData.content.filter(item => matchedAccessions.includes(item.accessionNumber))
+          queryData.content.filter((item) =>
+            matchedAccessions.includes(item.accessionNumber)
+          )
         );
         this.fetchTotalGenotypedAccessionsInBackground(filterData, dispatch);
 
         dispatch(setSearchResults(genotypedResult));
         dispatch(setTotalPreGenotypedAccessions(queryData.totalElements));
-        dispatch(setInstituteCode(this.extractSuggestions(filterDataResponse, "institute.code")));
-        dispatch(setCropList(this.extractSuggestions(filterDataResponse, "crop.shortName")));
-        dispatch(setTaxonomyList(this.extractSuggestions(filterDataResponse, "taxonomy.genus")));
-        dispatch(setOriginOfMaterialList(this.extractSuggestions(filterDataResponse, "countryOfOrigin.code3")));
-        dispatch(setSampStatList(this.extractSuggestions(filterDataResponse, "sampStat")));
-        dispatch(setGermplasmStorageList(this.extractSuggestions(filterDataResponse, "storage")));
+        dispatch(
+          setInstituteCode(
+            this.extractSuggestions(filterDataResponse, "institute.code")
+          )
+        );
+        dispatch(
+          setCropList(
+            this.extractSuggestions(filterDataResponse, "crop.shortName")
+          )
+        );
+        dispatch(
+          setTaxonomyList(
+            this.extractSuggestions(filterDataResponse, "taxonomy.genus")
+          )
+        );
+        dispatch(
+          setOriginOfMaterialList(
+            this.extractSuggestions(filterDataResponse, "countryOfOrigin.code3")
+          )
+        );
+        dispatch(
+          setSampStatList(
+            this.extractSuggestions(filterDataResponse, "sampStat")
+          )
+        );
+        dispatch(
+          setGermplasmStorageList(
+            this.extractSuggestions(filterDataResponse, "storage")
+          )
+        );
         dispatch(setCurrentPage(0));
         return queryData.filterCode;
       } else {
@@ -219,12 +251,36 @@ class GenesysApi extends BaseApi {
         ]);
         dispatch(setSearchResults(queryData.content));
         dispatch(setTotalAccessions(queryData.totalElements));
-        dispatch(setInstituteCode(this.extractSuggestions(filterDataResponse, "institute.code")));
-        dispatch(setCropList(this.extractSuggestions(filterDataResponse, "crop.shortName")));
-        dispatch(setTaxonomyList(this.extractSuggestions(filterDataResponse, "taxonomy.genus")));
-        dispatch(setOriginOfMaterialList(this.extractSuggestions(filterDataResponse, "countryOfOrigin.code3")));
-        dispatch(setSampStatList(this.extractSuggestions(filterDataResponse, "sampStat")));
-        dispatch(setGermplasmStorageList(this.extractSuggestions(filterDataResponse, "storage")));
+        dispatch(
+          setInstituteCode(
+            this.extractSuggestions(filterDataResponse, "institute.code")
+          )
+        );
+        dispatch(
+          setCropList(
+            this.extractSuggestions(filterDataResponse, "crop.shortName")
+          )
+        );
+        dispatch(
+          setTaxonomyList(
+            this.extractSuggestions(filterDataResponse, "taxonomy.genus")
+          )
+        );
+        dispatch(
+          setOriginOfMaterialList(
+            this.extractSuggestions(filterDataResponse, "countryOfOrigin.code3")
+          )
+        );
+        dispatch(
+          setSampStatList(
+            this.extractSuggestions(filterDataResponse, "sampStat")
+          )
+        );
+        dispatch(
+          setGermplasmStorageList(
+            this.extractSuggestions(filterDataResponse, "storage")
+          )
+        );
         dispatch(setCurrentPage(0));
         return queryData.filterCode;
       }
@@ -241,17 +297,26 @@ class GenesysApi extends BaseApi {
       let genotypedCount = 0;
 
       const firstGenesysEndpoint = `/api/v1/acn/query?p=0&l=${pageSize}&select=accessionNumber`;
-      const firstGenesysResult = await this.post(firstGenesysEndpoint, filterData);
+      const firstGenesysResult = await this.post(
+        firstGenesysEndpoint,
+        filterData
+      );
 
       if (!firstGenesysResult || !firstGenesysResult.filterCode) {
-        throw new Error('No filterCode returned from Genesys.');
+        throw new Error("No filterCode returned from Genesys.");
       }
 
       const filterCode = firstGenesysResult.filterCode;
-      const totalGenesysPages = Math.ceil(firstGenesysResult.totalElements / pageSize);
+      const totalGenesysPages = Math.ceil(
+        firstGenesysResult.totalElements / pageSize
+      );
 
       const genesysRequests = [];
-      for (let genesysPage = 0; genesysPage < totalGenesysPages; genesysPage++) {
+      for (
+        let genesysPage = 0;
+        genesysPage < totalGenesysPages;
+        genesysPage++
+      ) {
         const endpoint = `/api/v1/acn/query?f=${filterCode}&p=${genesysPage}&l=${pageSize}&select=accessionNumber`;
         genesysRequests.push(async () => {
           const response = await this.post(endpoint, null);
@@ -261,13 +326,15 @@ class GenesysApi extends BaseApi {
 
       for (let i = 0; i < genesysRequests.length; i += batchSize) {
         const batch = genesysRequests.slice(i, i + batchSize);
-        const batchResults = await Promise.all(batch.map(req => req()));
+        const batchResults = await Promise.all(batch.map((req) => req()));
 
-        batchResults.forEach(genesysResult => {
+        batchResults.forEach((genesysResult) => {
           if (genesysResult && genesysResult.content) {
-            const genesysAccessions = genesysResult.content.map(item => item.accessionNumber);
+            const genesysAccessions = genesysResult.content.map(
+              (item) => item.accessionNumber
+            );
 
-            const matchedAccessions = genesysAccessions.filter(accession =>
+            const matchedAccessions = genesysAccessions.filter((accession) =>
               this.genotypedAccessions.includes(accession)
             );
             genotypedCount += matchedAccessions.length;
@@ -285,7 +352,9 @@ class GenesysApi extends BaseApi {
   async fetchTotalGenotypedAccessionsInBackground(filterData, dispatch) {
     try {
       dispatch(setLoadingGenotypedAccessions(true));
-      const totalGenotypedAccession = await this.getTotalGenotypedAccessions(filterData);
+      const totalGenotypedAccession = await this.getTotalGenotypedAccessions(
+        filterData
+      );
       dispatch(setTotalAccessions(totalGenotypedAccession));
     } catch (error) {
       console.error("Error fetching total genotyped accessions:", error);
@@ -316,40 +385,59 @@ class GenesysApi extends BaseApi {
     );
   }
 
-  async fetchMoreResults({ filterCode, currentPage, pageSize, dispatch, searchResults, hasGenotype }) {
+  async fetchMoreResults({
+    filterCode,
+    currentPage,
+    pageSize,
+    dispatch,
+    searchResults,
+    hasGenotype,
+  }) {
     try {
       const select =
-        'instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases,donorName, sampStat';
+        "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases,donorName, donorCode, sampStat";
 
       const endpoint = filterCode
-        ? `/api/v1/acn/query?f=${filterCode}&p=${currentPage + 1}&l=${pageSize}&select=${select}`
-        : `/api/v1/acn/query?p=${currentPage + 1}&l=${pageSize}&select=${select}`;
+        ? `/api/v1/acn/query?f=${filterCode}&p=${
+            currentPage + 1
+          }&l=${pageSize}&select=${select}`
+        : `/api/v1/acn/query?p=${
+            currentPage + 1
+          }&l=${pageSize}&select=${select}`;
 
       const response = await this.post(endpoint, null);
 
       if (hasGenotype) {
-        const genesysAccessions = response.content.map(item => item.accessionNumber);
+        const genesysAccessions = response.content.map(
+          (item) => item.accessionNumber
+        );
         let genotypedResult = [];
 
-        const matchedAccessions = this.genotypedAccessions.filter(accession =>
+        const matchedAccessions = this.genotypedAccessions.filter((accession) =>
           genesysAccessions.includes(accession)
         );
 
         genotypedResult = genotypedResult.concat(
-          response.content.filter(item => matchedAccessions.includes(item.accessionNumber))
+          response.content.filter((item) =>
+            matchedAccessions.includes(item.accessionNumber)
+          )
         );
         dispatch(setSearchResults([...searchResults, ...genotypedResult]));
       } else {
         const endpoint = filterCode
-          ? `/api/v1/acn/query?f=${filterCode}&p=${currentPage + 1}&l=${pageSize}&select=${select}`
-          : `/api/v1/acn/query?p=${currentPage + 1}&l=${pageSize}&select=${select}`;
+          ? `/api/v1/acn/query?f=${filterCode}&p=${
+              currentPage + 1
+            }&l=${pageSize}&select=${select}`
+          : `/api/v1/acn/query?p=${
+              currentPage + 1
+            }&l=${pageSize}&select=${select}`;
 
         const response = await this.post(endpoint, null);
         dispatch(setSearchResults([...searchResults, ...response.content]));
       }
       dispatch(setCurrentPage(currentPage + 1));
     } catch (error) {
-      console.error('Error fetching more data:', error);
+      console.error("Error fetching more data:", error);
       throw error;
     }
   }
@@ -358,10 +446,14 @@ class GenesysApi extends BaseApi {
     try {
       const pageSize = 10000;
       const batchSize = 50;
-      const select = "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases,donorName, sampStat";
+      const select =
+        "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases,donorName, donorCode, sampStat";
 
       const firstGenesysEndpoint = `/api/v1/acn/query?p=0&l=${pageSize}&select=${select}`;
-      const firstGenesysResult = await this.post(firstGenesysEndpoint, filterData);
+      const firstGenesysResult = await this.post(
+        firstGenesysEndpoint,
+        filterData
+      );
       let allResults = firstGenesysResult.content || [];
       const filterCode = firstGenesysResult.filterCode;
 
@@ -383,9 +475,9 @@ class GenesysApi extends BaseApi {
 
       for (let i = 0; i < genesysRequests.length; i += batchSize) {
         const batch = genesysRequests.slice(i, i + batchSize);
-        const batchResults = await Promise.all(batch.map(req => req()));
+        const batchResults = await Promise.all(batch.map((req) => req()));
 
-        batchResults.forEach(genesysResult => {
+        batchResults.forEach((genesysResult) => {
           if (genesysResult && genesysResult.content) {
             allResults.push(...genesysResult.content);
           }
@@ -394,29 +486,35 @@ class GenesysApi extends BaseApi {
 
       if (allResults.length > 0) {
         if (hasGenotype) {
-          allResults = allResults.filter(result => this.genotypedAccessions.includes(result.accessionNumber));
+          allResults = allResults.filter((result) =>
+            this.genotypedAccessions.includes(result.accessionNumber)
+          );
         }
         const fieldsToExport = {
           "Institute Code": "instituteCode",
           "Holding Institute": "institute.fullName",
           "Accession Number": "accessionNumber",
           "Accession Name": "accessionName",
-          "Aliases": "aliases",
-          "Taxonomy": "taxonomy.taxonName",
+          Aliases: "aliases",
+          Taxonomy: "taxonomy.taxonName",
           "Crop Name": "cropName",
           "Biological status of accession": "sampStat",
-          "Donor Institute": "donorName",
+          "Donor Institute": "donorCombined",
           "Provenance of Material": "countryOfOrigin.name",
           "Acquisition Date": "acquisitionDate",
-          "DOI": "doi",
+          DOI: "doi",
           "Last Updated": "lastModifiedDate",
-          "isGenotyped": "isGenotyped",
-          "GenotypeID": "GenotypeID",
+          isGenotyped: "isGenotyped",
+          GenotypeID: "GenotypeID",
         };
 
         const tsvContent = this.generateTSV(allResults, fieldsToExport);
 
-        this.downloadFile(tsvContent, "filtered_data_all_pages.tsv", "text/tab-separated-values");
+        this.downloadFile(
+          tsvContent,
+          "filtered_data_all_pages.tsv",
+          "text/tab-separated-values"
+        );
       } else {
         console.error("No data available to export.");
       }
@@ -425,20 +523,22 @@ class GenesysApi extends BaseApi {
     }
   }
 
-
   generateTSV(data, fieldsMap) {
     const header = Object.keys(fieldsMap).join("\t");
 
-    const rows = data.map(item => {
+    const rows = data.map((item) => {
       return Object.entries(fieldsMap)
         .map(([_, fieldPath]) => {
-
           if (fieldPath === "isGenotyped") {
-            return this.genotypedAccessions.includes(item.accessionNumber) ? "Yes" : "No";
+            return this.genotypedAccessions.includes(item.accessionNumber)
+              ? "Yes"
+              : "No";
           }
 
           if (fieldPath === "GenotypeID") {
-            const index = this.genotypedAccessions.indexOf(item.accessionNumber);
+            const index = this.genotypedAccessions.indexOf(
+              item.accessionNumber
+            );
             return index !== -1 ? this.genotypedSamples[index] : "N/A";
           }
           if (fieldPath === "institute.fullName") {
@@ -460,9 +560,12 @@ class GenesysApi extends BaseApi {
           if (fieldPath === "aliases") {
             return item.aliases && item.aliases.length > 0
               ? item.aliases
-                .filter(alias => alias.aliasType !== "ACCENAME")
-                .map(alias => `${alias.name}${alias.usedBy ? ` ${alias.usedBy}` : ''}`)
-                .join(", ")
+                  .filter((alias) => alias.aliasType !== "ACCENAME")
+                  .map(
+                    (alias) =>
+                      `${alias.name}${alias.usedBy ? ` ${alias.usedBy}` : ""}`
+                  )
+                  .join(", ")
               : "";
           }
 
@@ -475,6 +578,14 @@ class GenesysApi extends BaseApi {
               return `${day}-${month}-${year}`;
             }
             return dateStr || "";
+          }
+          if (fieldPath === "donorCombined") {
+            const name = item["donorName"] || "";
+            const code = item["donorCode"] || "";
+            if (name && code) return `${name}, ${code}`;
+            if (name) return name;
+            if (code) return code;
+            return "";
           }
 
           return item[fieldPath] || "";
@@ -496,7 +607,6 @@ class GenesysApi extends BaseApi {
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
   }
-
 }
 
 export default GenesysApi;
