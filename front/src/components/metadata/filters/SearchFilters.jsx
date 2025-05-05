@@ -425,6 +425,7 @@ const SearchFilters = () => {
       setGenesysHeight("auto");
       dispatch(setActiveFilters([]));
       dispatch(setResetTrigger(true));
+      dispatch(setWildSearchValue(""));
     } catch (error) {
       setIsResetLoading(false);
       console.error("Error handling reset filter:", error);
