@@ -4,18 +4,28 @@ const axios = require("axios");
 const checkCredentials = require("../middlewares/checkCredentials");
 const logger = require("../middlewares/logger");
 const config = require("../config/appConfig");
-const generateGigwaToken = require("../utils/generateGigwaToken");
 
+// Get Gigwa Servers
+///////////////////////////////////////////////////////////////////////////////////////////////////
+router.get("/gigwaServers", (req, res) => {
+  res.json(config.gigwaServers);
+});
 // Generate Gigwa Token
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 router.post("/generateGigwaToken", async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { username, password, selectedGigwaServer } = req.body;
+    if (!selectedGigwaServer) {
+      return res
+        .status(400)
+        .json({ error: "Please specify Gigwa server in your payload" });
+    }
+
     const requestBody =
       username && password ? { username, password } : undefined;
 
     const tokenResponse = await axios.post(
-      `${config.gigwaServer}/gigwa/rest/gigwa/generateToken`,
+      `${selectedGigwaServer}/gigwa/rest/gigwa/generateToken`,
       requestBody,
       {
         headers: {
@@ -28,19 +38,38 @@ router.post("/generateGigwaToken", async (req, res) => {
     const token = tokenResponse.data.token;
     res.send({ token });
   } catch (error) {
-    console.error("Login failed:", error);
-    res.status(500).send("Login failed: " + error.message);
+    const status = error.response?.status || 500;
+
+    logger.error(`Login failed: ${error.message || error}`);
+    return res.status(status).json({
+      error:
+        status === 403 || status === 401
+          ? "Invalid username or password"
+          : "Login failed: " + (error.message || "Unknown error"),
+    });
   }
 });
+
 // Get a filtered list of breeding programs
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 router.post("/brapi/v2/programs", checkCredentials, async (req, res) => {
   try {
+    const { selectedGigwaServer } = req.body;
+    if (!selectedGigwaServer) {
+      return res
+        .status(400)
+        .json({ error: "Please specify Gigwa server in your payload" });
+    }
     const tokenResponse = await axios.post(
-      `${config.gigwaServer}/gigwa/rest/gigwa/generateToken`,
+      `${selectedGigwaServer}/gigwa/rest/gigwa/generateToken`,
+      req.body.username && req.body.password
+        ? { username: req.body.username, password: req.body.password }
+        : undefined,
       {
-        username: req.body.username,
-        password: req.body.password,
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
       }
     );
 
@@ -48,7 +77,7 @@ router.post("/brapi/v2/programs", checkCredentials, async (req, res) => {
     const params = req.body;
 
     const response = await axios.get(
-      `${config.gigwaServer}/gigwa/rest/brapi/v2/programs`,
+      `${selectedGigwaServer}/gigwa/rest/brapi/v2/programs`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -71,18 +100,29 @@ router.post(
   checkCredentials,
   async (req, res) => {
     try {
+      const { selectedGigwaServer } = req.body;
+      if (!selectedGigwaServer) {
+        return res
+          .status(400)
+          .json({ error: "Please specify Gigwa server in your payload" });
+      }
       const tokenResponse = await axios.post(
-        `${config.gigwaServer}/gigwa/rest/gigwa/generateToken`,
+        `${selectedGigwaServer}/gigwa/rest/gigwa/generateToken`,
+        req.body.username && req.body.password
+          ? { username: req.body.username, password: req.body.password }
+          : undefined,
         {
-          username: req.body.username,
-          password: req.body.password,
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
         }
       );
 
       const token = tokenResponse.data.token;
 
       const response = await axios.post(
-        `${config.gigwaServer}/gigwa/rest/brapi/v2/search/variantsets`,
+        `${selectedGigwaServer}/gigwa/rest/brapi/v2/search/variantsets`,
         req.body,
         {
           headers: {
@@ -105,17 +145,28 @@ router.post(
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 router.post("/brapi/v2/search/samples", checkCredentials, async (req, res) => {
   try {
+    const { selectedGigwaServer } = req.body;
+    if (!selectedGigwaServer) {
+      return res
+        .status(400)
+        .json({ error: "Please specify Gigwa server in your payload" });
+    }
     const tokenResponse = await axios.post(
-      `${config.gigwaServer}/gigwa/rest/gigwa/generateToken`,
+      `${selectedGigwaServer}/gigwa/rest/gigwa/generateToken`,
+      req.body.username && req.body.password
+        ? { username: req.body.username, password: req.body.password }
+        : undefined,
       {
-        username: req.body.username,
-        password: req.body.password,
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
       }
     );
 
     const token = tokenResponse.data.token;
     const response = await axios.post(
-      `${config.gigwaServer}/gigwa/rest/brapi/v2/search/samples`,
+      `${selectedGigwaServer}/gigwa/rest/brapi/v2/search/samples`,
       req.body,
       {
         headers: {
@@ -158,12 +209,18 @@ router.post("/brapi/v2/search/samples", checkCredentials, async (req, res) => {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 router.get("/brapi/v2/references", async (req, res) => {
   try {
+    const { selectedGigwaServer } = req.query;
+    if (!selectedGigwaServer) {
+      return res
+        .status(400)
+        .json({ error: "Please specify Gigwa server in your payload" });
+    }
     const params = req.query;
 
     const token = req.query.gigwaToken;
 
     const response = await axios.get(
-      `${config.gigwaServer}/gigwa/rest/brapi/v2/references`,
+      `${selectedGigwaServer}/gigwa/rest/brapi/v2/references`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -205,9 +262,14 @@ router.get("/brapi/v2/referencesets", async (req, res) => {
   try {
     const params = req.query;
     const token = params.gigwaToken;
-
+    const { selectedGigwaServer } = req.query;
+    if (!selectedGigwaServer) {
+      return res
+        .status(400)
+        .json({ error: "Please specify Gigwa server in your payload" });
+    }
     const response = await axios.get(
-      `${config.gigwaServer}/gigwa/rest/brapi/v2/referencesets`,
+      `${selectedGigwaServer}/gigwa/rest/brapi/v2/referencesets`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -251,18 +313,29 @@ router.post(
   checkCredentials,
   async (req, res) => {
     try {
+      const { selectedGigwaServer } = req.body;
+      if (!selectedGigwaServer) {
+        return res
+          .status(400)
+          .json({ error: "Please specify Gigwa server in your payload" });
+      }
       const tokenResponse = await axios.post(
-        `${config.gigwaServer}/gigwa/rest/gigwa/generateToken`,
+        `${selectedGigwaServer}/gigwa/rest/gigwa/generateToken`,
+        req.body.username && req.body.password
+          ? { username: req.body.username, password: req.body.password }
+          : undefined,
         {
-          username: req.body.username,
-          password: req.body.password,
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
         }
       );
 
       const token = tokenResponse.data.token;
 
       const response = await axios.get(
-        `${config.gigwaServer}/gigwa/rest/ga4gh/variants/${req.params.variantid}`,
+        `${selectedGigwaServer}/gigwa/rest/ga4gh/variants/${req.params.variantid}`,
         {
           headers: {
             assembly: "0",
@@ -282,7 +355,29 @@ router.post(
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 router.post("/ga4gh/variants/search", async (req, res) => {
   try {
-    const token = req.body.gigwaToken;
+    let token = "";
+    const { selectedGigwaServer } = req.body;
+    if (!selectedGigwaServer) {
+      return res
+        .status(400)
+        .json({ error: "Please specify Gigwa server in your payload" });
+    }
+    if (req.body.gigwaToken) {
+      token = req.body.gigwaToken;
+    } else {
+      token = await axios.post(
+        `${selectedGigwaServer}/gigwa/rest/gigwa/generateToken`,
+        req.body.username && req.body.password
+          ? { username: req.body.username, password: req.body.password }
+          : undefined,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
+    }
     const samplesDetails = req.body.selectedSamplesDetails;
     const sampleList = req.body.sampleVcfNames;
     const callsetIds = samplesDetails.map(
@@ -297,7 +392,7 @@ router.post("/ga4gh/variants/search", async (req, res) => {
       callSetIds: callsetIds ? callsetIds : [],
       callSetIds2: [],
       discriminate: false,
-      end: req.body.end || -1,
+      end: req.body.posEnd || -1,
       geneName: "",
       getGT: false,
       gtPattern: "Any",
@@ -325,13 +420,13 @@ router.post("/ga4gh/variants/search", async (req, res) => {
       selectedVariantTypes: "",
       sortBy: "",
       sortDir: "asc",
-      start: req.body.start || -1,
+      start: req.body.posStart || -1,
       variantEffect: "",
       variantSetId: `${samplesDetails[0]?.studyDbId}`,
       // variantSetId: "Database1§1",
     };
     response = await axios.post(
-      `${config.gigwaServer}/gigwa/rest/ga4gh/variants/search`,
+      `${selectedGigwaServer}/gigwa/rest/ga4gh/variants/search`,
       body,
       {
         headers: {
@@ -353,15 +448,35 @@ router.post("/ga4gh/variants/search", async (req, res) => {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 router.post("/searchSamplesInDatasets", async (req, res) => {
-  const { accessions, accessionNames } = req.body;
-
+  const { accessions, accessionNames, selectedGigwaServer } = req.body;
+  let token = "";
+  if (!selectedGigwaServer) {
+    return res
+      .status(400)
+      .json({ error: "Please specify Gigwa server in your payload" });
+  }
   if (!accessions || accessions.length === 0) {
     logger.error("No accessions provided");
     return res.status(400).send({ message: "No accessions provided" });
   }
 
   try {
-    const token = req.body.gigwaToken;
+    if (req.body.gigwaToken) {
+      token = req.body.gigwaToken;
+    } else {
+      token = await axios.post(
+        `${selectedGigwaServer}/gigwa/rest/gigwa/generateToken`,
+        req.body.username && req.body.password
+          ? { username: req.body.username, password: req.body.password }
+          : undefined,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
+    }
     const samplesObj = await axios
       .post(`${config.genolinkServer}/api/internalApi/accessionMapping`, {
         Accessions: accessions,
@@ -381,12 +496,11 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
               ).map((obj) => `${value}§${key}§${obj.Sample}`);
             })
         : [];
-
     const numberOfMappedAccessions = Array.from(new Set(Accessions)).length;
     const numberOfGenesysAccessions = accessions.length;
 
     const variantSetsResponse = await axios.get(
-      `${config.gigwaServer}/gigwa/rest/brapi/v2/variantsets`,
+      `${selectedGigwaServer}/gigwa/rest/brapi/v2/variantsets`,
       {
         headers: { Authorization: `Bearer ${token}` },
       }
@@ -404,7 +518,7 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
       }
     }
     const searchResponse = await axios.post(
-      `${config.gigwaServer}/gigwa/rest/brapi/v2/search/samples`,
+      `${selectedGigwaServer}/gigwa/rest/brapi/v2/search/samples`,
       {
         sampleNames,
         studyDbIds,
@@ -414,9 +528,6 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
       }
     );
     const response = searchResponse.data;
-    const sampleDbIds = response.result.data.map(
-      (individual) => individual.sampleDbId
-    );
 
     const uniqueSamplePresence = new Set(
       response.result.data.map(
@@ -429,7 +540,6 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
     res.send({
       response,
       variantSetDbIds,
-      sampleDbIds,
       datasetNames,
       vcfSamples: samples,
       numberOfGenesysAccessions,
@@ -461,10 +571,28 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
 router.post("/brapi/v2/search/allelematrix", async (req, res) => {
   try {
     let token = "";
+    const { selectedGigwaServer } = req.body;
+    if (!selectedGigwaServer) {
+      return res
+        .status(400)
+        .json({ error: "Please specify Gigwa server in your payload" });
+    }
+
     if (req.body.gigwaToken) {
       token = req.body.gigwaToken;
     } else {
-      token = await generateGigwaToken();
+      token = await axios.post(
+        `${selectedGigwaServer}/gigwa/rest/gigwa/generateToken`,
+        req.body.username && req.body.password
+          ? { username: req.body.username, password: req.body.password }
+          : undefined,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
     }
 
     if (!req.body.dataMatrixAbbreviations) {
@@ -484,7 +612,7 @@ router.post("/brapi/v2/search/allelematrix", async (req, res) => {
       }
     }
     const response = await axios.post(
-      `${config.gigwaServer}/gigwa/rest/brapi/v2/search/allelematrix`,
+      `${selectedGigwaServer}/gigwa/rest/brapi/v2/search/allelematrix`,
       req.body,
       {
         headers: {
@@ -527,10 +655,36 @@ router.post("/brapi/v2/search/allelematrix", async (req, res) => {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 router.post("/exportData", async (req, res) => {
   try {
-    const token = req.body.gigwaToken;
-    const { variantList, selectedSamplesDetails, linkagegroups, start, end } =
-      req.body;
-    logger.info(JSON.stringify(selectedSamplesDetails));
+    let token = "";
+    const {
+      variantList,
+      selectedSamplesDetails,
+      linkagegroups,
+      start,
+      end,
+      selectedGigwaServer,
+    } = req.body;
+    if (!selectedGigwaServer) {
+      return res
+        .status(400)
+        .json({ error: "Please specify Gigwa server in your payload" });
+    }
+    if (req.body.gigwaToken) {
+      token = req.body.gigwaToken;
+    } else {
+      token = await axios.post(
+        `${selectedGigwaServer}/gigwa/rest/gigwa/generateToken`,
+        req.body.username && req.body.password
+          ? { username: req.body.username, password: req.body.password }
+          : undefined,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
+    }
     const sampleList = selectedSamplesDetails.map(
       (sample) => sample.germplasmDbId.split("§")[1]
     );
@@ -580,7 +734,7 @@ router.post("/exportData", async (req, res) => {
       variantSetId: `${selectedSamplesDetails[0]?.studyDbId}`,
     };
     const response = await axios.post(
-      `${config.gigwaServer}/gigwa/rest/gigwa/exportData`,
+      `${selectedGigwaServer}/gigwa/rest/gigwa/exportData`,
       body,
       {
         headers: {
@@ -600,12 +754,29 @@ router.post("/exportData", async (req, res) => {
 //////////////////////////////////////////////////////////////////////////
 router.post("/samplesDatasetInfo", async (req, res) => {
   try {
-    let gigwaToken = "";
+    const { selectedGigwaServer } = req.body;
+    if (!selectedGigwaServer) {
+      return res
+        .status(400)
+        .json({ error: "Please specify Gigwa server in your payload" });
+    }
+    let token = "";
     let samples;
     if (req.body.gigwaToken) {
-      gigwaToken = req.body.gigwaToken;
+      token = req.body.gigwaToken;
     } else {
-      gigwaToken = await generateGigwaToken();
+      token = await axios.post(
+        `${selectedGigwaServer}/gigwa/rest/gigwa/generateToken`,
+        req.body.username && req.body.password
+          ? { username: req.body.username, password: req.body.password }
+          : undefined,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
     }
     if (!req.body.Samples) {
       throw new Error("Please provide Samples object");
@@ -622,9 +793,9 @@ router.post("/samplesDatasetInfo", async (req, res) => {
     }
 
     const variantSetsResponse = await axios.get(
-      `https://gigwa.plantinformatics.io/gigwa/rest/brapi/v2/variantsets`,
+      `${selectedGigwaServer}/gigwa/rest/brapi/v2/variantsets`,
       {
-        headers: { Authorization: `Bearer ${gigwaToken}` },
+        headers: { Authorization: `Bearer ${token}` },
       }
     );
 
@@ -639,13 +810,13 @@ router.post("/samplesDatasetInfo", async (req, res) => {
       }
     }
     const searchResponse = await axios.post(
-      `https://gigwa.plantinformatics.io/gigwa/rest/brapi/v2/search/samples`,
+      `${selectedGigwaServer}/gigwa/rest/brapi/v2/search/samples`,
       {
         sampleNames,
         studyDbIds,
       },
       {
-        headers: { Authorization: `Bearer ${gigwaToken}` },
+        headers: { Authorization: `Bearer ${token}` },
       }
     );
     const SamplesDatasetInfo = searchResponse.data.result.data.map((sample) => {

@@ -30,7 +30,7 @@ import { genolinkInternalApi } from "../../../pages/Home";
 
 const SearchFilters = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [genesysHeight, setGenesysHeight] = useState("auto");
+  const [genesysHeight, setGenesysHeight] = useState("600px");
   const [isResetLoading, setIsResetLoading] = useState(false);
   const [isUploadLoading, setIsUploadLoading] = useState(false);
   const [filterCode, setFilterCode] = useState(null);
@@ -52,7 +52,6 @@ const SearchFilters = () => {
   const [searchButtonName, setSearchButtonName] = useState("Search");
   const [hasGenotype, setHasGenotype] = useState(false);
   const checkedAccessions = useSelector((state) => state.checkedAccessions);
-  const hasCheckedAccessions = Object.keys(checkedAccessions).length > 0;
   const totalAccessions = useSelector((state) => state.totalAccessions);
   const searchResults = useSelector((state) => state.searchResults);
   const isLoadingGenotypedAccessions = useSelector(
@@ -60,10 +59,10 @@ const SearchFilters = () => {
   );
 
   const activeFilters = useSelector((state) => state.activeFilters);
-  const wildSearchValue = useSelector((state) => state.wildSearchValue);
   const instituteCheckedBoxes = useSelector(
     (state) => state.instituteCheckedBoxes
   );
+  const wildSearchValue = useSelector((state) => state.wildSearchValue);
   const cropCheckedBoxes = useSelector((state) => state.cropCheckedBoxes);
   const taxonomyCheckedBoxes = useSelector(
     (state) => state.taxonomyCheckedBoxes
@@ -98,12 +97,6 @@ const SearchFilters = () => {
   const wheatImage = "/Wheat.PNG";
 
   useEffect(() => {
-    if (Object.keys(checkedAccessions).length === 0) {
-      setGenesysHeight("auto");
-    }
-  }, [checkedAccessions]);
-
-  useEffect(() => {
     if (activeFilters.length > 0 && searchButtonName !== "Update Search") {
       setSearchButtonName("Update Search");
     } else {
@@ -136,7 +129,6 @@ const SearchFilters = () => {
 
     fetchData();
   }, [dispatch]);
-
   const removeFilter = (filterToRemove) => {
     switch (filterToRemove.type) {
       case "Text":
@@ -346,6 +338,8 @@ const SearchFilters = () => {
       console.error("Error applying filter:", error);
       setIsLoading(false);
       setIsFilterApplied(false);
+    } finally {
+      setIsWaitingForUpdate(false);
     }
   };
   useEffect(() => {
@@ -422,7 +416,7 @@ const SearchFilters = () => {
       const filterCode = await genesysApi.resetFilter(dispatch);
       setFilterCode(filterCode);
       setIsResetLoading(false);
-      setGenesysHeight("auto");
+      setGenesysHeight("600px");
       dispatch(setActiveFilters([]));
       dispatch(setResetTrigger(true));
       dispatch(setWildSearchValue(""));
@@ -468,11 +462,7 @@ const SearchFilters = () => {
           display: "grid",
           gridTemplateColumns: "minmax(280px, auto) 1fr",
           gridTemplateRows:
-            isLoading || isResetLoading
-              ? hasCheckedAccessions
-                ? "auto 1fr 5px 1fr auto"
-                : "auto 1fr auto"
-              : "none",
+            isLoading || isResetLoading ? "auto 1fr 5px 1fr auto" : "none",
           gridAutoRows: isLoading || isResetLoading ? "none" : "min-content",
           gap: "0px",
           height: "100vh",
@@ -509,10 +499,17 @@ const SearchFilters = () => {
               Genolink
             </h2>
           </div>
-          <p>
-            All passport data is sourced from{" "}
+
+          <p
+            style={{
+              margin: "5px 0 0",
+              fontSize: "14px",
+              color: "rgba(255, 255, 255, 0.8)",
+            }}
+          >
+            Powered by{" "}
             <a
-              href="https://www.genesys-pgr.org"
+              href="https://www.genesys-pgr.org/"
               target="_blank"
               rel="noopener noreferrer"
               style={{
@@ -525,8 +522,10 @@ const SearchFilters = () => {
             >
               Genesys-PGR
             </a>
-            , and by using this service, you agree to comply with the
-            Genesys-PGR{" "}
+          </p>
+          <p>
+            All passport data is sourced from Genesys-PGR, and by using this
+            service, you agree to comply with the Genesys-PGR{" "}
             <a
               href="https://www.genesys-pgr.org/content/legal/terms"
               target="_blank"
@@ -552,7 +551,7 @@ const SearchFilters = () => {
             maxWidth: "340px",
             overflowX: "auto",
             gridColumn: "1",
-            gridRow: hasCheckedAccessions ? "2 / 5" : "2 / 4",
+            gridRow: "2 / 5",
             background: "#50748c00",
             borderRight: "5px solid gray",
             padding: "10px",
@@ -878,12 +877,19 @@ const SearchFilters = () => {
             </>
           )}
           <div>
-            <label style={{ fontWeight: 500 }}>
+            <label
+              style={{
+                fontWeight: 500,
+                color: wildSearchValue ? "#888" : "inherit",
+                cursor: wildSearchValue ? "not-allowed" : "pointer",
+              }}
+            >
               <input
                 type="checkbox"
                 checked={hasGenotype}
                 onChange={handleChange}
                 style={{ marginRight: "8px" }}
+                disabled={wildSearchValue}
               />
               Check for genotype
             </label>
@@ -901,7 +907,7 @@ const SearchFilters = () => {
             padding: "10px",
             overflow: "auto",
             minHeight: "100px",
-            height: hasCheckedAccessions ? genesysHeight : "100%",
+            height: genesysHeight,
           }}
         >
           {isLoading || isResetLoading ? (
@@ -975,40 +981,34 @@ const SearchFilters = () => {
           )}
         </div>
         {/* Horizontal Divider */}
-        {Object.keys(checkedAccessions).length > 0 && (
-          <div
-            style={{
-              gridColumn: "2",
-              gridRow: "3",
-              background: "gray",
-              height: "5px",
-              cursor: "row-resize",
-            }}
-            onMouseDown={handleHorizontalDrag}
-          ></div>
-        )}
-        {/* div4: Genotype Result */}
-        {Object.keys(checkedAccessions).length > 0 && (
-          <div
-            style={{
-              gridColumn: "2",
-              gridRow: "4",
-              background: "linear-gradient(to right, #EEF1F2,#F1F3F4, #F3F6F7)",
-              padding: "10px",
-              minWidth: "100px",
-              minHeight: "50px",
-              overflow: "auto",
-            }}
-          >
-            <GenotypeExplorer />
-          </div>
-        )}
-
-        {/* New About Section */}
         <div
           style={{
-            gridColumn: "1 / 3", // Takes both columns
-            gridRow: hasCheckedAccessions ? "5" : "4",
+            gridColumn: "2",
+            gridRow: "3",
+            background: "gray",
+            height: "5px",
+            cursor: "row-resize",
+          }}
+          onMouseDown={handleHorizontalDrag}
+        ></div>
+        {/* div4: Genotype Result */}
+        <div
+          style={{
+            gridColumn: "2",
+            gridRow: "4",
+            background: "linear-gradient(to right, #EEF1F2,#F1F3F4, #F3F6F7)",
+            padding: "10px",
+            minWidth: "100px",
+            minHeight: "50px",
+            overflow: "auto",
+          }}
+        >
+          <GenotypeExplorer />
+        </div>
+        <div
+          style={{
+            gridColumn: "1 / 3",
+            gridRow: "5",
             background: "green",
             color: "white",
             padding: "20px",
