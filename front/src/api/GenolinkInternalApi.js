@@ -37,6 +37,15 @@ class GenolinkInternalApi extends BaseApi {
       });
       return response;
     } catch (error) {
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.message
+      ) {
+        alert(error.response.data.message);
+      } else {
+        alert("An unexpected error occurred.");
+      }
       console.error("Error mapping genotypeIds:", error);
       throw error;
     }
