@@ -30,7 +30,9 @@ import { genolinkInternalApi } from "../../../pages/Home";
 
 const SearchFilters = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [genesysHeight, setGenesysHeight] = useState("600px");
+  const [genesysHeight, setGenesysHeight] = useState(
+    () => window.innerHeight * 0.55
+  );
   const [isResetLoading, setIsResetLoading] = useState(false);
   const [isUploadLoading, setIsUploadLoading] = useState(false);
   const [filterCode, setFilterCode] = useState(null);
@@ -416,7 +418,7 @@ const SearchFilters = () => {
       const filterCode = await genesysApi.resetFilter(dispatch);
       setFilterCode(filterCode);
       setIsResetLoading(false);
-      setGenesysHeight("600px");
+      setGenesysHeight(window.innerHeight * 0.66);
       dispatch(setActiveFilters([]));
       dispatch(setResetTrigger(true));
       dispatch(setWildSearchValue(""));
@@ -430,20 +432,12 @@ const SearchFilters = () => {
     e.preventDefault();
     const startY = e.clientY;
     const topDiv = e.target.previousElementSibling;
-    const bottomDivs = e.target.nextElementSibling;
     const startTopHeight = topDiv.offsetHeight;
-    const startBottomHeight = bottomDivs ? bottomDivs.offsetHeight : 0;
 
     const onMouseMove = (moveEvent) => {
       const delta = moveEvent.clientY - startY;
       const newTopHeight = Math.max(100, startTopHeight + delta);
-      const newBottomHeight = Math.max(50, startBottomHeight - delta);
-
-      topDiv.style.height = `${newTopHeight}px`;
-      if (bottomDivs) {
-        bottomDivs.style.height = `${newBottomHeight}px`;
-      }
-      setGenesysHeight(`${newTopHeight}px`);
+      setGenesysHeight(newTopHeight);
     };
 
     const onMouseUp = () => {
@@ -462,7 +456,9 @@ const SearchFilters = () => {
           display: "grid",
           gridTemplateColumns: "minmax(280px, auto) 1fr",
           gridTemplateRows:
-            isLoading || isResetLoading ? "auto 1fr 5px 1fr auto" : "none",
+            isLoading || isResetLoading
+              ? "auto 1fr 5px 1fr auto"
+              : `140px ${genesysHeight}px 5px auto 140px`,
           gridAutoRows: isLoading || isResetLoading ? "none" : "min-content",
           gap: "0px",
           height: "100vh",
@@ -553,7 +549,7 @@ const SearchFilters = () => {
             gridColumn: "1",
             gridRow: "2 / 5",
             background: "#50748c00",
-            borderRight: "5px solid gray",
+            borderRight: "3px solid gray",
             padding: "10px",
             minWidth: "320px",
             overflow: "auto",
@@ -907,7 +903,6 @@ const SearchFilters = () => {
             padding: "10px",
             overflow: "auto",
             minHeight: "100px",
-            height: genesysHeight,
           }}
         >
           {isLoading || isResetLoading ? (
@@ -986,7 +981,7 @@ const SearchFilters = () => {
             gridColumn: "2",
             gridRow: "3",
             background: "gray",
-            height: "5px",
+            height: "3px",
             cursor: "row-resize",
           }}
           onMouseDown={handleHorizontalDrag}
@@ -998,9 +993,8 @@ const SearchFilters = () => {
             gridRow: "4",
             background: "linear-gradient(to right, #EEF1F2,#F1F3F4, #F3F6F7)",
             padding: "10px",
-            minWidth: "100px",
-            minHeight: "50px",
             overflow: "auto",
+            minHeight: "50px",
           }}
         >
           <GenotypeExplorer />
