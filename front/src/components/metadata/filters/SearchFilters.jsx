@@ -31,7 +31,7 @@ import { genolinkInternalApi } from "../../../pages/Home";
 const SearchFilters = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [genesysHeight, setGenesysHeight] = useState(
-    () => window.innerHeight * 0.55
+    () => window.innerHeight * 0.6
   );
   const [isResetLoading, setIsResetLoading] = useState(false);
   const [isUploadLoading, setIsUploadLoading] = useState(false);
@@ -458,10 +458,10 @@ const SearchFilters = () => {
           gridTemplateRows:
             isLoading || isResetLoading
               ? "auto 1fr 5px 1fr auto"
-              : `140px ${genesysHeight}px 5px auto 140px`,
+              : `120px ${genesysHeight}px 5px auto 140px`,
           gridAutoRows: isLoading || isResetLoading ? "none" : "min-content",
           gap: "0px",
-          height: "100vh",
+          height: isLoading || isResetLoading ? "100vh" : "150vh",
           padding: "10px",
           overflowY: "auto",
         }}
@@ -520,8 +520,8 @@ const SearchFilters = () => {
             </a>
           </p>
           <p>
-            All passport data is sourced from Genesys-PGR, and by using this
-            service, you agree to comply with the Genesys-PGR{" "}
+            All passport data is from Genesys-PGR. By using this service, you
+            agree to Genesys-PGR{" "}
             <a
               href="https://www.genesys-pgr.org/content/legal/terms"
               target="_blank"
@@ -534,10 +534,10 @@ const SearchFilters = () => {
               onMouseOver={(e) => (e.target.style.textDecoration = "underline")}
               onMouseOut={(e) => (e.target.style.textDecoration = "none")}
             >
-              Terms and Conditions
+              Terms and Conditions{" "}
             </a>
-            ; when using passport data via Genolink, Genesys-PGR must be
-            acknowledged as the source
+            and must acknowledge Genesys-PGR as the source when using passport
+            data via Genolink.
           </p>
         </div>
 

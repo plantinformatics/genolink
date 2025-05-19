@@ -18,6 +18,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
   const [selectAll, setSelectAll] = useState(false);
   const [expandedRow, setExpandedRow] = useState(null);
   const [remainingPages, setRemainingPages] = useState(
+    // Math.floor((hasGenotype ? totalPreGenotypedAccessions : totalAccessions) / (hasGenotype ? 10000 : 500))
     Math.floor(
       (hasGenotype ? totalPreGenotypedAccessions : totalAccessions) / 500
     )
@@ -102,6 +103,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
       await genesysApi.fetchMoreResults({
         filterCode,
         currentPage,
+        // pageSize: hasGenotype ? 10000 : 500,
         pageSize: 500,
         dispatch,
         searchResults,
@@ -198,7 +200,6 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
                 isGenotyped && Array.isArray(genesysApi.genotypedSamples)
                   ? genesysApi.genotypedSamples[genotypedIndex]
                   : "N/A";
-
               return (
                 <tr
                   key={item.uuid || item.id || index}

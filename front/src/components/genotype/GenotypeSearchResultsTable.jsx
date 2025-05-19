@@ -164,50 +164,50 @@ const GenotypeSearchResultsTable = ({
 
   return (
     <div>
-      <div className="scrollable-table">
+      <div className="table-wrapper">
         {platform === "Gigwa" ? (
-          <table className="table table-bordered table-striped">
+          <table className="scrollable-table table table-bordered table-striped">
             <thead>
               <tr>
                 <th
                   className="vertical-header"
                   onClick={() => handleSort("id")}
                 >
-                  #
+                  <span>#</span>
                 </th>
                 <th
                   className="vertical-header"
                   onClick={() => handleSort("referenceName")}
                 >
-                  CHROM
+                  <span>CHROM</span>
                 </th>
                 <th
                   className="vertical-header"
                   onClick={() => handleSort("start")}
                 >
-                  POS
+                  <span>POS</span>
                 </th>
                 <th
                   className="vertical-header"
                   onClick={() => handleSort("id")}
                 >
-                  ID
+                  <span>ID</span>
                 </th>
                 <th
                   className="vertical-header"
                   onClick={() => handleSort("referenceBases")}
                 >
-                  REF
+                  <span>REF</span>
                 </th>
                 <th
                   className="vertical-header"
                   onClick={() => handleSort("alternateBases")}
                 >
-                  ALT
+                  <span>ALT</span>
                 </th>
                 {unionSamples.map((sample) => (
-                  <th className="vertical-header" key={sample}>
-                    {sample}
+                  <th className="vertical-header" key={sample} title={sample}>
+                    <span>{sample}</span>
                   </th>
                 ))}
               </tr>
@@ -220,7 +220,9 @@ const GenotypeSearchResultsTable = ({
                     <td>{rowOffset + index + 1}</td>
                     <td>{variant.referenceName}</td>
                     <td>{variant.start}</td>
-                    <td>{variant.id.split("§")[2]}</td>
+                    <td title={variant.id.split("§")[2]}>
+                      {variant.id.split("§")[2]}
+                    </td>
                     <td>{variant.referenceBases}</td>
                     <td>{variant.alternateBases[0]}</td>
                     {unionSamples.map((sample) => {
