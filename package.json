@@ -1,0 +1,13 @@
+{
+  "name": "genolink-root",
+  "private": true,
+  "scripts": {
+    "test:front": "cd front && npm test",
+    "test:back": "cd back && npm test",
+    "test": "npm run test:front && npm run test:back",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}

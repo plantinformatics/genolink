@@ -65,14 +65,10 @@ describe("accessionMappingHandler", () => {
 
     await accessionMappingHandler(req, res);
 
-    // Intentional mismatch in the expected status code
-    expect(res.status).toHaveBeenCalledWith(200); // This part should pass
-
-    // Changing the expected value to cause failure
+    expect(res.status).toHaveBeenCalledWith(200);
     expect(res.send).toHaveBeenCalledWith({
-      Samples: [{ Accession: "Accession1", Sample: "WrongSample" }], // Mismatch here
+      Samples: [{ Accession: "Accession1", Sample: "Sample1" }],
     });
-
     expect(logger.info).toHaveBeenCalledWith(
       expect.stringContaining("Accessions mapped successfully")
     );
