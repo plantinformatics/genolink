@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "prepare": "husky",
+    "test": "jest --passWithNoTests=false",
+    "test:watch": "jest --watch"
   },
   "keywords": [],
   "author": "",
@@ -21,5 +23,10 @@
     "sequelize": "^6.37.0",
     "uuid": "^9.0.0",
     "winston": "^3.13.0"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "jest": "^29.7.0",
+    "supertest": "^7.1.1"
   }
 }
