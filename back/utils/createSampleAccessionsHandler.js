@@ -3,6 +3,27 @@ const fs = require("fs");
 const csvParser = require("csv-parser");
 const logger = require("../middlewares/logger");
 
+const parseCSV = (filePath) => {
+  return new Promise((resolve, reject) => {
+    const sampleAccessions = [];
+    fs.createReadStream(filePath)
+      .pipe(csvParser())
+      .on("data", (data) => {
+        const record = {
+          Accession: data.accession.trim(),
+          Sample: data.sample.trim(),
+        };
+        if (record.Accession && record.Sample) {
+          sampleAccessions.push(record);
+        } else {
+          logger.error("Invalid data entry skipped:", record);
+        }
+      })
+      .on("end", () => resolve(sampleAccessions))
+      .on("error", (error) => reject(error));
+  });
+};
+
 const createSampleAccessionsHandler = async (req, res) => {
   if (req.fileValidationError) {
     logger.error("File validation error:", req.fileValidationError);
@@ -16,43 +37,29 @@ const createSampleAccessionsHandler = async (req, res) => {
     });
   }
 
-    if (req.file && req.file.mimetype !== 'text/csv') {
-      logger.error("Invalid file type:", req.file.mimetype);
-      return res.status(400).send({ message: "Please upload a CSV file." });
-    }
+  if (req.file && req.file.mimetype !== "text/csv") {
+    logger.error("Invalid file type:", req.file.mimetype);
+    return res.status(400).send({ message: "Please upload a CSV file." });
+  }
 
   try {
     if (req.file) {
-      const sampleAccessions = [];
-      fs.createReadStream(req.file.path)
-        .pipe(csvParser())  
-        .on("data", (data) => {
-          const record = {
-            Accession: data.accession.trim(),
-            Sample: data.sample.trim()
-          };
-          if (record.Accession && record.Sample) {
-            sampleAccessions.push(record);
-          } else {
-            logger.error("Invalid data entry skipped:", record);
-          }
-        })
-        .on("end", async () => {
-          try {
-            const createdRecords = await db.SampleAccession.bulkCreate(
-              sampleAccessions
-            );
-            return res.status(201).send(createdRecords);
-          } catch (bulkCreateError) {
-            logger.error(
-              "Error during the bulk create operation:",
-              bulkCreateError
-            );
-            return res
-              .status(500)
-              .send({ message: "Error during the bulk create operation." });
-          }
+      const sampleAccessions = await parseCSV(req.file.path);
+
+      try {
+        const createdRecords = await db.SampleAccession.bulkCreate(
+          sampleAccessions
+        );
+        return res.status(201).send(createdRecords);
+      } catch (bulkCreateError) {
+        logger.error(
+          "Error during the bulk create operation:",
+          bulkCreateError
+        );
+        return res.status(500).send({
+          message: "Error during the bulk create operation.",
         });
+      }
     } else if (req.body.sampleAccessions) {
       const { sampleAccessions } = req.body;
 
@@ -76,15 +83,15 @@ const createSampleAccessionsHandler = async (req, res) => {
           sampleAccessions
         );
         logger.info("Sample accessions provided in body created successfully.");
-        res.status(201).send(createdRecords);
+        return res.status(201).send(createdRecords);
       } catch (bulkCreateError) {
         logger.error(
           "Error during the bulk create operation:",
           bulkCreateError
         );
-        return res
-          .status(500)
-          .send({ message: "Error during the bulk create operation." });
+        return res.status(500).send({
+          message: "Error during the bulk create operation.",
+        });
       }
     }
   } catch (error) {
