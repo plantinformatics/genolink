@@ -476,11 +476,12 @@ const SearchFilters = () => {
             padding: "10px",
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
             flexDirection: "column",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center" }}>
+          <div
+            style={{ display: "flex", alignItems: "center", maxWidth: "100%" }}
+          >
             <img
               src="/Genolink.png"
               alt="Genolink-logo"
@@ -518,9 +519,15 @@ const SearchFilters = () => {
               Genesys-PGR
             </a>
           </p>
-          <p>
-            All passport data is from Genesys-PGR. By using this service, you
-            agree to Genesys-PGR{" "}
+          <p
+            style={{
+              margin: "5px 0 0",
+              fontSize: "14px",
+              color: "rgba(255, 255, 255, 0.8)",
+            }}
+          >
+            Passport data sourced from Genesys-PGR. Use of this service means
+            you agree to their{" "}
             <a
               href="https://www.genesys-pgr.org/content/legal/terms"
               target="_blank"
@@ -535,8 +542,7 @@ const SearchFilters = () => {
             >
               Terms and Conditions{" "}
             </a>
-            and must acknowledge Genesys-PGR as the source when using passport
-            data via Genolink.
+            and acknowledge Genesys-PGR as the source when using Genolink data.
           </p>
         </div>
 
