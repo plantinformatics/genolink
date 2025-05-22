@@ -463,7 +463,6 @@ const SearchFilters = () => {
           gap: "0px",
           height: isLoading || isResetLoading ? "100vh" : "150vh",
           padding: "10px",
-          overflowY: "auto",
         }}
       >
         {/* div1: Genolink Title */}
@@ -914,7 +913,6 @@ const SearchFilters = () => {
                 display: "flex",
                 flexDirection: "column",
                 height: "100vh",
-                overflowY: "auto",
               }}
             >
               <div
