@@ -5,8 +5,6 @@ This API endpoint allows users to retrieve passport data from Genesys using eith
 - A list of `genotypeIds`
 - Or both
 
-Genolink processes these inputs and returns detailed passport metadata for each accession.
-
 ---
 
 ## 🔗 Endpoint
@@ -29,8 +27,6 @@ Genolink processes these inputs and returns detailed passport metadata for each 
 |----------------|----------|----------|--------------------------------------------------------------------------|
 | accessionNumbers | Array of strings | Optional | A list of accession numbers (e.g., "AGG 240 WHEA")                     |
 | genotypeIds      | Array of strings | Optional | A list of genotype IDs (e.g., "AGG240WHEA2-B00003-1-09")              |
-
-If `genotypeIds` are provided, they will be internally converted to accession numbers and merged with any provided `accessionNumbers`.
 
 ---
 
