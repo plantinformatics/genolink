@@ -12,8 +12,8 @@ Genolink processes these inputs and returns detailed passport metadata for each 
 ## 🔗 Endpoint
 
 **URL:**  
-`POST /api/genesys/accession/query`  
-(e.g., `https://genolink.plantinformatics.io/api/genesys/accession/query`)
+`/api/genesys/accession/query`  
+(e.g., https://genolink.plantinformatics.io/api/genesys/accession/query)
 
 **Method:**  
 `POST`
@@ -27,10 +27,10 @@ Genolink processes these inputs and returns detailed passport metadata for each 
 
 | Field           | Type     | Required | Description                                                              |
 |----------------|----------|----------|--------------------------------------------------------------------------|
-| `accessionNumbers` | Array of strings | Optional | A list of accession numbers (e.g., `"AGG 240 WHEA"`)                     |
-| `genotypeIds`      | Array of strings | Optional | A list of genotype IDs (e.g., `"AGG240WHEA2-B00003-1-09"`)              |
+| accessionNumbers | Array of strings | Optional | A list of accession numbers (e.g., "AGG 240 WHEA")                     |
+| genotypeIds      | Array of strings | Optional | A list of genotype IDs (e.g., "AGG240WHEA2-B00003-1-09")              |
 
-> If `genotypeIds` are provided, they will be internally converted to accession numbers and merged with any provided `accessionNumbers`.
+If `genotypeIds` are provided, they will be internally converted to accession numbers and merged with any provided `accessionNumbers`.
 
 ---
 
