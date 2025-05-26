@@ -54,5 +54,3 @@ This API endpoint allows users to retrieve passport data from Genesys using eith
   "genotypeIds": ["AGG240WHEA2-B00003-1-09"]
 }
 ```
-This will result in the merged list:
-["AGG 1 WHEA", "AGG 480 WHEA", "AGG 240 WHEA"]
