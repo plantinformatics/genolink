@@ -36,20 +36,20 @@ Genolink processes these inputs and returns detailed passport metadata for each 
 
 ## 📤 Example Requests
 
-### 🔹 Example 1: Using Only `genotypeIds`
+### 🔹 Example 1: Using Only `accessionNumbers`
 
 ```json
 {
   "genotypeIds": ["AGG240WHEA2-B00003-1-09", "AGG5259WHEA1-B00003-1-06"]
 }
-
+```
 ### 🔹 Example 2: Using Only `accessionNumbers`
 
 ```json
 {
   "accessionNumbers": ["AGG 1 WHEA", "AGG 480 WHEA"]
 }
-
+```
 ### 🔹 Example 3: Using Both `genotypeIds` and `accessionNumbers`
 
 ```json
@@ -57,6 +57,6 @@ Genolink processes these inputs and returns detailed passport metadata for each 
   "accessionNumbers": ["AGG 1 WHEA", "AGG 480 WHEA"],
   "genotypeIds": ["AGG240WHEA2-B00003-1-09"]
 }
-
+```
 This will result in the merged list:
 ["AGG 1 WHEA", "AGG 480 WHEA", "AGG 240 WHEA"]
