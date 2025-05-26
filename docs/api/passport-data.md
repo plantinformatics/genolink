@@ -32,7 +32,7 @@ This API endpoint allows users to retrieve passport data from Genesys using eith
 
 ## 📤 Example Requests
 
-### 🔹 Example 1: Using Only `accessionNumbers`
+### 🔹 Example 1: Using Only `genotypeIds`
 
 ```json
 {
