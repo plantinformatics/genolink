@@ -13,7 +13,7 @@ Genolink processes these inputs and returns detailed passport metadata for each 
 
 **URL:**  
 `/api/genesys/accession/query`  
-(e.g.,>https://genolink.plantinformatics.io/api/genesys/accession/query)
+(e.g., 'https://genolink.plantinformatics.io/api/genesys/accession/query')
 
 **Method:**  
 `POST`
