@@ -9,7 +9,7 @@ If the user knows the specific sample names for which they need to retrieve geno
 The user needs to send a `POST` request to the `/samplesDatasetInfo` endpoint, providing the sample names as an array in the request body. This request will return the `callSetDbIds` and `variantSetDbIds` (datasets that the sample belongs to). 
 #### Request: 
 ```bash 
-POST https://genolink.plantinformatics.io/test/api/gigwa/samplesDatasetInfo 
+POST https://genolink.plantinformatics.io/api/gigwa/samplesDatasetInfo 
 ``` 
 #### Request Body: 
 ```json 
@@ -59,7 +59,7 @@ POST https://genolink.plantinformatics.io/test/api/gigwa/samplesDatasetInfo
 Once the `callSetDbIds` and `variantSetDbIds` are obtained, send a `POST` request to the `/allelematrix` endpoint to retrieve the genotype data. 
 #### Request: 
 ```bash 
-POST https://genolink.plantinformatics.io/test/api/gigwa/brapi/v2/search/allelematrix 
+POST https://genolink.plantinformatics.io/api/gigwa/brapi/v2/search/allelematrix 
 ``` 
 #### Request Body: 
 ```json 
@@ -112,7 +112,8 @@ POST https://genolink.plantinformatics.io/test/api/gigwa/brapi/v2/search/allelem
     }
 }
 ``` 
-## Scenario 2: Users Don’t Know the Sample Names** If the user does not know the sample names and needs to search for them using filters, follow these steps: 
+## Scenario 2: Users Don’t Know the Sample Names 
+If the user does not know the sample names and needs to search for them using filters, follow these steps: 
 ### 1. Search for Samples: 
 The user must first use the `/passportQuery` endpoint to search for samples using filters like accession, institute, date range, crop, and country of origin. 
 #### Request: 
@@ -205,7 +206,7 @@ POST https://genolink.plantinformatics.io/api/gigwa/samplesDatasetInfo
 ### 3. Get Genotype Data: Finally, after obtaining the necessary dataset information, send a `POST` request to the `/allelematrix` endpoint to retrieve the genotype data. 
 #### Request: 
 ```bash 
-POST https://genolink.plantinformatics.io/test/api/gigwa/brapi/v2/search/allelematrix 
+POST https://genolink.plantinformatics.io/api/gigwa/brapi/v2/search/allelematrix 
 ``` 
 #### Request Body: 
 ```json 
