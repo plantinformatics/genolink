@@ -1,4 +1,4 @@
-# 📘 Passport Data Retrieval API
+# Passport Data Retrieval API
 
 This API endpoint allows users to retrieve passport data from Genesys using either:
 - A list of `accessionNumbers`
@@ -7,7 +7,7 @@ This API endpoint allows users to retrieve passport data from Genesys using eith
 
 ---
 
-## 🔗 Endpoint
+## Endpoint
 
 **URL:**  
 `/api/genesys/accession/query`  
@@ -21,7 +21,7 @@ This API endpoint allows users to retrieve passport data from Genesys using eith
 
 ---
 
-## 🧾 Request Body
+## Request Body
 
 | Field           | Type     | Required | Description                                                              |
 |----------------|----------|----------|--------------------------------------------------------------------------|
@@ -30,23 +30,23 @@ This API endpoint allows users to retrieve passport data from Genesys using eith
 
 ---
 
-## 📤 Example Requests
+## Example Requests
 
-### 🔹 Example 1: Using Only `genotypeIds`
+### Example 1: Using Only `genotypeIds`
 
 ```json
 {
   "genotypeIds": ["AGG240WHEA2-B00003-1-09", "AGG5259WHEA1-B00003-1-06"]
 }
 ```
-### 🔹 Example 2: Using Only `accessionNumbers`
+### Example 2: Using Only `accessionNumbers`
 
 ```json
 {
   "accessionNumbers": ["AGG 1 WHEA", "AGG 480 WHEA"]
 }
 ```
-### 🔹 Example 3: Using Both `genotypeIds` and `accessionNumbers`
+### Example 3: Using Both `genotypeIds` and `accessionNumbers`
 
 ```json
 {
