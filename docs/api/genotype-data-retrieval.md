@@ -174,7 +174,8 @@ POST https://genolink.plantinformatics.io/api/genesys/passportQuery
     ]
 }
 ``` 
-note: you can find all possible values for filters by sending the following request 
+#### note: 
+you can find all possible values for filters by sending the following request 
 ```bash 
 GET https://genolink.plantinformatics.io/api/genesys/passportFilter/possibleValues 
 ```
