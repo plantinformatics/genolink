@@ -20,6 +20,7 @@ Genolink provides users with three primary filtering options:
 
   ![Figure 2: Accession-Based Filter](../images/g2.png)
   *Figure 2: Accession-Based Filter*
+
 - **GenotypeId-Based Filter:** Users can input specific genotype IDs in a text box, enabling direct retrieval of associated passport records.
   
   ![Figure 3: GenotypeId-Based Filter](../images/g3.png)
@@ -88,6 +89,7 @@ These functionalities enable interoperability with external genomic databases an
 ## 5. Multiple Gigwa Servers Support
 
 In some cases, selected accessions from the passport table belong to more than one Gigwa server. In these cases, Genolink identifies these servers and lists them for users. After providing credentials to log into these servers, users can see the search summary plus datasets on each server that include selected accessions or samples.
+
 ![Figure 11: Providing credentials for each server](../images/g12.png)
 *Figure 11: Providing credentials for each server*
 
@@ -95,6 +97,7 @@ In some cases, selected accessions from the passport table belong to more than o
 *Figure 12: Selecting datasets and Genotype filters*
 
 After selecting datasets and specifying regions, users can search for genotype data and export genotype data from each server by selecting the target server. In Genolink, genotype data from multiple servers is displayed together in the same table.
+
 ![Figure 13: Exporting Genotype data for the selected Gigwa server](../images/g14.png)
 *Figure 13: Exporting Genotype data for the selected Gigwa server*
 
