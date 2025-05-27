@@ -88,10 +88,6 @@ To refine their genotype data search, users can further filter results based on:
 - Genomic positions  
 - Variant IDs corresponding to particular genomic regions  
 
-
-![Figure 7: Filtering Genotype Data by Chromosome and Position](../images/g8.png)  
-*Figure 7: Filtering Genotype Data by Chromosome and Position*
-
 <p align="center">
   <img src="../images/g8.png" alt="Filtering Genotype Data by Chromosome and Position">
   <br>
@@ -157,8 +153,6 @@ In some cases, selected accessions from the passport table belong to more than o
 After selecting datasets and specifying regions, users can search for genotype data and export genotype data from each server by selecting the target server. In Genolink, genotype data from multiple servers is displayed together in the same table.
 
 
-![Figure 13: Exporting Genotype data for the selected Gigwa server](../images/g14.png)
-*Figure 13: Exporting Genotype data for the selected Gigwa server*
 <p align="center">
   <img src="../images/g14.png" alt="Exporting Genotype data for the selected Gigwa server">
   <br>
