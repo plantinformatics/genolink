@@ -1,7 +1,7 @@
 
 # How to Get Genotype Data for Samples 
 
-> **Note:** The following are example requests demonstrating how to use the Genolink API endpoints to retrieve genotype data.
+**Note:** The following are example requests demonstrating how to use the Genolink API endpoints to retrieve genotype data.
 
 There are two main scenarios for retrieving genotype data for samples. The process involves sending a series of requests to specific API endpoints. Here’s an overview of how to proceed with each scenario. 
 
@@ -177,8 +177,7 @@ POST https://genolink.plantinformatics.io/api/genesys/passportQuery
     ]
 }
 ``` 
-#### Note: 
-you can find all possible values for filters by sending the following request 
+**Note:** you can find all possible values for filters by sending the following request 
 ```bash 
 GET https://genolink.plantinformatics.io/api/genesys/passportFilter/possibleValues 
 ```
