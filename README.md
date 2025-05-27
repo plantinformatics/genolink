@@ -9,7 +9,7 @@ https://agriculture.vic.gov.au/crops-and-horticulture/the-australian-grains-gene
 
 - Provides real-time access to passport and genotype data, ensuring users always have current information.
 
-- Allows users to filter accessions based on passport information or specified lists before retrieving related genotype data.
+- Allows users to filter accessions based on passport information or specified lists of accessions ot specified lists of genotype ids before retrieving related genotype data.
 
 - Supports integration with multiple genomic platforms, enabling comprehensive data retrieval and consolidation.
 
@@ -17,22 +17,20 @@ https://agriculture.vic.gov.au/crops-and-horticulture/the-australian-grains-gene
 
 - Reduces data redundancy by avoiding the need for local duplicate copies of databases.
 
-- Streamlines the process of managing large-scale genotype data from global wheat genebanks.
 
 
 # Setup Instructions
 
 **Note:** For any placeholder values (e.g., `<your_db_username>`, `<your_db_password>`, etc.), please replace them with the correct data that you need to use.
 
-
-## Manual Setup
+## Manual Setup (Without Docker)
 
 ### Prerequisites
 
-Before you begin, ensure you have the following installed:
-- Node.js (version 14 or higher)
-- NPM (version 6 or higher)
-- MySQL (server and client)
+Make sure you have installed:
+- Node.js (v14+)
+- npm (v6+)
+- MySQL (server & client)
 
 ### Setup Steps
 
@@ -51,12 +49,10 @@ npm install
 #### 3. Create .env File for Frontend
 Create a .env file in the '*front*' directory with the following content:
 ```bash
-VITE_Genesys_OIDC_AUTHORITY=https://api.sandbox.genesys-pgr.org
 VITE_Genesys_OIDC_CLIENT_ID=<ask Genesys support>
 VITE_Genesys_OIDC_CLIENT_SECRET=<ask Genesys support>
-VITE_Genesys_OIDC_REDIRECT_URI=http://127.0.0.1:3000
 VITE_GENOLINK_SERVER=http://127.0.0.1:3000
-VITE_GENESYS_SERVER=https://api.sandbox.genesys-pgr.org/api/v1/acn
+VITE_GENESYS_SERVER=https://api.genesys-pgr.org
 ```
 
 #### 4. Build Frontend
@@ -72,29 +68,17 @@ Navigate to the *back* directory and install dependencies:
 npm install
 ```
 
-#### 6. Install MySQL Client and Server
-Install MySQL client and server:
-```bash
-sudo apt install mysql-server mysql-client
-```
+#### 6. Install and configure MySQL:
+_Install MySQL server and client for your OS
+_Start MySQL server
+_Create a database user and database:
 
-#### 7. Create an Admin User
-Open MySQL shell:
-```bash
-sudo mysql
-```
-Create a genolink user with the name "genouser":
 ```sql
 CREATE USER '<your_db_username>'@'localhost' IDENTIFIED BY '<your_db_password>';
-```
-
-#### 8. Create a Database
-Create a database with the name corresponding to your_db_name:
-```sql
 CREATE DATABASE <your_db_name>;
 ```
 
-#### 9. Grant all previleges to the user
+#### 7. Grant all previleges to the user
 ```sql
 GRANT ALL PRIVILEGES ON <your_db_name>.* TO '<your_db_username>'@'localhost';
 FLUSH PRIVILEGES;
@@ -111,7 +95,7 @@ DB_DIALECT=mysql
 GIGWA_SERVER=<your_gigwa_server_url>
 GERMINATE_SERVER=<your_germinate_server_url>
 GENOLINK_SERVER=http://127.0.0.1:3000
-GENESYS_SERVER=https://api.sandbox.genesys-pgr.org/api/v1/acn
+GENESYS_SERVER=https://api.genesys-pgr.org
 GENOLINK_SERVER_PORT=3000
 ```
 
@@ -126,15 +110,13 @@ Open your browser and navigate to http://localhost:3000 to use your application.
 
 
 
-## Docker Setup
+## Docker Setup (Recommended)
 
 ### Prerequisites
 
-Before you begin, ensure you have the following installed:
-- Docker (version 20 or higher)
-- Docker Compose (version 1.29 or higher)
-
-### Option 1: Build Docker Image from Code
+Make sure you have installed:
+- Docker (v20+)
+- Docker Compose (v1.29+)
 
 ### Setup Steps
 
@@ -144,8 +126,26 @@ Clone the project repository to your local machine from GitHub:
 git clone <repository_url>
 ```
 
-#### 2. Edit `docker-compose.yml`:
-After cloning the project, open the docker-compose.yml file. This file contains placeholders (e.g., <your_db_username>, <your_db_password>, etc.) that need to be replaced with the correct values. Make sure to fill in these placeholders with the appropriate data.
+#### 2. Create a .env file in the project root:
+Example .env content:
+```bash 
+DB_ROOT_PASSWORD=<your_root_mysql_password>
+DB_USERNAME=<your_db_username>
+DB_PASSWORD=<your_db_password>
+DB_NAME=<your_db_name>
+DB_HOST=db
+DB_DIALECT=mysql
+GIGWA_SERVERS={"AUS165": "https://gigwa.plantinformatics.io", "MEX002": "https://gigwatest.plantinformatics.io"}
+GERMINATE_SERVER=https://germinate.plantinformatics.io
+GENOLINK_SERVER=http://127.0.0.1:3000
+GENESYS_SERVER=https://api.genesys-pgr.org
+GENOLINK_SERVER_PORT=3000
+VITE_Genesys_OIDC_CLIENT_ID=<your_client_id>
+VITE_Genesys_OIDC_CLIENT_SECRET=<your_client_secret>
+VITE_GENOLINK_SERVER=http://127.0.0.1:3000
+VITE_GENESYS_SERVER=https://api.genesys-pgr.org
+VITE_PLATFORM=Gigwa
+```
 
 #### 3. Start Docker Containers
 Navigate to the directory containing the docker-compose.yml file and run the following command to start the containers:
@@ -156,65 +156,5 @@ docker-compose up -d
 
 #### 4. Access the Application
 Open your browser and navigate to http://127.0.0.1:3000 to use your application.
-
-
-
-### Option 2: Use Pre-built Docker Image from Docker Hub
-
-### Setup Steps
-
-#### 1. Create Docker Compose File
-Create a docker-compose.yml file with the following content:
-
-```yaml
-services:
-  app:
-    image: <genolink-dockerhub-repo>/genolink:latest
-    ports:
-      - '3000:3000'
-    environment:
-      # Frontend-Variables
-      VITE_Genesys_OIDC_AUTHORITY: 'https://api.sandbox.genesys-pgr.org'
-      VITE_Genesys_OIDC_CLIENT_ID: '<ask Genesys support for your OIDC Client ID>'
-      VITE_Genesys_OIDC_CLIENT_SECRET: '<ask Genesys support for your OIDC Client Secret>'
-      VITE_Genesys_OIDC_REDIRECT_URI: 'http://127.0.0.1:3000'
-      VITE_GENOLINK_SERVER: 'http://127.0.0.1:3000'
-      VITE_GENESYS_SERVER: 'https://api.sandbox.genesys.pgr.org'
-      # Backend-Variables
-      DB_USERNAME: '<your_db_username>'
-      DB_PASSWORD: '<your_db_password>'
-      DB_NAME: '<your_db_name>'
-      DB_HOST: 'db'
-      DB_DIALECT: 'mysql'
-      GIGWA_SERVER: '<your_gigwa_server_url>'
-      GERMINATE_SERVER: '<your_germinate_server_url>'
-      GENOLINK_SERVER: 'http://127.0.0.1:3000'
-      GENESYS_SERVER: 'https://api.sandbox.genesys.pgr.org/api/v1/acn'
-      GENOLINK_SERVER_PORT: 3000
-    depends_on:
-      - db
-    restart: always
-
-  db:
-    image: mysql:5.7
-    environment:
-      MYSQL_ROOT_PASSWORD: '<your_root_password>'
-      MYSQL_DATABASE: '<same_as_your_db_name>'
-      MYSQL_USER: '<same_as_your_db_username>'
-      MYSQL_PASSWORD: '<same_as_your_db_password>'
-    ports:
-      - '3307:3306'
-```
-
-#### 2. Start Docker Containers
-Navigate to the directory containing the docker-compose.yml file and run the following command to start the containers:
-
-```bash
-docker-compose up -d
-```
-#### 3. Access the Application
-Open your browser and navigate to http://127.0.0.1:3000 to use your application.
-
-Note: The Docker image will soon be available on Docker Hub.
 
 
