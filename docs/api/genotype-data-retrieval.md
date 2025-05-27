@@ -203,7 +203,36 @@ POST https://genolink.plantinformatics.io/api/gigwa/samplesDatasetInfo
 ``` 
 #### Response: 
 ```json 
-[ { "sampleName": "AGG422086BARL2-B00005-8-88-1-240806-Raw-MorexV3", "callSetDbId": "AGG_BARLEY§13006", "variantSetDbId": ["AGG_BARLEY§1§240806-Raw-MorexV3"] }, { "sampleName": "AGG422088BARL2-B00005-9-09-1-240806-Raw-MorexV3", "callSetDbId": "AGG_BARLEY§13007", "variantSetDbId": ["AGG_BARLEY§1§240806-Raw-MorexV3"] }, { "sampleName": "AGG422086BARL2-B00005-8-88-2-240806-FilledIn-MorexV3", "callSetDbId": "AGG_BARLEY§26995", "variantSetDbId": ["AGG_BARLEY§2§240806-FilledIn-MorexV3"] }, { "sampleName": "AGG422088BARL2-B00005-9-09-2-240806-FilledIn-MorexV3", "callSetDbId": "AGG_BARLEY§26996", "variantSetDbId": ["AGG_BARLEY§2§240806-FilledIn-MorexV3"] } ] 
+[
+    {
+        "sampleName": "AGG422086BARL2-B00005-8-88-1-240806-Raw-MorexV3",
+        "callSetDbId": "AGG_BARLEY§13006",
+        "variantSetDbId": [
+            "AGG_BARLEY§1§240806-Raw-MorexV3"
+        ]
+    },
+    {
+        "sampleName": "AGG422088BARL2-B00005-9-09-1-240806-Raw-MorexV3",
+        "callSetDbId": "AGG_BARLEY§13007",
+        "variantSetDbId": [
+            "AGG_BARLEY§1§240806-Raw-MorexV3"
+        ]
+    },
+    {
+        "sampleName": "AGG422086BARL2-B00005-8-88-2-240806-FilledIn-MorexV3",
+        "callSetDbId": "AGG_BARLEY§26995",
+        "variantSetDbId": [
+            "AGG_BARLEY§2§240806-FilledIn-MorexV3"
+        ]
+    },
+    {
+        "sampleName": "AGG422088BARL2-B00005-9-09-2-240806-FilledIn-MorexV3",
+        "callSetDbId": "AGG_BARLEY§26996",
+        "variantSetDbId": [
+            "AGG_BARLEY§2§240806-FilledIn-MorexV3"
+        ]
+    }
+]
 ``` 
 ### 3. Get Genotype Data: 
 Finally, after obtaining the necessary dataset information, send a `POST` request to the `/allelematrix` endpoint to retrieve the genotype data. 
