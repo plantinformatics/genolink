@@ -1,4 +1,4 @@
-# Genolink Workflow
+# Genolink Use Cases
 
 ## 1. Filtering Mechanism for Passport Data
 
