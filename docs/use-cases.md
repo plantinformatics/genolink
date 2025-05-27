@@ -1,4 +1,4 @@
-# Genolink Use Cases
+# Genolink Usage Guide
 
 ## 1. Filtering Mechanism for Passport Data
 
