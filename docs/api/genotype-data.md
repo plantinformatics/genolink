@@ -289,5 +289,3 @@ POST https://genolink.plantinformatics.io/api/gigwa/brapi/v2/search/allelematrix
     }
 }
 ``` 
-### Conclusion
-By following these steps, users can either retrieve genotype data directly for known samples or search for samples using filters, retrieve the necessary dataset information, and finally, obtain genotype data for their chosen samples.
