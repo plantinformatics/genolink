@@ -14,18 +14,21 @@ Genolink provides users with three primary filtering options:
   - Type of germplasm storage  
 
   ![Figure 1: Passport Data Filter](../images/g1.png)
+  *Figure 1: Passport Data Filter*
 
 - **Accession-Based Filter:** Users can input specific accession numbers in a text box, enabling direct retrieval of associated passport records.
 
   ![Figure 2: Accession-Based Filter](../images/g2.png)
-
+  *Figure 2: Accession-Based Filter*
 - **GenotypeId-Based Filter:** Users can input specific genotype IDs in a text box, enabling direct retrieval of associated passport records.
   
   ![Figure 3: GenotypeId-Based Filter](../images/g3.png)
+  *Figure 3: GenotypeId-Based Filter*
   
 By leveraging Genesys APIs, Genolink ensures accurate and up-to-date passport data retrieval while also incorporating an option to filter accessions based on the availability of genotypic data. Each record displays its genotype status, offering an integrated view of the dataset.
 
   ![Figure 4: Filtering Accessions by Genotype Availability](../images/g4.png)
+  *Figure 4: Filtering Accessions by Genotype Availability*
 
 ---
 
@@ -36,6 +39,7 @@ The genotype data associated with plant accessions is stored in Variant Call For
 Users are required to upload a pre-formatted CSV template provided by Genolink to populate this mapping database. This step is crucial, as incomplete or incorrect mapping files will cause errors when querying genotype data. The tool ensures that only accessions with correctly linked Genotype IDs can be searched across different genomic platforms.
 
 ![Figure 5: Accession-Genotype Mapping Ensures Accurate Data Linkage](../images/g5.png)
+*Figure 5: Accession-Genotype Mapping Ensures Accurate Data Linkage*
 
 ---
 
@@ -46,6 +50,7 @@ Once users apply the desired filters and obtain relevant passport data, they can
 Upon selecting a preferred genomic platform, Genolink cross-references the Genotype IDs and retrieves the available genotype data. If multiple datasets contain the required information, the tool presents a list of datasets, allowing users to select the most appropriate one for their analysis.
 
 ![Figure 6: Genolink Enables Seamless Genotype Data Retrieval](../images/g7.png)
+*Figure 6: Genolink Enables Seamless Genotype Data Retrieval*
 
 To refine their genotype data search, users can further filter results based on:  
 - Specific chromosomes  
@@ -53,7 +58,10 @@ To refine their genotype data search, users can further filter results based on:
 - Variant IDs corresponding to particular genomic regions  
 
 ![Figure 7: Filtering Genotype Data by Chromosome and Position](../images/g8.png)  
+*Figure 7: Filtering Genotype Data by Chromosome and Position*
+
 ![Figure 8: Filtering Genotype Data by Variant ID](../images/g9.png)
+*Figure 8: Filtering Genotype Data by Variant ID*
 
 ---
 
@@ -62,7 +70,10 @@ To refine their genotype data search, users can further filter results based on:
 Genolink provides users with the ability to export both passport and genotype data. Passport data can be exported in TSV format for further analysis, while genotype data can be downloaded as VCF files, preserving their original structure.
 
 ![Figure 9: Exporting Passport Data in TSV Format](../images/g10.png)  
+*Figure 9: Exporting Passport Data in TSV Format*
+
 ![Figure 10: Exporting Genotype Data in VCF Format](../images/g11.png)
+*Figure 10: Exporting Genotype Data in VCF Format*
 
 Additionally, Genolink features Breeding API (BrAPI)-compliant endpoints to facilitate integration with third-party applications. The most critical endpoints include:  
 - Querying genotype data for a specific genomic position on a designated chromosome  
@@ -78,7 +89,12 @@ These functionalities enable interoperability with external genomic databases an
 
 In some cases, selected accessions from the passport table belong to more than one Gigwa server. In these cases, Genolink identifies these servers and lists them for users. After providing credentials to log into these servers, users can see the search summary plus datasets on each server that include selected accessions or samples.
 ![Figure 11: Providing credentials for each server](../images/g12.png)
+*Figure 11: Providing credentials for each server*
+
 ![Figure 12: Selecting datasets and Genotype filters](../images/g13.png)
+*Figure 12: Selecting datasets and Genotype filters*
+
 After selecting datasets and specifying regions, users can search for genotype data and export genotype data from each server by selecting the target server. In Genolink, genotype data from multiple servers is displayed together in the same table.
 ![Figure 13: Exporting Genotype data for the selected Gigwa server](../images/g14.png)
+*Figure 13: Exporting Genotype data for the selected Gigwa server*
 
