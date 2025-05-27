@@ -20,10 +20,12 @@ Genolink provides users with three primary filtering options:
   ![Figure 2: Accession-Based Filter](../images/g2.png)
 
 - **GenotypeId-Based Filter:** Users can input specific genotype IDs in a text box, enabling direct retrieval of associated passport records.
+  
   ![Figure 3: GenotypeId-Based Filter](../images/g3.png)
+  
 By leveraging Genesys APIs, Genolink ensures accurate and up-to-date passport data retrieval while also incorporating an option to filter accessions based on the availability of genotypic data. Each record displays its genotype status, offering an integrated view of the dataset.
 
-![Figure 4: Filtering Accessions by Genotype Availability](../images/g4.png)
+  ![Figure 4: Filtering Accessions by Genotype Availability](../images/g4.png)
 
 ---
 
