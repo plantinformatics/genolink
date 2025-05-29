@@ -104,6 +104,82 @@ async function fetchAllAccessionNumbers(finalbody, header) {
   }
 }
 
+router.get("/passportFilter/possibleValues", async (req, res) => {
+  let url = `${config.genesysServer}/api/v1/acn/filter`;
+
+  const sendRequestWithRetry = async () => {
+    try {
+      const token = await getCachedToken();
+      const header = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Accept: "application/json, text/plain, */*",
+          Origin: config.genolinkServer,
+        },
+      };
+      // Attempt the request
+      const result = await axios.post(url, { _text: " " }, header);
+      const suggestions = result.data.suggestions;
+      const output = {
+        _text: "anything",
+        institute:
+          suggestions["institute.code"]?.terms.map((t) => t.term) || [],
+        crop: suggestions["crop.shortName"]?.terms.map((t) => t.term) || [],
+        taxonomy: suggestions["taxonomy.genus"]?.terms.map((t) => t.term) || [],
+        OriginOfMaterial:
+          suggestions["countryOfOrigin.code3"]?.terms.map((t) => t.term) || [],
+        BiologicalStatus:
+          suggestions["sampStat"]?.terms.map((t) => t.term) || [],
+        TypeOfGermplasmStorage:
+          suggestions["storage"]?.terms.map((t) => t.term) || [],
+      };
+
+      return output;
+    } catch (error) {
+      if (error.response && error.response.status === 401) {
+        // If token is invalid, fetch a new token and retry
+        cachedToken = await getToken(); // Refresh token
+        const header = {
+          headers: {
+            Authorization: `Bearer ${cachedToken}`,
+            "Content-Type": "application/json",
+            Accept: "application/json, text/plain, */*",
+            Origin: config.genolinkServer,
+          },
+        };
+        const result = await axios.post(url, { _text: " " }, header);
+        const suggestions = result.data.suggestions;
+        const output = {
+          _text: "anything",
+          institute:
+            suggestions["institute.code"]?.terms.map((t) => t.term) || [],
+          crop: suggestions["crop.shortName"]?.terms.map((t) => t.term) || [],
+          taxonomy:
+            suggestions["taxonomy.genus"]?.terms.map((t) => t.term) || [],
+          OriginOfMaterial:
+            suggestions["countryOfOrigin.code3"]?.terms.map((t) => t.term) ||
+            [],
+          BiologicalStatus:
+            suggestions["sampStat"]?.terms.map((t) => t.term) || [],
+          TypeOfGermplasmStorage:
+            suggestions["storage"]?.terms.map((t) => t.term) || [],
+        };
+
+        return output;
+      }
+      throw error; // Rethrow other errors
+    }
+  };
+
+  try {
+    const response = await sendRequestWithRetry();
+    res.send(response);
+  } catch (error) {
+    logger.error(`API Error in /accession/filters: ${error}`);
+    res.status(500).send("API request failed: " + error.message);
+  }
+});
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 router.post("/accession/filters", async (req, res) => {
   let url = `${config.genesysServer}/api/v1/acn/filter`;
