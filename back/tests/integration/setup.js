@@ -5,5 +5,8 @@ const logger = require("../../middlewares/logger");
 
 jest.mock("axios");
 jest.mock("../../middlewares/logger");
+jest.mock("../../utils/generateGenesysToken");
 
-module.exports = { app, request, axios, logger };
+const generateGenesysToken = require("../../utils/generateGenesysToken");
+
+module.exports = { app, request, axios, logger, generateGenesysToken };
