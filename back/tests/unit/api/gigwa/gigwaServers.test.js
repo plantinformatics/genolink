@@ -1,4 +1,4 @@
-const { app, request } = require("../setup");
+const { app, request } = require("../../../helpers/setup");
 
 describe("GET /api/gigwa/gigwaServers", () => {
   it("should return the list of gigwa servers from config", async () => {

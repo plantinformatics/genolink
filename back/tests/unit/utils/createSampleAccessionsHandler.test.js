@@ -1,18 +1,18 @@
-const db = require("../../models");
+const db = require("../../../models");
 const fs = require("fs");
 const stream = require("stream");
-const createSampleAccessionsHandler = require("../../utils/createSampleAccessionsHandler");
-const mockRequest = require("../helpers/mockRequest");
-const mockResponse = require("../helpers/mockResponse");
-const logger = require("../../middlewares/logger");
+const createSampleAccessionsHandler = require("../../../utils/createSampleAccessionsHandler");
+const mockRequest = require("../../helpers/mockRequest");
+const mockResponse = require("../../helpers/mockResponse");
+const logger = require("../../../middlewares/logger");
 
-jest.mock("../../models", () => ({
+jest.mock("../../../models", () => ({
   SampleAccession: {
     bulkCreate: jest.fn(),
   },
 }));
 
-jest.mock("../../middlewares/logger", () => ({
+jest.mock("../../../middlewares/logger", () => ({
   warn: jest.fn(),
   info: jest.fn(),
   error: jest.fn(),

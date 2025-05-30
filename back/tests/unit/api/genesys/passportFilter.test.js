@@ -1,4 +1,9 @@
-const { app, request, axios, generateGenesysToken } = require("../setup");
+const {
+  app,
+  request,
+  axios,
+  generateGenesysToken,
+} = require("../../../helpers/setup");
 
 describe("GET /passportFilter/possibleValues", () => {
   beforeEach(() => {

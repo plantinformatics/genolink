@@ -1,16 +1,16 @@
-const db = require("../../models");
-const logger = require("../../middlewares/logger");
-const genotypeIdMappingHandler = require("../../utils/genotypeIdMappingHandler");
-const mockRequest = require("../helpers/mockRequest");
-const mockResponse = require("../helpers/mockResponse");
+const db = require("../../../models");
+const logger = require("../../../middlewares/logger");
+const genotypeIdMappingHandler = require("../../../utils/genotypeIdMappingHandler");
+const mockRequest = require("../../helpers/mockRequest");
+const mockResponse = require("../../helpers/mockResponse");
 
-jest.mock("../../models", () => ({
+jest.mock("../../../models", () => ({
   SampleAccession: {
     findAll: jest.fn(),
   },
 }));
 
-jest.mock("../../middlewares/logger", () => ({
+jest.mock("../../../middlewares/logger", () => ({
   warn: jest.fn(),
   info: jest.fn(),
   error: jest.fn(),

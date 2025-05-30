@@ -1,14 +1,14 @@
-const accessionMappingHandler = require("../../utils/accessionMappingHandler");
-const mockRequest = require("../helpers/mockRequest");
-const mockResponse = require("../helpers/mockResponse");
+const accessionMappingHandler = require("../../../utils/accessionMappingHandler");
+const mockRequest = require("../../helpers/mockRequest");
+const mockResponse = require("../../helpers/mockResponse");
 
-jest.mock("../../models", () => ({
+jest.mock("../../../models", () => ({
   SampleAccession: {
     findAll: jest.fn(),
   },
 }));
 
-jest.mock("../../middlewares/logger", () => ({
+jest.mock("../../../middlewares/logger", () => ({
   warn: jest.fn(),
   info: jest.fn(),
   error: jest.fn(),
@@ -19,8 +19,8 @@ describe("accessionMappingHandler", () => {
   let db, logger;
 
   beforeEach(() => {
-    db = require("../../models");
-    logger = require("../../middlewares/logger");
+    db = require("../../../models");
+    logger = require("../../../middlewares/logger");
 
     req = mockRequest();
     res = mockResponse();

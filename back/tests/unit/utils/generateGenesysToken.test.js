@@ -1,9 +1,9 @@
 const axios = require("axios");
-const generateGenesysToken = require("../../utils/generateGenesysToken");
-const logger = require("../../middlewares/logger");
+const generateGenesysToken = require("../../../utils/generateGenesysToken");
+const logger = require("../../../middlewares/logger");
 
 jest.mock("axios");
-jest.mock("../../middlewares/logger");
+jest.mock("../../../middlewares/logger");
 
 describe("generateGenesysToken", () => {
   afterEach(() => {

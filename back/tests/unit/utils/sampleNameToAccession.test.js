@@ -1,4 +1,4 @@
-const sampleNameToAccession = require("../../utils/sampleNameToAccession");
+const sampleNameToAccession = require("../../../utils/sampleNameToAccession");
 
 describe("sampleNameToAccession", () => {
   it("parses sample name correctly", () => {
