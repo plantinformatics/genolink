@@ -1,5 +1,4 @@
 const { app, request, axios, generateGenesysToken } = require("../setup");
-const genesysModule = require("../../../api/genesys");
 
 describe("POST /accession/filters", () => {
   beforeEach(() => {
