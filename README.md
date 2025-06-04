@@ -21,7 +21,7 @@ https://agriculture.vic.gov.au/crops-and-horticulture/the-australian-grains-gene
 
 # Setup Instructions
 
-**Note:** For any placeholder values (e.g., `<your_db_username>`, `<your_db_password>`, etc.), please replace them with the correct data that you need to use.
+> **Note:** For any placeholder values (e.g., `<your_db_username>`, `<your_db_password>`, etc.), please replace them with the correct data that you need to use.
 
 ## Manual Setup (Without Docker)
 
@@ -54,7 +54,7 @@ VITE_Genesys_OIDC_CLIENT_SECRET=<your_client_secret>
 VITE_GENOLINK_SERVER=http://127.0.0.1:3000
 VITE_GENESYS_SERVER=https://api.genesys-pgr.org
 ```
-**Note:** To obtain your Genesys OIDC Client ID and Secret, please contact the [Genesys support team](https://www.genesys-pgr.org/content/about/contact).
+> **Note:** To obtain your Genesys OIDC Client ID and Secret, please contact the [Genesys support team](https://www.genesys-pgr.org/content/about/contact).
 
 
 #### 4. Build Frontend
@@ -100,8 +100,6 @@ GENOLINK_SERVER=http://127.0.0.1:3000
 GENESYS_SERVER=https://api.genesys-pgr.org
 GENOLINK_SERVER_PORT=3000
 ```
-> **Note:** To obtain your Genesys OIDC Client ID and Secret, please contact the [Genesys support team](https://www.genesys-pgr.org/content/about/contact).
-
 
 #### 11. Run the Application
 Start the backend server by running the following in '*back*' folder:
@@ -150,6 +148,8 @@ VITE_GENOLINK_SERVER=http://127.0.0.1:3000
 VITE_GENESYS_SERVER=https://api.genesys-pgr.org
 VITE_PLATFORM=Gigwa
 ```
+> **Note:** To obtain your Genesys OIDC Client ID and Secret, please contact the [Genesys support team](https://www.genesys-pgr.org/content/about/contact).
+
 
 #### 3. Start Docker Containers
 Navigate to the directory containing the docker-compose.yml file and run the following command to start the containers:
