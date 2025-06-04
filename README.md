@@ -49,11 +49,13 @@ npm install
 #### 3. Create .env File for Frontend
 Create a .env file in the '*front*' directory with the following content:
 ```bash
-VITE_Genesys_OIDC_CLIENT_ID=<ask Genesys support>
-VITE_Genesys_OIDC_CLIENT_SECRET=<ask Genesys support>
+VITE_Genesys_OIDC_CLIENT_ID=<your_client_id>
+VITE_Genesys_OIDC_CLIENT_SECRET=<your_client_secret>
 VITE_GENOLINK_SERVER=http://127.0.0.1:3000
 VITE_GENESYS_SERVER=https://api.genesys-pgr.org
 ```
+**Note:** To obtain your Genesys OIDC Client ID and Secret, please contact the [Genesys support team](https://www.genesys-pgr.org/content/about/contact).
+
 
 #### 4. Build Frontend
 Build the frontend and move the generated '*dist*' folder to the backend's root directory:
@@ -98,6 +100,8 @@ GENOLINK_SERVER=http://127.0.0.1:3000
 GENESYS_SERVER=https://api.genesys-pgr.org
 GENOLINK_SERVER_PORT=3000
 ```
+> **Note:** To obtain your Genesys OIDC Client ID and Secret, please contact the [Genesys support team](https://www.genesys-pgr.org/content/about/contact).
+
 
 #### 11. Run the Application
 Start the backend server by running the following in '*back*' folder:
