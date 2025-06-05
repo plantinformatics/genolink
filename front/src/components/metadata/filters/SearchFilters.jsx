@@ -47,6 +47,7 @@ const SearchFilters = () => {
   const [filterMode, setFilterMode] = useState("Passport Filter");
   const [isFilterApplied, setIsFilterApplied] = useState(false);
   const [initialRequestSent, setInitialRequestSent] = useState(false);
+  const [initialRequestStatus, setInitialRequestStatus] = useState("pending");
   const [file, setFile] = useState(null);
   const [inputKey, setInputKey] = useState(Date.now());
   const [showFileInput, setShowFileInput] = useState(false);
@@ -122,8 +123,10 @@ const SearchFilters = () => {
         setFilterCode(filterCode);
         setFilterBody(body);
         setInitialRequestSent(true);
+        setInitialRequestStatus("success");
       } catch (error) {
         console.error("Error fetching initial data:", error);
+        setInitialRequestStatus("error");
       } finally {
         setIsLoading(false);
       }
@@ -1034,13 +1037,54 @@ const SearchFilters = () => {
               </div>
 
               <div style={{ flex: "1 1 auto" }}>
-                {Object.keys(searchResults).length !== 0 ? (
-                  <MetadataSearchResultTable
-                    filterCode={filterCode}
-                    hasGenotype={hasGenotype}
-                    filterBody={filterBody}
-                  />
-                ) : null}
+                {initialRequestStatus === "pending" && <LoadingComponent />}
+
+                {initialRequestStatus === "error" && (
+                  <div style={{ padding: "20px", textAlign: "center" }}>
+                    <div
+                      className="alert alert-danger"
+                      role="alert"
+                      style={{ display: "inline-block", textAlign: "left" }}
+                    >
+                      <strong>Error:</strong> Unable to load data from Genesys.
+                      <br />
+                      Please check your connection or click the button below.
+                      <br />
+                      <button
+                        onClick={() => window.location.reload()}
+                        className="btn btn-danger mt-2"
+                      >
+                        Refresh Page
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {initialRequestStatus === "success" &&
+                  searchResults?.length === 0 && (
+                    <div style={{ padding: "20px", textAlign: "center" }}>
+                      <div
+                        className="alert alert-warning"
+                        role="alert"
+                        style={{ display: "inline-block", textAlign: "left" }}
+                      >
+                        <strong>No data found.</strong> The selected filters
+                        returned no results.
+                        <br />
+                        Please reset or try using different filters.
+                      </div>
+                    </div>
+                  )}
+
+                {initialRequestStatus === "success" &&
+                  searchResults?.length > 0 && (
+                    <MetadataSearchResultTable
+                      filterCode={filterCode}
+                      filterBody={filterBody}
+                      hasGenotype={hasGenotype}
+                      searchResults={searchResults}
+                    />
+                  )}
               </div>
             </div>
           )}
