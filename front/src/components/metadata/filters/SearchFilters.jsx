@@ -729,12 +729,23 @@ const SearchFilters = () => {
                     {isInstituteDrawerOpen ? "\u25B2" : "\u25BC"}
                   </span>
                 </button>
-                {isInstituteDrawerOpen && (
-                  <MultiSelectFilter
-                    options={instituteCode}
-                    type="institueCheckedBoxes"
-                  />
-                )}
+                {isInstituteDrawerOpen &&
+                  (instituteCode && instituteCode.length > 0 ? (
+                    <MultiSelectFilter
+                      options={instituteCode}
+                      type="institueCheckedBoxes"
+                    />
+                  ) : (
+                    <p
+                      style={{
+                        padding: "0 10px",
+                        color: "gray",
+                        fontStyle: "italic",
+                      }}
+                    >
+                      No available filters.
+                    </p>
+                  ))}
               </div>
               <div>
                 <button
@@ -756,12 +767,23 @@ const SearchFilters = () => {
                     {isCropDrawerOpen ? "\u25B2" : "\u25BC"}
                   </span>
                 </button>
-                {isCropDrawerOpen && (
-                  <MultiSelectFilter
-                    options={cropList}
-                    type="cropCheckedBoxes"
-                  />
-                )}
+                {isCropDrawerOpen &&
+                  (cropList && cropList.length > 0 ? (
+                    <MultiSelectFilter
+                      options={cropList}
+                      type="cropCheckedBoxes"
+                    />
+                  ) : (
+                    <p
+                      style={{
+                        padding: "0 10px",
+                        color: "gray",
+                        fontStyle: "italic",
+                      }}
+                    >
+                      No available filters.
+                    </p>
+                  ))}
               </div>
               <div>
                 <button
@@ -783,12 +805,23 @@ const SearchFilters = () => {
                     {isTaxonomyDrawerOpen ? "\u25B2" : "\u25BC"}
                   </span>
                 </button>
-                {isTaxonomyDrawerOpen && (
-                  <MultiSelectFilter
-                    options={taxonomyList}
-                    type="taxonomyCheckedBoxes"
-                  />
-                )}
+                {isTaxonomyDrawerOpen &&
+                  (taxonomyList && taxonomyList.length > 0 ? (
+                    <MultiSelectFilter
+                      options={taxonomyList}
+                      type="taxonomyCheckedBoxes"
+                    />
+                  ) : (
+                    <p
+                      style={{
+                        padding: "0 10px",
+                        color: "gray",
+                        fontStyle: "italic",
+                      }}
+                    >
+                      No available filters.
+                    </p>
+                  ))}
               </div>
               <div>
                 <button
@@ -810,12 +843,23 @@ const SearchFilters = () => {
                     {isOriginDrawerOpen ? "\u25B2" : "\u25BC"}
                   </span>
                 </button>
-                {isOriginDrawerOpen && (
-                  <MultiSelectFilter
-                    options={originOfMaterialList}
-                    type="originOfMaterialCheckedBoxes"
-                  />
-                )}
+                {isOriginDrawerOpen &&
+                  (originOfMaterialList && originOfMaterialList.length > 0 ? (
+                    <MultiSelectFilter
+                      options={originOfMaterialList}
+                      type="originOfMaterialCheckedBoxes"
+                    />
+                  ) : (
+                    <p
+                      style={{
+                        padding: "0 10px",
+                        color: "gray",
+                        fontStyle: "italic",
+                      }}
+                    >
+                      No available filters.
+                    </p>
+                  ))}
               </div>
               <div>
                 <button
@@ -837,12 +881,23 @@ const SearchFilters = () => {
                     {isSampStatDrawerOpen ? "\u25B2" : "\u25BC"}
                   </span>
                 </button>
-                {isSampStatDrawerOpen && (
-                  <MultiSelectFilter
-                    options={sampStatList}
-                    type="sampStatCheckedBoxes"
-                  />
-                )}
+                {isSampStatDrawerOpen &&
+                  (sampStatList && sampStatList.length > 0 ? (
+                    <MultiSelectFilter
+                      options={sampStatList}
+                      type="sampStatCheckedBoxes"
+                    />
+                  ) : (
+                    <p
+                      style={{
+                        padding: "0 10px",
+                        color: "gray",
+                        fontStyle: "italic",
+                      }}
+                    >
+                      No available filters.
+                    </p>
+                  ))}
               </div>
               <div>
                 <button
@@ -868,12 +923,23 @@ const SearchFilters = () => {
                     {isGermplasmStorageDrawerOpen ? "\u25B2" : "\u25BC"}
                   </span>
                 </button>
-                {isGermplasmStorageDrawerOpen && (
-                  <MultiSelectFilter
-                    options={germplasmStorageList}
-                    type="germplasmStorageCheckedBoxes"
-                  />
-                )}
+                {isGermplasmStorageDrawerOpen &&
+                  (germplasmStorageList && germplasmStorageList.length > 0 ? (
+                    <MultiSelectFilter
+                      options={germplasmStorageList}
+                      type="germplasmStorageCheckedBoxes"
+                    />
+                  ) : (
+                    <p
+                      style={{
+                        padding: "0 10px",
+                        color: "gray",
+                        fontStyle: "italic",
+                      }}
+                    >
+                      No available filters.
+                    </p>
+                  ))}
               </div>
             </>
           )}
