@@ -94,8 +94,11 @@ class GenesysApi extends BaseApi {
 
   async fetchInitialFilterData(dispatch, userInput = " ", isReset = false) {
     try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const filterMode = urlParams.get("filterMode");
+      const genotypeIds = urlParams.get("genotypeIds");
       let body;
-      if (!isReset) {
+      if (!isReset && !filterMode && !genotypeIds) {
         body = {
           _text: userInput,
           institute: {
@@ -135,8 +138,11 @@ class GenesysApi extends BaseApi {
 
   async fetchInitialQueryData(dispatch, userInput = " ", isReset = false) {
     try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const filterMode = urlParams.get("filterMode");
+      const genotypeIds = urlParams.get("genotypeIds");
       let body;
-      if (!isReset) {
+      if (!isReset && !filterMode && !genotypeIds) {
         body = {
           _text: userInput,
           institute: {

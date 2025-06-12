@@ -100,6 +100,22 @@ const SearchFilters = () => {
   const wheatImage = "/Wheat.PNG";
 
   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+
+    const mode = urlParams.get("filterMode");
+    const genotypeIds = urlParams.get("genotypeIds");
+
+    if (mode) {
+      setFilterMode(mode);
+    }
+
+    if (genotypeIds) {
+      const genotypeIdList = genotypeIds.split(",").map((id) => id.trim());
+      dispatch(setGenotypeIds(genotypeIdList));
+    }
+  }, [dispatch]);
+
+  useEffect(() => {
     if (activeFilters.length > 0 && searchButtonName !== "Update Search") {
       setSearchButtonName("Update Search");
     } else {
