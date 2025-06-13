@@ -20,8 +20,7 @@ const genotypeIdMappingHandler = async (req, res) => {
 
     if (sampleAccessions.length === 0) {
       res.status(404).send({
-        message:
-          "Mapping for given genotypeIds not found. Ensure genotypeIds are imported.",
+        message: "Mapping for given genotypeIds not found.",
       });
       logger.info("No accessions found for the provided list.");
       return;

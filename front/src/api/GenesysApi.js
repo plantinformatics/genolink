@@ -92,11 +92,17 @@ class GenesysApi extends BaseApi {
     }
   }
 
-  async fetchInitialFilterData(dispatch, userInput = " ", isReset = false) {
+  async fetchInitialFilterData(
+    dispatch,
+    userInput = " ",
+    isReset = false,
+    accessionNumbers = []
+  ) {
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const filterMode = urlParams.get("filterMode");
       const genotypeIds = urlParams.get("genotypeIds");
+
       let body;
       if (!isReset && !filterMode && !genotypeIds) {
         body = {
@@ -105,6 +111,21 @@ class GenesysApi extends BaseApi {
             code: ["AUS165"],
           },
         };
+        dispatch(setInstituteCheckedBoxes(["AUS165"]));
+        dispatch(
+          setActiveFilters([{ type: "Institute Code", value: ["AUS165"] }])
+        );
+      } else if (!isReset && filterMode && genotypeIds) {
+        body = {
+          _text: userInput,
+          accessionNumbers:
+            accessionNumbers.length > 0 ? accessionNumbers : ["__INVALID__"],
+        };
+        dispatch(
+          setActiveFilters([
+            { type: "Genotype Ids", value: genotypeIds.split(",") },
+          ])
+        );
       } else {
         body = {
           _text: userInput,
@@ -136,7 +157,12 @@ class GenesysApi extends BaseApi {
     }
   }
 
-  async fetchInitialQueryData(dispatch, userInput = " ", isReset = false) {
+  async fetchInitialQueryData(
+    dispatch,
+    userInput = " ",
+    isReset = false,
+    accessionNumbers = []
+  ) {
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const filterMode = urlParams.get("filterMode");
@@ -152,6 +178,17 @@ class GenesysApi extends BaseApi {
         dispatch(setInstituteCheckedBoxes(["AUS165"]));
         dispatch(
           setActiveFilters([{ type: "Institute Code", value: ["AUS165"] }])
+        );
+      } else if (!isReset && filterMode && genotypeIds) {
+        body = {
+          _text: userInput,
+          accessionNumbers:
+            accessionNumbers.length > 0 ? accessionNumbers : ["__INVALID__"],
+        };
+        dispatch(
+          setActiveFilters([
+            { type: "Genotype Ids", value: genotypeIds.split(",") },
+          ])
         );
       } else {
         body = {

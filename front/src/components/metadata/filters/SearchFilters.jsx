@@ -54,7 +54,7 @@ const SearchFilters = () => {
   const [filterBody, setFilterBody] = useState({});
   const [searchButtonName, setSearchButtonName] = useState("Search");
   const [hasGenotype, setHasGenotype] = useState(false);
-  const checkedAccessions = useSelector((state) => state.checkedAccessions);
+  const [mappingFailed, setMappingFailed] = useState(false);
   const totalAccessions = useSelector((state) => state.totalAccessions);
   const searchResults = useSelector((state) => state.searchResults);
   const isLoadingGenotypedAccessions = useSelector(
@@ -100,22 +100,6 @@ const SearchFilters = () => {
   const wheatImage = "/Wheat.PNG";
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-
-    const mode = urlParams.get("filterMode");
-    const genotypeIds = urlParams.get("genotypeIds");
-
-    if (mode) {
-      setFilterMode(mode);
-    }
-
-    if (genotypeIds) {
-      const genotypeIdList = genotypeIds.split(",").map((id) => id.trim());
-      dispatch(setGenotypeIds(genotypeIdList));
-    }
-  }, [dispatch]);
-
-  useEffect(() => {
     if (activeFilters.length > 0 && searchButtonName !== "Update Search") {
       setSearchButtonName("Update Search");
     } else {
@@ -131,11 +115,38 @@ const SearchFilters = () => {
           await genesysApi.fetchAndSetToken();
         }
 
+        const urlParams = new URLSearchParams(window.location.search);
+        const filterMode = urlParams.get("filterMode");
+        const genotypeIdsParam = urlParams.get("genotypeIds");
+
+        let accessionNums = [];
+
+        if (filterMode === "GenotypeId Filter" && genotypeIdsParam) {
+          const genotypeIdList = genotypeIdsParam
+            .split(",")
+            .map((id) => id.trim());
+          try {
+            accessionNums = await genolinkInternalApi.genotypeIdMapping(
+              genotypeIdList
+            );
+            setMappingFailed(accessionNums.length === 0);
+          } catch (e) {
+            console.warn("Genotype mapping failed, possibly 404:", e);
+            setMappingFailed(true);
+          }
+        }
+
         const [_, { filterCode, body }] = await Promise.all([
-          genesysApi.fetchInitialFilterData(dispatch),
-          genesysApi.fetchInitialQueryData(dispatch),
+          genesysApi.fetchInitialFilterData(
+            dispatch,
+            " ",
+            false,
+            accessionNums
+          ),
+          genesysApi.fetchInitialQueryData(dispatch, " ", false, accessionNums),
         ]);
 
+        setFilterMode(filterMode);
         setFilterCode(filterCode);
         setFilterBody(body);
         setInitialRequestSent(true);
@@ -1055,7 +1066,7 @@ const SearchFilters = () => {
               <div style={{ flex: "1 1 auto" }}>
                 {initialRequestStatus === "pending" && <LoadingComponent />}
 
-                {initialRequestStatus === "error" && (
+                {initialRequestStatus === "error" && !mappingFailed && (
                   <div style={{ padding: "20px", textAlign: "center" }}>
                     <div
                       className="alert alert-danger"
@@ -1076,21 +1087,22 @@ const SearchFilters = () => {
                   </div>
                 )}
 
-                {initialRequestStatus === "success" &&
-                  searchResults?.length === 0 && (
-                    <div style={{ padding: "20px", textAlign: "center" }}>
-                      <div
-                        className="alert alert-warning"
-                        role="alert"
-                        style={{ display: "inline-block", textAlign: "left" }}
-                      >
-                        <strong>No data found.</strong> The selected filters
-                        returned no results.
-                        <br />
-                        Please reset or try using different filters.
-                      </div>
+                {(initialRequestStatus === "success" &&
+                  searchResults?.length === 0) ||
+                (mappingFailed && searchResults?.length === 0) ? (
+                  <div style={{ padding: "20px", textAlign: "center" }}>
+                    <div
+                      className="alert alert-warning"
+                      role="alert"
+                      style={{ display: "inline-block", textAlign: "left" }}
+                    >
+                      <strong>No data found.</strong> The selected filters
+                      returned no results.
+                      <br />
+                      Please reset or try using different filters.
                     </div>
-                  )}
+                  </div>
+                ) : null}
 
                 {initialRequestStatus === "success" &&
                   searchResults?.length > 0 && (

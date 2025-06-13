@@ -51,8 +51,7 @@ describe("genotypeIdMappingHandler", () => {
     });
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.send).toHaveBeenCalledWith({
-      message:
-        "Mapping for given genotypeIds not found. Ensure genotypeIds are imported.",
+      message: "Mapping for given genotypeIds not found.",
     });
     expect(logger.info).toHaveBeenCalledWith(
       "No accessions found for the provided list."
