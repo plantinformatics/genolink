@@ -125,6 +125,7 @@ const SearchFilters = () => {
           const genotypeIdList = genotypeIdsParam
             .split(",")
             .map((id) => id.trim());
+          setFilterMode(filterMode);
           try {
             accessionNums = await genolinkInternalApi.genotypeIdMapping(
               genotypeIdList
@@ -146,7 +147,6 @@ const SearchFilters = () => {
           genesysApi.fetchInitialQueryData(dispatch, " ", false, accessionNums),
         ]);
 
-        setFilterMode(filterMode);
         setFilterCode(filterCode);
         setFilterBody(body);
         setInitialRequestSent(true);
