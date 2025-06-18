@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import GenolinkApi from "../api/GenolinkApi";
 import GenesysApi from "../api/GenesysApi";
 import SearchFilters from "../components/metadata/filters/SearchFilters";
 import GenolinkGigwaApi from "../api/GenolinkGigwaApi";
@@ -12,7 +11,6 @@ export const genolinkInternalApi = new GenolinkInternalApi();
 const Home = () => {
   const [tokenReady, setTokenReady] = useState(false);
   let genesysToken;
-  const genolinkApi = new GenolinkApi();
 
   useEffect(() => {
     const initialize = async () => {
@@ -20,8 +18,6 @@ const Home = () => {
         await genesysApi.fetchAndSetToken();
         setTokenReady(true);
         genesysToken = genesysApi.getToken();
-        // genolinkApi.setToken(genesysToken);
-        passTokenToServer(genesysToken);
 
         const accessionResult = await genolinkInternalApi.getAllAccessions();
         genesysApi.setGenotypedAccessions(accessionResult.genotypedAccessions);
@@ -36,12 +32,6 @@ const Home = () => {
     };
     initialize();
   }, [genesysToken]);
-
-  const passTokenToServer = async (token) => {
-    if (token) {
-      await genolinkApi.sendTokenToAppServer(token);
-    }
-  };
 
   return <SearchFilters tokenReady={tokenReady} />;
 };
