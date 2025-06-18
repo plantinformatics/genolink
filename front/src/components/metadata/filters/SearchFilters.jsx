@@ -28,7 +28,7 @@ import GenotypeExplorer from "../../genotype/GenotypeExplorer";
 import { genesysApi } from "../../../pages/Home";
 import { genolinkInternalApi } from "../../../pages/Home";
 
-const SearchFilters = () => {
+const SearchFilters = ({ tokenReady }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [genesysHeight, setGenesysHeight] = useState(
     () => window.innerHeight * 0.6
@@ -108,13 +108,10 @@ const SearchFilters = () => {
   }, [activeFilters]);
 
   useEffect(() => {
+    if (!tokenReady) return;
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        if (!genesysApi.getToken()) {
-          await genesysApi.fetchAndSetToken();
-        }
-
         const urlParams = new URLSearchParams(window.location.search);
         const filterMode = urlParams.get("filterMode");
         const genotypeIdsParam = urlParams.get("genotypeIds");
@@ -160,7 +157,7 @@ const SearchFilters = () => {
     };
 
     fetchData();
-  }, [dispatch]);
+  }, [dispatch, tokenReady]);
   const removeFilter = (filterToRemove) => {
     switch (filterToRemove.type) {
       case "Text":
