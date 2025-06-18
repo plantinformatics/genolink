@@ -99,6 +99,19 @@ const SearchFilters = ({ tokenReady }) => {
 
   const wheatImage = "/Wheat.PNG";
 
+  const withRetryOn401 = async (fn, delay = 500) => {
+    try {
+      return await fn();
+    } catch (error) {
+      if (error?.response?.status === 401) {
+        console.warn("401 Unauthorized — retrying after delay...");
+        await new Promise((res) => setTimeout(res, delay));
+        return await fn();
+      }
+      throw error;
+    }
+  };
+
   useEffect(() => {
     if (activeFilters.length > 0 && searchButtonName !== "Update Search") {
       setSearchButtonName("Update Search");
@@ -135,13 +148,22 @@ const SearchFilters = ({ tokenReady }) => {
         }
 
         const [_, { filterCode, body }] = await Promise.all([
-          genesysApi.fetchInitialFilterData(
-            dispatch,
-            " ",
-            false,
-            accessionNums
+          withRetryOn401(() =>
+            genesysApi.fetchInitialFilterData(
+              dispatch,
+              " ",
+              false,
+              accessionNums
+            )
           ),
-          genesysApi.fetchInitialQueryData(dispatch, " ", false, accessionNums),
+          withRetryOn401(() =>
+            genesysApi.fetchInitialQueryData(
+              dispatch,
+              " ",
+              false,
+              accessionNums
+            )
+          ),
         ]);
 
         setFilterCode(filterCode);
