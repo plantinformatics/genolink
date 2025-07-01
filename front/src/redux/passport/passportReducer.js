@@ -1,6 +1,5 @@
 const initialState = {
   isSubmit: false,
-  searchQuery: "",
   searchResults: {},
   instituteCheckedBoxes: [],
   cropCheckedBoxes: [],
@@ -14,20 +13,17 @@ const initialState = {
   originOfMaterialList: [],
   sampStatList: [],
   germplasmStorageList: [],
-  accessionNumber: "",
   resetTrigger: false,
-  currentPage: 0,
+  passportCurrentPage: 0,
   accessionNumbers: [],
   genotypeIds: [],
   totalAccessions: 0,
   totalPreGenotypedAccessions: 0,
-  searchAcc: "",
   creationStartDate: null,
   creationEndDate: null,
   checkedAccessions: {},
   checkedAccessionNames: {},
   platform: "Gigwa",
-  isLoadingGenotypedAccessions: false,
   activeFilters: [],
   wildSearchValue: "",
 };
@@ -48,12 +44,6 @@ const rootReducer = (state = initialState, action) => {
       return {
         ...state,
         isSubmit: action.payload,
-      };
-
-    case "SET_SEARCH_QUERY":
-      return {
-        ...state,
-        searchQuery: action.payload,
       };
 
     case "SET_SEARCH_RESULTS":
@@ -123,20 +113,15 @@ const rootReducer = (state = initialState, action) => {
         ...state,
         germplasmStorageList: action.payload,
       };
-    case "SET_ACCESSION_NUMBER":
-      return {
-        ...state,
-        accessionNumber: action.payload,
-      };
     case "SET_RESET_TRIGGER":
       return {
         ...state,
         resetTrigger: action.payload,
       };
-    case "SET_CURRENT_PAGE":
+    case "SET_PASSPORT_CURRENT_PAGE ":
       return {
         ...state,
-        currentPage: action.payload,
+        passportCurrentPage: action.payload,
       };
     case "SET_ACCESSION_NUMBERS":
       return {
@@ -158,11 +143,6 @@ const rootReducer = (state = initialState, action) => {
         ...state,
         totalPreGenotypedAccessions: action.payload,
       };
-    case "SET_SEARCH_ACC":
-      return {
-        ...state,
-        searchAcc: action.payload,
-      };
     case "SET_CREATION_START_DATE":
       return {
         ...state,
@@ -177,11 +157,6 @@ const rootReducer = (state = initialState, action) => {
       return {
         ...state,
         platform: action.payload,
-      };
-    case "SET_LOADING_GENOTYPED_ACCESSIONS":
-      return {
-        ...state,
-        isLoadingGenotypedAccessions: action.payload,
       };
     case "SET_ACTIVE_FILTERS":
       return {

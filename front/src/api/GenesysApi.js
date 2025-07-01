@@ -13,12 +13,10 @@ import {
   setGermplasmStorageList,
   setTotalAccessions,
   setTotalPreGenotypedAccessions,
-  setCurrentPage,
-  setSearchAcc,
+  setPassportCurrentPage,
   setResetTrigger,
-  setLoadingGenotypedAccessions,
-} from "../actions";
-
+} from "../redux/passport/passportActions";
+import { setLoadingGenotypedAccessions } from "../redux/genotype/genotypeActions";
 class GenesysApi extends BaseApi {
   constructor() {
     super(genesysServer);
@@ -150,7 +148,7 @@ class GenesysApi extends BaseApi {
       dispatch(setOriginOfMaterialList(origins));
       dispatch(setSampStatList(sampStat));
       dispatch(setGermplasmStorageList(germplasmStorage));
-      dispatch(setCurrentPage(0));
+      dispatch(setPassportCurrentPage(0));
     } catch (error) {
       console.error("Error fetching initial data:", error);
       throw error;
@@ -204,7 +202,7 @@ class GenesysApi extends BaseApi {
 
       dispatch(setSearchResults(searchData.content));
       dispatch(setTotalAccessions(searchData.totalElements));
-      dispatch(setCurrentPage(0));
+      dispatch(setPassportCurrentPage(0));
       return { filterCode: searchData.filterCode, body };
     } catch (error) {
       console.error("Error fetching initial data:", error);
@@ -214,12 +212,12 @@ class GenesysApi extends BaseApi {
 
   async applyFilter(filterData, dispatch, hasGenotype) {
     try {
+      // const pageSize = hasGenotype ? 10000 : 500;
       const pageSize = 500;
       const select =
         "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases,donorName, donorCode, sampStat";
       const endpointQuery = `/api/v1/acn/query?p=0&l=${pageSize}&select=${select}`;
       const endpointFilter = "/api/v1/acn/filter";
-
       if (hasGenotype) {
         if (filterData.hasOwnProperty("accessionNumbers")) {
           filterData.accessionNumbers = Array.from(
@@ -251,6 +249,7 @@ class GenesysApi extends BaseApi {
             matchedAccessions.includes(item.accessionNumber)
           )
         );
+        // Fetch total genotyped accessions asynchronously
         this.fetchTotalGenotypedAccessionsInBackground(filterData, dispatch);
 
         dispatch(setSearchResults(genotypedResult));
@@ -285,7 +284,7 @@ class GenesysApi extends BaseApi {
             this.extractSuggestions(filterDataResponse, "storage")
           )
         );
-        dispatch(setCurrentPage(0));
+        dispatch(setPassportCurrentPage(0));
         return queryData.filterCode;
       } else {
         const [queryData, filterDataResponse] = await Promise.all([
@@ -324,7 +323,7 @@ class GenesysApi extends BaseApi {
             this.extractSuggestions(filterDataResponse, "storage")
           )
         );
-        dispatch(setCurrentPage(0));
+        dispatch(setPassportCurrentPage(0));
         return queryData.filterCode;
       }
     } catch (error) {
@@ -430,7 +429,7 @@ class GenesysApi extends BaseApi {
 
   async fetchMoreResults({
     filterCode,
-    currentPage,
+    passportCurrentPage,
     pageSize,
     dispatch,
     searchResults,
@@ -442,10 +441,10 @@ class GenesysApi extends BaseApi {
 
       const endpoint = filterCode
         ? `/api/v1/acn/query?f=${filterCode}&p=${
-            currentPage + 1
+            passportCurrentPage + 1
           }&l=${pageSize}&select=${select}`
         : `/api/v1/acn/query?p=${
-            currentPage + 1
+            passportCurrentPage + 1
           }&l=${pageSize}&select=${select}`;
 
       const response = await this.post(endpoint, null);
@@ -469,16 +468,16 @@ class GenesysApi extends BaseApi {
       } else {
         const endpoint = filterCode
           ? `/api/v1/acn/query?f=${filterCode}&p=${
-              currentPage + 1
+              passportCurrentPage + 1
             }&l=${pageSize}&select=${select}`
           : `/api/v1/acn/query?p=${
-              currentPage + 1
+              passportCurrentPage + 1
             }&l=${pageSize}&select=${select}`;
 
         const response = await this.post(endpoint, null);
         dispatch(setSearchResults([...searchResults, ...response.content]));
       }
-      dispatch(setCurrentPage(currentPage + 1));
+      dispatch(setPassportCurrentPage(passportCurrentPage + 1));
     } catch (error) {
       console.error("Error fetching more data:", error);
       throw error;
@@ -595,11 +594,9 @@ class GenesysApi extends BaseApi {
           if (fieldPath === "taxonomy.taxonName") {
             return item["taxonomy.taxonName"] || "";
           }
-
           if (fieldPath === "sampStat") {
             return this.getSampleStatus(item["sampStat"]) || "";
           }
-
           if (fieldPath === "aliases") {
             return item.aliases && item.aliases.length > 0
               ? item.aliases

@@ -17,7 +17,7 @@ import {
   setCheckedAccessions,
   setActiveFilters,
   setWildSearchValue,
-} from "../../../actions";
+} from "../../../redux/passport/passportActions";
 
 import MultiSelectFilter from "./MultiSelectFilter";
 import AccessionFilter from "./AccessionFilter";
@@ -55,45 +55,58 @@ const SearchFilters = ({ tokenReady }) => {
   const [searchButtonName, setSearchButtonName] = useState("Search");
   const [hasGenotype, setHasGenotype] = useState(false);
   const [mappingFailed, setMappingFailed] = useState(false);
-  const totalAccessions = useSelector((state) => state.totalAccessions);
-  const searchResults = useSelector((state) => state.searchResults);
+  const totalAccessions = useSelector(
+    (state) => state.passport.totalAccessions
+  );
+  const searchResults = useSelector((state) => state.passport.searchResults);
+
   const isLoadingGenotypedAccessions = useSelector(
-    (state) => state.isLoadingGenotypedAccessions
+    (state) => state.genotype.isLoadingGenotypedAccessions
   );
 
-  const activeFilters = useSelector((state) => state.activeFilters);
+  const activeFilters = useSelector((state) => state.passport.activeFilters);
   const instituteCheckedBoxes = useSelector(
-    (state) => state.instituteCheckedBoxes
+    (state) => state.passport.instituteCheckedBoxes
   );
-  const wildSearchValue = useSelector((state) => state.wildSearchValue);
-  const cropCheckedBoxes = useSelector((state) => state.cropCheckedBoxes);
+  const wildSearchValue = useSelector(
+    (state) => state.passport.wildSearchValue
+  );
+  const cropCheckedBoxes = useSelector(
+    (state) => state.passport.cropCheckedBoxes
+  );
   const taxonomyCheckedBoxes = useSelector(
-    (state) => state.taxonomyCheckedBoxes
+    (state) => state.passport.taxonomyCheckedBoxes
   );
   const originOfMaterialCheckedBoxes = useSelector(
-    (state) => state.originOfMaterialCheckedBoxes
+    (state) => state.passport.originOfMaterialCheckedBoxes
   );
   const sampStatCheckedBoxes = useSelector(
-    (state) => state.sampStatCheckedBoxes
+    (state) => state.passport.sampStatCheckedBoxes
   );
   const germplasmStorageCheckedBoxes = useSelector(
-    (state) => state.germplasmStorageCheckedBoxes
+    (state) => state.passport.germplasmStorageCheckedBoxes
   );
-  const instituteCode = useSelector((state) => state.instituteCode);
+  const instituteCode = useSelector((state) => state.passport.instituteCode);
 
-  const resetTrigger = useSelector((state) => state.resetTrigger);
-  const accessionNumbers = useSelector((state) => state.accessionNumbers);
-  const genotypeIds = useSelector((state) => state.genotypeIds);
-  const creationStartDate = useSelector((state) => state.creationStartDate);
-  const creationEndDate = useSelector((state) => state.creationEndDate);
-  const cropList = useSelector((state) => state.cropList);
-  const taxonomyList = useSelector((state) => state.taxonomyList);
-  const originOfMaterialList = useSelector(
-    (state) => state.originOfMaterialList
+  const resetTrigger = useSelector((state) => state.passport.resetTrigger);
+  const accessionNumbers = useSelector(
+    (state) => state.passport.accessionNumbers
   );
-  const sampStatList = useSelector((state) => state.sampStatList);
+  const genotypeIds = useSelector((state) => state.passport.genotypeIds);
+  const creationStartDate = useSelector(
+    (state) => state.passport.creationStartDate
+  );
+  const creationEndDate = useSelector(
+    (state) => state.passport.creationEndDate
+  );
+  const cropList = useSelector((state) => state.passport.cropList);
+  const taxonomyList = useSelector((state) => state.passport.taxonomyList);
+  const originOfMaterialList = useSelector(
+    (state) => state.passport.originOfMaterialList
+  );
+  const sampStatList = useSelector((state) => state.passport.sampStatList);
   const germplasmStorageList = useSelector(
-    (state) => state.germplasmStorageList
+    (state) => state.passport.germplasmStorageList
   );
   const dispatch = useDispatch();
 
@@ -389,8 +402,6 @@ const SearchFilters = ({ tokenReady }) => {
       console.error("Error applying filter:", error);
       setIsLoading(false);
       setIsFilterApplied(false);
-    } finally {
-      setIsWaitingForUpdate(false);
     }
   };
   useEffect(() => {

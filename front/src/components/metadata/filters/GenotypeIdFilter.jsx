@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setGenotypeIds } from "../../../actions";
+import { setGenotypeIds } from "../../../redux/passport/passportActions";
 
 const GenotypeIdFilter = () => {
   const dispatch = useDispatch();
-  const reduxGenotypeIds = useSelector((state) => state.genotypeIds);
+  const reduxGenotypeIds = useSelector((state) => state.passport.genotypeIds);
   const [inputValue, setInputValue] = useState("");
 
   useEffect(() => {

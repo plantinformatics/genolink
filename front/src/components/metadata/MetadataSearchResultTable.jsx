@@ -2,36 +2,43 @@ import { useState } from "react";
 import "../../tableStyles.css";
 import { useSelector, useDispatch } from "react-redux";
 import LoadingComponent from "../LoadingComponent";
-import { setCheckedAccessions, setCheckedAccessionNames } from "../../actions";
+import {
+  setCheckedAccessions,
+  setCheckedAccessionNames,
+} from "../../redux/passport/passportActions";
 import { genesysApi } from "../../pages/Home";
 
 const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
-  const searchResults = useSelector((state) => state.searchResults);
-  const totalAccessions = useSelector((state) => state.totalAccessions);
-  const totalPreGenotypedAccessions = useSelector(
-    (state) => state.totalPreGenotypedAccessions
+  const searchResults = useSelector((state) => state.passport.searchResults);
+  const totalAccessions = useSelector(
+    (state) => state.passport.totalAccessions
   );
-  const currentPage = useSelector((state) => state.currentPage);
+  const totalPreGenotypedAccessions = useSelector(
+    (state) => state.passport.totalPreGenotypedAccessions
+  );
+  const passportCurrentPage = useSelector(
+    (state) => state.passport.passportCurrentPage
+  );
 
   const [isPaginating, setIsPaginating] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [selectAll, setSelectAll] = useState(false);
   const [expandedRow, setExpandedRow] = useState(null);
   const [remainingPages, setRemainingPages] = useState(
-    // Math.floor((hasGenotype ? totalPreGenotypedAccessions : totalAccessions) / (hasGenotype ? 10000 : 500))
     Math.floor(
       (hasGenotype ? totalPreGenotypedAccessions : totalAccessions) / 500
     )
   );
   const dispatch = useDispatch();
-  const checkedAccessions = useSelector((state) => state.checkedAccessions);
+  const checkedAccessions = useSelector(
+    (state) => state.passport.checkedAccessions
+  );
   const checkedAccessionNames = useSelector(
-    (state) => state.checkedAccessionNames
+    (state) => state.passport.checkedAccessionNames
   );
   const isLoadingGenotypedAccessions = useSelector(
-    (state) => state.isLoadingGenotypedAccessions
+    (state) => state.genotype.isLoadingGenotypedAccessions
   );
-
   function getSampleStatus(number) {
     const sampStatMapping = {
       100: "Wild",
@@ -102,7 +109,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
       setIsPaginating(true);
       await genesysApi.fetchMoreResults({
         filterCode,
-        currentPage,
+        passportCurrentPage,
         // pageSize: hasGenotype ? 10000 : 500,
         pageSize: 500,
         dispatch,
@@ -200,6 +207,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
                 isGenotyped && Array.isArray(genesysApi.genotypedSamples)
                   ? genesysApi.genotypedSamples[genotypedIndex]
                   : "N/A";
+
               return (
                 <tr
                   key={item.uuid || item.id || index}

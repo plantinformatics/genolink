@@ -3,11 +3,6 @@ export const setIsSubmit = (isSubmit) => ({
   payload: isSubmit,
 });
 
-export const setSearchQuery = (query) => ({
-  type: "SET_SEARCH_QUERY",
-  payload: query,
-});
-
 export const setSearchResults = (results) => ({
   type: "SET_SEARCH_RESULTS",
   payload: results,
@@ -67,17 +62,12 @@ export const setGermplasmStorageList = (storage) => ({
   payload: storage,
 });
 
-export const setAccessionNumber = (number) => ({
-  type: "SET_ACCESSION_NUMBER",
-  payload: number,
-});
-
 export const setResetTrigger = (isTrigger) => ({
   type: "SET_RESET_TRIGGER",
   payload: isTrigger,
 });
-export const setCurrentPage = (currentPage) => ({
-  type: "SET_CURRENT_PAGE",
+export const setPassportCurrentPage = (currentPage) => ({
+  type: "SET_PASSPORT_CURRENT_PAGE ",
   payload: currentPage,
 });
 export const setAccessionNumbers = (accessions) => ({
@@ -98,10 +88,6 @@ export const setTotalPreGenotypedAccessions = (
   type: "SET_TOTAL_PRE_GENOTYPED_ACCESSIONS",
   payload: totalPreGenotypedAccessions,
 });
-export const setSearchAcc = (searchAcc) => ({
-  type: "SET_SEARCH_ACC",
-  payload: searchAcc,
-});
 export const setCreationStartDate = (creationStartDate) => ({
   type: "SET_CREATION_START_DATE",
   payload: creationStartDate,
@@ -121,10 +107,6 @@ export const setCheckedAccessionNames = (accessionNames) => ({
 export const setPlatform = (platform) => ({
   type: "SET_PLATFORM",
   payload: platform,
-});
-export const setLoadingGenotypedAccessions = (isLoading) => ({
-  type: "SET_LOADING_GENOTYPED_ACCESSIONS",
-  payload: isLoading,
 });
 export const setActiveFilters = (activeFilters) => ({
   type: "SET_ACTIVE_FILTERS",

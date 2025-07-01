@@ -1,14 +1,17 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { setGenotypeCurrentPage } from "../../redux/genotype/genotypeActions";
+import { useDispatch, useSelector } from "react-redux";
 
-const GenotypeSearchResultsTable = ({
-  data,
-  alleles,
-  currentPage,
-  setCurrentPage,
-  samples,
-  platform,
-  pageLengths,
-}) => {
+const GenotypeSearchResultsTable = () => {
+  const dispatch = useDispatch();
+  const data = useSelector((state) => state.genotype.genomData);
+  const alleles = useSelector((state) => state.genotype.alleleData);
+  const genotypeCurrentPage = useSelector(
+    (state) => state.genotype.genotypeCurrentPage
+  );
+  const samples = useSelector((state) => state.genotype.completeNames);
+  const platform = useSelector((state) => state.genotype.selectedOption);
+  const pageLengths = useSelector((state) => state.genotype.pageLengths);
   const itemsPerPage = 1000;
   const unionSamples = useMemo(() => {
     const serverSamples = samples.filter(
@@ -44,9 +47,9 @@ const GenotypeSearchResultsTable = ({
 
   const rowOffset = useMemo(() => {
     return pageLengths
-      .slice(0, currentPage - 1)
+      .slice(0, genotypeCurrentPage - 1)
       .reduce((sum, val) => sum + (val || 0), 0);
-  }, [pageLengths, currentPage]);
+  }, [pageLengths, genotypeCurrentPage]);
 
   let totalPages = 1;
   if (platform === "Gigwa" && alleles.length > 0 && data.length > 0) {
@@ -124,7 +127,7 @@ const GenotypeSearchResultsTable = ({
   const getVisiblePages = () => {
     const maxPageNumbersToShow = 3;
     let startPage = Math.max(
-      currentPage - Math.floor(maxPageNumbersToShow / 2),
+      genotypeCurrentPage - Math.floor(maxPageNumbersToShow / 2),
       1
     );
     let endPage = startPage + maxPageNumbersToShow - 1;
@@ -278,12 +281,14 @@ const GenotypeSearchResultsTable = ({
               {data &&
                 data[0].result.data
                   .slice(
-                    (currentPage - 1) * itemsPerPage,
-                    currentPage * itemsPerPage
+                    (genotypeCurrentPage - 1) * itemsPerPage,
+                    genotypeCurrentPage * itemsPerPage
                   )
                   .map((item, index1) => (
                     <tr key={index1}>
-                      <td>{index1 + 1 + (currentPage - 1) * itemsPerPage}</td>
+                      <td>
+                        {index1 + 1 + (genotypeCurrentPage - 1) * itemsPerPage}
+                      </td>
                       <td>{CHROMConverter(item.variantName.split("-")[2])}</td>
                       <td>{item.variantName.split("-")[1]}</td>
                       <td>{item.variantName.split("-")[0]}</td>
@@ -301,15 +306,19 @@ const GenotypeSearchResultsTable = ({
       <div className="d-flex">
         <button
           className="btn btn-primary mr-1"
-          onClick={() => setCurrentPage(1)}
-          disabled={currentPage === 1}
+          onClick={() => dispatch(setGenotypeCurrentPage(1))}
+          disabled={genotypeCurrentPage === 1}
         >
           First
         </button>
         <button
           className="btn btn-primary mr-1"
-          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
+          onClick={() =>
+            dispatch(
+              setGenotypeCurrentPage(Math.max(genotypeCurrentPage - 1, 1))
+            )
+          }
+          disabled={genotypeCurrentPage === 1}
         >
           Prev
         </button>
@@ -317,9 +326,9 @@ const GenotypeSearchResultsTable = ({
           <button
             key={page}
             className={`btn btn-primary mr-1 ${
-              currentPage === page ? "active" : ""
+              genotypeCurrentPage === page ? "active" : ""
             }`}
-            onClick={() => setCurrentPage(page)}
+            onClick={() => dispatch(setGenotypeCurrentPage(page))}
           >
             {page}
           </button>
@@ -327,16 +336,20 @@ const GenotypeSearchResultsTable = ({
         <button
           className="btn btn-primary mr-1"
           onClick={() =>
-            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            dispatch(
+              setGenotypeCurrentPage(
+                Math.min(genotypeCurrentPage + 1, totalPages)
+              )
+            )
           }
-          disabled={currentPage === totalPages}
+          disabled={genotypeCurrentPage === totalPages}
         >
           Next
         </button>
         <button
           className="btn btn-primary mr-1"
-          onClick={() => setCurrentPage(totalPages)}
-          disabled={currentPage === totalPages}
+          onClick={() => dispatch(setGenotypeCurrentPage(totalPages))}
+          disabled={genotypeCurrentPage === totalPages}
         >
           Last
         </button>

@@ -1,14 +1,16 @@
-import { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { setAccessionNumbers } from '../../../actions';
+import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { setAccessionNumbers } from "../../../redux/passport/passportActions";
 
 const AccessionFilter = () => {
   const dispatch = useDispatch();
-  const reduxAccessionNumbers = useSelector((state) => state.accessionNumbers);
-  const [inputValue, setInputValue] = useState('');
+  const reduxAccessionNumbers = useSelector(
+    (state) => state.passport.accessionNumbers
+  );
+  const [inputValue, setInputValue] = useState("");
 
   useEffect(() => {
-    setInputValue(reduxAccessionNumbers.join(', '));
+    setInputValue(reduxAccessionNumbers.join(", "));
   }, [reduxAccessionNumbers]);
 
   const onChangeAccession = (e) => {
@@ -17,9 +19,9 @@ const AccessionFilter = () => {
 
   const handleBlur = () => {
     const trimmedAccessions = inputValue
-      .split(',')
+      .split(",")
       .map((acc) => acc.trim())
-      .filter((acc) => acc !== '');
+      .filter((acc) => acc !== "");
     dispatch(setAccessionNumbers(trimmedAccessions));
   };
 
@@ -30,10 +32,10 @@ const AccessionFilter = () => {
       reader.onload = (e) => {
         const fileContents = e.target.result;
         const fileAccessions = fileContents
-          .replace(/[\n\t;|]+/g, ',')
-          .split(',')
+          .replace(/[\n\t;|]+/g, ",")
+          .split(",")
           .map((acc) => acc.trim())
-          .filter((acc) => acc !== '');
+          .filter((acc) => acc !== "");
 
         dispatch(setAccessionNumbers(fileAccessions));
       };

@@ -6,80 +6,120 @@ import {
   setOriginOfMaterialCheckedBoxes,
   setSampStatCheckedBoxes,
   setGermplasmStorageCheckedBoxes,
-} from "../../../actions";
+} from "../../../redux/passport/passportActions";
 import { useDispatch } from "react-redux";
 
 const sampStatMapping = {
-  "100": "Wild",
-  "110": "Natural",
-  "120": "Semi-natural/wild",
-  "130": "Semi-natural/sown",
-  "200": "Weedy",
-  "300": "Traditional cultivar/Landrace",
-  "400": "Breeding/Research Material",
-  "410": "Breeders Line",
-  "411": "Synthetic population",
-  "412": "Hybrid",
-  "413": "Founder stock/base population",
-  "414": "Inbred line",
-  "415": "Segregating population",
-  "416": "Clonal selection",
-  "420": "Genetic stock",
-  "421": "Mutant",
-  "422": "Cytogenetic stocks",
-  "423": "Other genetic stocks",
-  "500": "Advanced/improved cultivar",
-  "600": "GMO",
-  "999": "Other",
+  100: "Wild",
+  110: "Natural",
+  120: "Semi-natural/wild",
+  130: "Semi-natural/sown",
+  200: "Weedy",
+  300: "Traditional cultivar/Landrace",
+  400: "Breeding/Research Material",
+  410: "Breeders Line",
+  411: "Synthetic population",
+  412: "Hybrid",
+  413: "Founder stock/base population",
+  414: "Inbred line",
+  415: "Segregating population",
+  416: "Clonal selection",
+  420: "Genetic stock",
+  421: "Mutant",
+  422: "Cytogenetic stocks",
+  423: "Other genetic stocks",
+  500: "Advanced/improved cultivar",
+  600: "GMO",
+  999: "Other",
 };
 
 const germplasmStorageMapping = {
-  "10": "Seed collection",
-  "11": "Short term seed collection",
-  "12": "Medium term seed collection",
-  "13": "Long term seed collection",
-  "20": "Field collection",
-  "30": "In vitro collection",
-  "40": "Cryopreserved collection",
-  "50": "DNA collection",
-  "99": "Other",
-}
+  10: "Seed collection",
+  11: "Short term seed collection",
+  12: "Medium term seed collection",
+  13: "Long term seed collection",
+  20: "Field collection",
+  30: "In vitro collection",
+  40: "Cryopreserved collection",
+  50: "DNA collection",
+  99: "Other",
+};
 
 const hierarchy1 = {
-  "100": ["110", "120", "130"],
-  "400": ["410", "411", "412", "413", "414", "415", "416", "420", "421", "422", "423"],
-  "410": ["411", "412", "413", "414", "415", "416"],
-  "420": ["421", "422", "423"],
-  "10": ["11", "12", "13"],
+  100: ["110", "120", "130"],
+  400: [
+    "410",
+    "411",
+    "412",
+    "413",
+    "414",
+    "415",
+    "416",
+    "420",
+    "421",
+    "422",
+    "423",
+  ],
+  410: ["411", "412", "413", "414", "415", "416"],
+  420: ["421", "422", "423"],
+  10: ["11", "12", "13"],
 };
 const hierarchy2 = {
-  "parent": ["100", "200", "300", "400", "500", "600", "999", "10", "20", "30", "40", "50", "99"],
-  "child": ["110", "120", "130", "410", "420", "11", "12", "13"],
-  "grand-child": ["411", "412", "413", "414", "415", "416", "421", "422", "423"]
+  parent: [
+    "100",
+    "200",
+    "300",
+    "400",
+    "500",
+    "600",
+    "999",
+    "10",
+    "20",
+    "30",
+    "40",
+    "50",
+    "99",
+  ],
+  child: ["110", "120", "130", "410", "420", "11", "12", "13"],
+  "grand-child": [
+    "411",
+    "412",
+    "413",
+    "414",
+    "415",
+    "416",
+    "421",
+    "422",
+    "423",
+  ],
 };
-
-
 
 const MultiSelectFilter = ({ options, type }) => {
   const dispatch = useDispatch();
   const instituteCheckedBoxes = useSelector(
-    (state) => state.instituteCheckedBoxes
+    (state) => state.passport.instituteCheckedBoxes
   );
-  const cropCheckedBoxes = useSelector((state) => state.cropCheckedBoxes);
+  const cropCheckedBoxes = useSelector(
+    (state) => state.passport.cropCheckedBoxes
+  );
   const taxonomyCheckedBoxes = useSelector(
-    (state) => state.taxonomyCheckedBoxes
+    (state) => state.passport.taxonomyCheckedBoxes
   );
   const originOfMaterialCheckedBoxes = useSelector(
-    (state) => state.originOfMaterialCheckedBoxes
+    (state) => state.passport.originOfMaterialCheckedBoxes
   );
   const sampStatCheckedBoxes = useSelector(
-    (state) => state.sampStatCheckedBoxes
+    (state) => state.passport.sampStatCheckedBoxes
   );
   const germplasmStorageCheckedBoxes = useSelector(
-    (state) => state.germplasmStorageCheckedBoxes
+    (state) => state.passport.germplasmStorageCheckedBoxes
   );
   const getIndentation = (optionKey) => {
-    if (type !== "sampStatCheckedBoxes" && type !== "germplasmStorageCheckedBoxes") return "";
+    if (
+      type !== "sampStatCheckedBoxes" &&
+      type !== "germplasmStorageCheckedBoxes"
+    )
+      return "";
 
     if (hierarchy2["parent"].includes(optionKey)) {
       return "0px";
@@ -91,8 +131,6 @@ const MultiSelectFilter = ({ options, type }) => {
 
     return "0px";
   };
-
-
 
   const handleCheckedBox = (option, checked) => {
     if (type === "institueCheckedBoxes")
@@ -164,8 +202,7 @@ const MultiSelectFilter = ({ options, type }) => {
       }
 
       dispatch(setSampStatCheckedBoxes(newCheckedBoxes));
-    }
-    else if (type === "germplasmStorageCheckedBoxes") {
+    } else if (type === "germplasmStorageCheckedBoxes") {
       let newCheckedBoxes = [...germplasmStorageCheckedBoxes];
 
       if (hierarchy1[option]) {
@@ -195,14 +232,20 @@ const MultiSelectFilter = ({ options, type }) => {
   return (
     <div className="container-fluid mt-2">
       {options && (
-        <div className="d-flex flex-column" style={{
-          maxHeight: "600px",
-          overflowY: "auto",
-        }}>
+        <div
+          className="d-flex flex-column"
+          style={{
+            maxHeight: "600px",
+            overflowY: "auto",
+          }}
+        >
           {options
             .filter((option) => option[0] !== "101")
             .sort((a, b) => {
-              if (type === "sampStatCheckedBoxes" || type === "germplasmStorageCheckedBoxes") {
+              if (
+                type === "sampStatCheckedBoxes" ||
+                type === "germplasmStorageCheckedBoxes"
+              ) {
                 return parseInt(a[0]) - parseInt(b[0]);
               }
               return 0;
@@ -224,28 +267,34 @@ const MultiSelectFilter = ({ options, type }) => {
                       type === "institueCheckedBoxes"
                         ? instituteCheckedBoxes.includes(option[0])
                         : type === "cropCheckedBoxes"
-                          ? cropCheckedBoxes.includes(option[0])
-                          : type === "taxonomyCheckedBoxes"
-                            ? taxonomyCheckedBoxes.includes(option[0])
-                            : type === "originOfMaterialCheckedBoxes"
-                              ? originOfMaterialCheckedBoxes.includes(option[0])
-                              : type === "sampStatCheckedBoxes"
-                                ? sampStatCheckedBoxes.includes(option[0])
-                                : type === "germplasmStorageCheckedBoxes"
-                                  ? germplasmStorageCheckedBoxes.includes(option[0])
-                                  : null
+                        ? cropCheckedBoxes.includes(option[0])
+                        : type === "taxonomyCheckedBoxes"
+                        ? taxonomyCheckedBoxes.includes(option[0])
+                        : type === "originOfMaterialCheckedBoxes"
+                        ? originOfMaterialCheckedBoxes.includes(option[0])
+                        : type === "sampStatCheckedBoxes"
+                        ? sampStatCheckedBoxes.includes(option[0])
+                        : type === "germplasmStorageCheckedBoxes"
+                        ? germplasmStorageCheckedBoxes.includes(option[0])
+                        : null
                     }
-                    onChange={(e) => handleCheckedBox(option[0], e.target.checked)}
+                    onChange={(e) =>
+                      handleCheckedBox(option[0], e.target.checked)
+                    }
                   />
                   <div
                     style={{ whiteSpace: "pre" }}
                     key={option[0] + "-" + option[1]}
                   >
                     {type === "sampStatCheckedBoxes"
-                      ? sampStatMapping[option[0]] + "                  " + option[1]
+                      ? sampStatMapping[option[0]] +
+                        "                  " +
+                        option[1]
                       : type === "germplasmStorageCheckedBoxes"
-                        ? germplasmStorageMapping[option[0]] + "                  " + option[1]
-                        : option[0] + "                  " + option[1]}
+                      ? germplasmStorageMapping[option[0]] +
+                        "                  " +
+                        option[1]
+                      : option[0] + "                  " + option[1]}
                   </div>
                 </label>
               );
