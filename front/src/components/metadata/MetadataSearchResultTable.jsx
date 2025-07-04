@@ -183,6 +183,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
               <th scope="col">Accession Number</th>
               <th scope="col">Accession Name</th>
               <th scope="col">Aliases</th>
+              <th scope="col">Remarks</th>
               <th scope="col">Taxonomy</th>
               <th scope="col">Crop Name</th>
               <th scope="col">Biological status of accession</th>
@@ -302,6 +303,15 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
                           )
                           .join(", ")
                       : ""}
+                  </td>
+                  <td
+                    className="cell"
+                    style={{
+                      overflow: expandedRow === index ? "visible" : "hidden",
+                      whiteSpace: expandedRow === index ? "normal" : "nowrap",
+                    }}
+                  >
+                    {item["remarks.remark"] || ""}
                   </td>
                   <td
                     className="cell"
