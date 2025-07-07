@@ -839,9 +839,10 @@ const GenotypeExplorer = () => {
   };
 
   const handleCopySampleNames = () => {
-    const samples = sampleNames.join("\n");
+    const flatSamples = sampleNames.flat();
+    const samplesText = flatSamples.join("\n");
     navigator.clipboard
-      .writeText(samples)
+      .writeText(samplesText)
       .then(() => {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
