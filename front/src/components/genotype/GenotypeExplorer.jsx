@@ -421,7 +421,7 @@ const GenotypeExplorer = () => {
             const messages = failed
               .map(
                 (f) =>
-                  `Authentication failed for ${f.server.replace(
+                  `Authentication failed for ${f.server?.replace(
                     /^https?:\/\//,
                     ""
                   )}: ${f.message}`
@@ -924,7 +924,7 @@ const GenotypeExplorer = () => {
                 <div>
                   {selectedGigwaServers.map((server, index) => (
                     <div key={server}>
-                      <h4>{server.replace(/^https?:\/\//, "")}</h4>
+                      <h4>{server?.replace(/^https?:\/\//, "")}</h4>
 
                       <div className="access-mode-toggle">
                         <label>
@@ -1000,7 +1000,7 @@ const GenotypeExplorer = () => {
                           borderRadius: "4px",
                         }}
                       >
-                        <h4>Server: {server.replace(/^https?:\/\//, "")}</h4>
+                        <h4>Server: {server?.replace(/^https?:\/\//, "")}</h4>
                         <h5>
                           {numberOfMappedAccessions[index]} of{" "}
                           {numberOfGenesysAccessions} accessions have sample
@@ -1060,7 +1060,7 @@ const GenotypeExplorer = () => {
                         >
                           <legend>
                             Server:{" "}
-                            {selectedGigwaServers[groupIndex].replace(
+                            {selectedGigwaServers[groupIndex]?.replace(
                               /^https?:\/\//,
                               ""
                             )}
