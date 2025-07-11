@@ -78,6 +78,10 @@ export const setGenotypeIds = (genotypeIds) => ({
   type: "SET_GENOTYPE_IDS",
   payload: genotypeIds,
 });
+export const setFigs = (figs) => ({
+  type: "SET_FIGS",
+  payload: figs,
+});
 export const setTotalAccessions = (totalAccessions) => ({
   type: "SET_TOTAL_ACCESSIONS",
   payload: totalAccessions,

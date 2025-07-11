@@ -7,6 +7,7 @@ import {
   setResetTrigger,
   setAccessionNumbers,
   setGenotypeIds,
+  setFigs,
   setCreationStartDate,
   setCreationEndDate,
   setCropCheckedBoxes,
@@ -22,6 +23,7 @@ import {
 import MultiSelectFilter from "./MultiSelectFilter";
 import AccessionFilter from "./AccessionFilter";
 import GenotypeIdFilter from "./GenotypeIdFilter";
+import FigFilter from "./FigFilter";
 import MetadataSearchResultTable from "../MetadataSearchResultTable";
 import DateRangeFilter from "./DateRangeFilter";
 import GenotypeExplorer from "../../genotype/GenotypeExplorer";
@@ -34,7 +36,6 @@ const SearchFilters = ({ tokenReady }) => {
     () => window.innerHeight * 0.6
   );
   const [isResetLoading, setIsResetLoading] = useState(false);
-  const [isUploadLoading, setIsUploadLoading] = useState(false);
   const [filterCode, setFilterCode] = useState(null);
   const [isDateDrawerOpen, setIsDateDrawerOpen] = useState(false);
   const [isInstituteDrawerOpen, setIsInstituteDrawerOpen] = useState(false);
@@ -48,9 +49,6 @@ const SearchFilters = ({ tokenReady }) => {
   const [isFilterApplied, setIsFilterApplied] = useState(false);
   const [initialRequestSent, setInitialRequestSent] = useState(false);
   const [initialRequestStatus, setInitialRequestStatus] = useState("pending");
-  const [file, setFile] = useState(null);
-  const [inputKey, setInputKey] = useState(Date.now());
-  const [showFileInput, setShowFileInput] = useState(false);
   const [filterBody, setFilterBody] = useState({});
   const [searchButtonName, setSearchButtonName] = useState("Search");
   const [hasGenotype, setHasGenotype] = useState(false);
@@ -93,6 +91,7 @@ const SearchFilters = ({ tokenReady }) => {
     (state) => state.passport.accessionNumbers
   );
   const genotypeIds = useSelector((state) => state.passport.genotypeIds);
+  const figs = useSelector((state) => state.passport.figs);
   const creationStartDate = useSelector(
     (state) => state.passport.creationStartDate
   );
@@ -204,6 +203,9 @@ const SearchFilters = ({ tokenReady }) => {
       case "Genotype Ids":
         dispatch(setGenotypeIds([]));
         break;
+      case "Figs":
+        dispatch(setFigs([]));
+        break;
       case "Institute Code":
         dispatch(setInstituteCheckedBoxes([]));
         break;
@@ -251,6 +253,9 @@ const SearchFilters = ({ tokenReady }) => {
             break;
           case "Genotype Ids":
             updatedBody.genotypeIds = filter.value;
+            break;
+          case "Figs":
+            updatedBody.figs = filter.value;
             break;
           case "Institute Code":
             updatedBody.institute = { code: filter.value };
@@ -300,6 +305,10 @@ const SearchFilters = ({ tokenReady }) => {
         accessionNums = await genolinkInternalApi.genotypeIdMapping(
           genotypeIds
         );
+      }
+    } else if (filterMode === "Fig Filter") {
+      if (figs && figs.length > 0) {
+        accessionNums = await genolinkInternalApi.figMapping(figs);
       }
     }
 
@@ -366,6 +375,7 @@ const SearchFilters = ({ tokenReady }) => {
         newFilters.push({ type: "Accession Numbers", value: accessionNumbers });
       if (genotypeIds.length > 0)
         newFilters.push({ type: "Genotype Ids", value: genotypeIds });
+      if (figs.length > 0) newFilters.push({ type: "Figs", value: figs });
       if (instituteCheckedBoxes.length > 0)
         newFilters.push({
           type: "Institute Code",
@@ -409,6 +419,7 @@ const SearchFilters = ({ tokenReady }) => {
       dispatch(setInstituteCheckedBoxes([]));
       dispatch(setAccessionNumbers([]));
       dispatch(setGenotypeIds([]));
+      dispatch(setFigs([]));
       dispatch(setCreationEndDate(null));
       dispatch(setCreationStartDate(null));
       dispatch(setCropCheckedBoxes([]));
@@ -430,46 +441,6 @@ const SearchFilters = ({ tokenReady }) => {
   useEffect(() => {
     setIsFilterApplied(activeFilters.length > 0);
   }, [activeFilters]);
-
-  const handleFileChange = (event) => {
-    setFile(event.target.files[0]);
-  };
-
-  const handleUploadClick = async () => {
-    if (!file) {
-      alert("Please select a file first.");
-      return;
-    }
-    try {
-      setIsUploadLoading(true);
-      await genolinkInternalApi.createSampleAccessions(file);
-      setIsUploadLoading(false);
-      alert("File uploaded successfully!");
-      setShowFileInput(false);
-      setInputKey(Date.now());
-    } catch (error) {
-      setIsUploadLoading(false);
-      console.error("Error uploading file:", error);
-      alert("Failed to upload file!");
-      setShowFileInput(false);
-      setInputKey(Date.now());
-    }
-  };
-
-  const handleDownloadTemplate = () => {
-    const headers = "sample,accession\n";
-    const blob = new Blob([headers], { type: "text/csv;charset=utf-8;" });
-
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "sample_accessions_template.csv";
-    document.body.appendChild(link);
-    link.click();
-
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
 
   const handleResetFilter = async () => {
     setIsResetLoading(true);
@@ -628,59 +599,6 @@ const SearchFilters = ({ tokenReady }) => {
             ) : (
               <LoadingComponent />
             ))}
-          <div style={{ marginBottom: "5px" }}>
-            {initialRequestSent ? (
-              isUploadLoading ? (
-                <LoadingComponent />
-              ) : (
-                <div style={{ marginBottom: "70px" }}>
-                  <button
-                    className="btn btn-info"
-                    onClick={() => setShowFileInput(!showFileInput)}
-                    style={{
-                      display: "inline-block",
-                      width: "280px",
-                      textAlign: "left",
-                      position: "relative",
-                      border: "2px solid #ebba35",
-                      margin: "15px 0 5px 0",
-                      backgroundColor: "beige",
-                      fontWeight: "500",
-                    }}
-                  >
-                    Upload Metadata{" "}
-                    <span style={{ float: "right" }}>
-                      {showFileInput ? "\u25B2" : "\u25BC"}
-                    </span>{" "}
-                  </button>
-                  {showFileInput && (
-                    <div style={{ marginBottom: "20px" }}>
-                      <button
-                        className="btn btn-success"
-                        onClick={handleDownloadTemplate}
-                      >
-                        Download Template
-                      </button>
-                      <input
-                        id="file-input"
-                        type="file"
-                        onChange={handleFileChange}
-                        accept=".csv,.tsv"
-                        key={inputKey}
-                        style={{ width: "210px", marginLeft: "5px" }}
-                      />
-                      <button
-                        className="btn btn-primary"
-                        onClick={handleUploadClick}
-                      >
-                        Submit File
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )
-            ) : null}
-          </div>
           <div style={{ display: "flex", marginBottom: "10px" }}>
             <button
               type="button"
@@ -699,6 +617,7 @@ const SearchFilters = ({ tokenReady }) => {
                 <option value="Passport Filter">Passport Filter</option>
                 <option value="Accession Filter">Accession Filter</option>
                 <option value="GenotypeId Filter">GenotypeId Filter</option>
+                <option value="Fig Filter">Fig Filter</option>
               </select>
             ) : null}
           </div>
@@ -1073,8 +992,10 @@ const SearchFilters = ({ tokenReady }) => {
                   />
                 ) : filterMode === "Accession Filter" ? (
                   <AccessionFilter />
-                ) : (
+                ) : filterMode === "GenotypeId Filter" ? (
                   <GenotypeIdFilter />
+                ) : (
+                  <FigFilter />
                 )}
                 <button
                   type="button"

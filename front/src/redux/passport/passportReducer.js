@@ -17,6 +17,7 @@ const initialState = {
   passportCurrentPage: 0,
   accessionNumbers: [],
   genotypeIds: [],
+  figs: [],
   totalAccessions: 0,
   totalPreGenotypedAccessions: 0,
   creationStartDate: null,
@@ -132,6 +133,11 @@ const rootReducer = (state = initialState, action) => {
       return {
         ...state,
         genotypeIds: action.payload,
+      };
+    case "SET_FIGS":
+      return {
+        ...state,
+        figs: action.payload,
       };
     case "SET_TOTAL_ACCESSIONS":
       return {

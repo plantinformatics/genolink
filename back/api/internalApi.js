@@ -1,23 +1,17 @@
 const express = require("express");
 const router = express.Router();
-const multer = require("multer");
-const upload = multer({ dest: "uploads/" });
 const db = require("../models");
 const logger = require("../middlewares/logger");
 
-const createSampleAccessionsHandler = require("../utils/createSampleAccessionsHandler");
 const accessionMappingHandler = require("../utils/accessionMappingHandler");
 const genotypeIdMappingHandler = require("../utils/genotypeIdMappingHandler");
-
-router.post(
-  "/createSampleAccessions",
-  upload.single("file"),
-  createSampleAccessionsHandler
-);
+const figMappingHandler = require("../utils/figMappingHandler");
 
 router.post("/accessionMapping", accessionMappingHandler);
 
 router.post("/genotypIdMapping", genotypeIdMappingHandler);
+
+router.post("/figMapping", figMappingHandler);
 
 router.get("/getAllAccessions", async (req, res) => {
   try {

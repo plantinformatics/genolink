@@ -38,6 +38,8 @@ services:
     depends_on:
       - db
     restart: always
+    volumes:
+      - ./back/uploads:/app/uploads
 
   db:
     image: mysql:5.7
