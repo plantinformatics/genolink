@@ -36,4 +36,21 @@ router.get("/getAllAccessions", async (req, res) => {
   }
 });
 
+router.get("/getAllFigs", async (req, res) => {
+  try {
+    const figRecords = await db.Fig.findAll({
+      attributes: ["fig_name"],
+      order: [["fig_name", "ASC"]],
+    });
+
+    const figs = figRecords.map((fig) => fig.fig_name);
+
+    res.status(200).send({ figs });
+    logger.info("Fetched all fig names successfully.");
+  } catch (error) {
+    logger.error("Error fetching fig names:", error);
+    res.status(500).send({ message: "Internal server error" });
+  }
+});
+
 module.exports = router;

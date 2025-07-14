@@ -3,15 +3,23 @@ const logger = require("../middlewares/logger");
 
 const figMappingHandler = async (req, res) => {
   try {
-    const { figs } = req.body;
-
-    if (!figs || !Array.isArray(figs) || figs.length === 0) {
-      res.status(400).send({ message: "A list of fig names is required." });
-      logger.warn("fig list was empty or not provided.");
+    let { figs } = req.body;
+    if (!figs) {
+      res.status(400).send({ message: "Fig name(s) are required." });
+      logger.warn("Fig input was empty or not provided.");
       return;
     }
 
-    // Step 1: Get matching fig records
+    if (typeof figs === "string") {
+      figs = [figs];
+    }
+
+    if (!Array.isArray(figs) || figs.length === 0) {
+      res.status(400).send({ message: "A list of fig names is required." });
+      logger.warn("Fig list is not an array or is empty.");
+      return;
+    }
+
     const figRecords = await db.Fig.findAll({
       where: {
         fig_name: figs,
@@ -27,13 +35,12 @@ const figMappingHandler = async (req, res) => {
 
     const figIds = figRecords.map((fig) => fig.id);
 
-    // Step 2: Get accessions linked to these fig IDs
     const linkRecords = await db.FigAccessionLink.findAll({
       where: {
         fig_id: figIds,
       },
       attributes: ["accession_id"],
-      group: ["accession_id"], // to avoid duplicates
+      group: ["accession_id"],
     });
 
     if (linkRecords.length === 0) {
@@ -46,7 +53,6 @@ const figMappingHandler = async (req, res) => {
 
     const accessions = linkRecords.map((rec) => rec.accession_id);
 
-    // Step 3: Return unique accessions
     res.status(200).send(accessions);
   } catch (error) {
     logger.error("Error fetching accessions by fig:", error);

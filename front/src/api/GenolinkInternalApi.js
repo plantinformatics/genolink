@@ -16,6 +16,16 @@ class GenolinkInternalApi extends BaseApi {
     }
   }
 
+  async getAllFigs() {
+    try {
+      const response = await this.get("/api/internalApi/getAllFigs");
+      return response;
+    } catch (error) {
+      console.error("Error fetching all figs:", error);
+      throw error;
+    }
+  }
+
   async genotypeIdMapping(genotypeIds) {
     try {
       const response = await this.post("/api/internalApi/genotypIdMapping", {

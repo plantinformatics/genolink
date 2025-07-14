@@ -18,6 +18,7 @@ import {
   setCheckedAccessions,
   setActiveFilters,
   setWildSearchValue,
+  setSelectedFig,
 } from "../../../redux/passport/passportActions";
 
 import MultiSelectFilter from "./MultiSelectFilter";
@@ -45,6 +46,7 @@ const SearchFilters = ({ tokenReady }) => {
   const [isSampStatDrawerOpen, setIsSampStatDrawerOpen] = useState(false);
   const [isGermplasmStorageDrawerOpen, setIsGermplasmStorageDrawerOpen] =
     useState(false);
+  const [isFigsDrawerOpen, setIsFigsDrawerOpen] = useState(false);
   const [filterMode, setFilterMode] = useState("Passport Filter");
   const [isFilterApplied, setIsFilterApplied] = useState(false);
   const [initialRequestSent, setInitialRequestSent] = useState(false);
@@ -92,6 +94,7 @@ const SearchFilters = ({ tokenReady }) => {
   );
   const genotypeIds = useSelector((state) => state.passport.genotypeIds);
   const figs = useSelector((state) => state.passport.figs);
+  const selectedFig = useSelector((state) => state.passport.selectedFig);
   const creationStartDate = useSelector(
     (state) => state.passport.creationStartDate
   );
@@ -131,6 +134,19 @@ const SearchFilters = ({ tokenReady }) => {
       setSearchButtonName("Search");
     }
   }, [activeFilters]);
+
+  useEffect(() => {
+    const fetchFigs = async () => {
+      try {
+        const response = await genolinkInternalApi.getAllFigs();
+        dispatch(setFigs(response.figs));
+      } catch (error) {
+        console.error("Failed to fetch figs:", error);
+      }
+    };
+
+    fetchFigs();
+  }, []);
 
   useEffect(() => {
     if (!tokenReady) return;
@@ -204,7 +220,7 @@ const SearchFilters = ({ tokenReady }) => {
         dispatch(setGenotypeIds([]));
         break;
       case "Figs":
-        dispatch(setFigs([]));
+        dispatch(setSelectedFig(""));
         break;
       case "Institute Code":
         dispatch(setInstituteCheckedBoxes([]));
@@ -255,7 +271,7 @@ const SearchFilters = ({ tokenReady }) => {
             updatedBody.genotypeIds = filter.value;
             break;
           case "Figs":
-            updatedBody.figs = filter.value;
+            updatedBody.selectedFig = filter.value;
             break;
           case "Institute Code":
             updatedBody.institute = { code: filter.value };
@@ -306,10 +322,9 @@ const SearchFilters = ({ tokenReady }) => {
           genotypeIds
         );
       }
-    } else if (filterMode === "Fig Filter") {
-      if (figs && figs.length > 0) {
-        accessionNums = await genolinkInternalApi.figMapping(figs);
-      }
+    } else if (selectedFig) {
+      const convertedFig = await genolinkInternalApi.figMapping(selectedFig);
+      accessionNums = [...accessionNums, ...convertedFig];
     }
 
     dispatch(setResetTrigger(false));
@@ -375,7 +390,7 @@ const SearchFilters = ({ tokenReady }) => {
         newFilters.push({ type: "Accession Numbers", value: accessionNumbers });
       if (genotypeIds.length > 0)
         newFilters.push({ type: "Genotype Ids", value: genotypeIds });
-      if (figs.length > 0) newFilters.push({ type: "Figs", value: figs });
+      if (selectedFig) newFilters.push({ type: "Figs", value: selectedFig });
       if (instituteCheckedBoxes.length > 0)
         newFilters.push({
           type: "Institute Code",
@@ -419,7 +434,7 @@ const SearchFilters = ({ tokenReady }) => {
       dispatch(setInstituteCheckedBoxes([]));
       dispatch(setAccessionNumbers([]));
       dispatch(setGenotypeIds([]));
-      dispatch(setFigs([]));
+      dispatch(setSelectedFig(""));
       dispatch(setCreationEndDate(null));
       dispatch(setCreationStartDate(null));
       dispatch(setCropCheckedBoxes([]));
@@ -434,6 +449,7 @@ const SearchFilters = ({ tokenReady }) => {
       setIsTaxonomyDrawerOpen(false);
       setIsSampStatDrawerOpen(false);
       setIsGermplasmStorageDrawerOpen(false);
+      setIsFigsDrawerOpen(false);
       dispatch(setCheckedAccessions({}));
     }
   }, [resetTrigger]);
@@ -617,7 +633,6 @@ const SearchFilters = ({ tokenReady }) => {
                 <option value="Passport Filter">Passport Filter</option>
                 <option value="Accession Filter">Accession Filter</option>
                 <option value="GenotypeId Filter">GenotypeId Filter</option>
-                <option value="Fig Filter">Fig Filter</option>
               </select>
             ) : null}
           </div>
@@ -920,6 +935,41 @@ const SearchFilters = ({ tokenReady }) => {
                     </p>
                   ))}
               </div>
+              <div>
+                <button
+                  onClick={() => setIsFigsDrawerOpen(!isFigsDrawerOpen)}
+                  className="btn btn-info"
+                  style={{
+                    display: "inline-block",
+                    width: "280px",
+                    textAlign: "left",
+                    position: "relative",
+                    border: "2px solid #ebba35",
+                    backgroundColor: "beige",
+                    marginBottom: "5px",
+                    fontWeight: "500",
+                  }}
+                >
+                  FIG{" "}
+                  <span style={{ float: "right" }}>
+                    {isFigsDrawerOpen ? "\u25B2" : "\u25BC"}
+                  </span>
+                </button>
+                {isFigsDrawerOpen &&
+                  (figs && figs.length > 0 ? (
+                    <FigFilter />
+                  ) : (
+                    <p
+                      style={{
+                        padding: "0 10px",
+                        color: "gray",
+                        fontStyle: "italic",
+                      }}
+                    >
+                      No available filters.
+                    </p>
+                  ))}
+              </div>
             </>
           )}
           <div>
@@ -992,10 +1042,8 @@ const SearchFilters = ({ tokenReady }) => {
                   />
                 ) : filterMode === "Accession Filter" ? (
                   <AccessionFilter />
-                ) : filterMode === "GenotypeId Filter" ? (
-                  <GenotypeIdFilter />
                 ) : (
-                  <FigFilter />
+                  <GenotypeIdFilter />
                 )}
                 <button
                   type="button"
