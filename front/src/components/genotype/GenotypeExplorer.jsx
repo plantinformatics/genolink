@@ -19,8 +19,11 @@ import { faCopy } from "@fortawesome/free-solid-svg-icons";
 
 import GenolinkGigwaApi from "../../api/GenolinkGigwaApi";
 import GenolinkGerminateApi from "../../api/GenolinkGerminateApi";
-import { platforms } from "../../config/apiConfig";
-import { genolinkServer } from "../../config/apiConfig";
+import {
+  platforms,
+  genolinkServer,
+  REQUIRE_GIGWA_CREDENTIALS,
+} from "../../config/apiConfig";
 
 const GenotypeExplorer = () => {
   const [genolinkGerminateApi, setGenolinkGerminateApi] = useState(
@@ -75,7 +78,6 @@ const GenotypeExplorer = () => {
   const genotypeCurrentPage = useSelector(
     (state) => state.genotype.genotypeCurrentPage
   );
-  const pageLengths = useSelector((state) => state.genotype.pageLengths);
   const selectedGroups = useSelector((state) => state.genotype.selectedGroups);
   const linkageGroups = useSelector((state) => state.genotype.linkageGroups);
   const variantList = useSelector((state) => state.genotype.variantList);
@@ -119,7 +121,7 @@ const GenotypeExplorer = () => {
 
   useEffect(() => {
     if (selectedGigwaServers.length > 0) {
-      const defaultAccessModes = selectedGigwaServers.map(() => "private");
+      const defaultAccessModes = selectedGigwaServers.map(() => "public");
       const defaultUsernames = selectedGigwaServers.map(() => "");
       const defaultPasswords = selectedGigwaServers.map(() => "");
 
@@ -922,62 +924,69 @@ const GenotypeExplorer = () => {
 
               {!isGenomeSearchSubmit && (
                 <div>
+                  {selectedGigwaServers.length > 0 && <h4>Server found:</h4>}
                   {selectedGigwaServers.map((server, index) => (
-                    <div key={server}>
-                      <h4>{server?.replace(/^https?:\/\//, "")}</h4>
-
-                      <div className="access-mode-toggle">
-                        <label>
-                          <input
-                            type="radio"
-                            value="private"
-                            checked={accessMode[index] === "private"}
-                            onChange={(e) => handleAccessModeChange(index, e)}
-                          />
-                          Private
-                        </label>
-                        <label>
-                          <input
-                            type="radio"
-                            value="public"
-                            checked={accessMode[index] === "public"}
-                            onChange={(e) => handleAccessModeChange(index, e)}
-                          />
-                          Public
-                        </label>
-                      </div>
-
-                      {/* Username and Password input fields for private access mode */}
-                      {accessMode[index] === "private" && (
+                    <div key={server} style={{ marginBottom: "15px" }}>
+                      <h5>{server?.replace(/^https?:\/\//, "")}</h5>
+                      {REQUIRE_GIGWA_CREDENTIALS && (
                         <>
-                          <div className="input-group mb-3">
-                            <span className="input-group-addon">
-                              <FontAwesomeIcon icon={faUser} />
-                            </span>
-                            <input
-                              type="text"
-                              className="form-control"
-                              placeholder="Username"
-                              value={usernames[index] || ""}
-                              onChange={(e) =>
-                                handleUsernameChange(index, e.target.value)
-                              }
-                            />
+                          <div className="access-mode-toggle">
+                            <label>
+                              <input
+                                type="radio"
+                                value="private"
+                                checked={accessMode[index] === "private"}
+                                onChange={(e) =>
+                                  handleAccessModeChange(index, e)
+                                }
+                              />
+                              Private
+                            </label>
+                            <label>
+                              <input
+                                type="radio"
+                                value="public"
+                                checked={accessMode[index] === "public"}
+                                onChange={(e) =>
+                                  handleAccessModeChange(index, e)
+                                }
+                              />
+                              Public
+                            </label>
                           </div>
-                          <div className="input-group mb-3">
-                            <span className="input-group-addon">
-                              <FontAwesomeIcon icon={faLock} />
-                            </span>
-                            <input
-                              type="password"
-                              className="form-control"
-                              placeholder="Password"
-                              value={passwords[index] || ""}
-                              onChange={(e) =>
-                                handlePasswordChange(index, e.target.value)
-                              }
-                            />
-                          </div>
+
+                          {accessMode[index] === "private" && (
+                            <>
+                              <div className="input-group mb-3">
+                                <span className="input-group-addon">
+                                  <FontAwesomeIcon icon={faUser} />
+                                </span>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  placeholder="Username"
+                                  value={usernames[index] || ""}
+                                  onChange={(e) =>
+                                    handleUsernameChange(index, e.target.value)
+                                  }
+                                />
+                              </div>
+                              <div className="input-group mb-3">
+                                <span className="input-group-addon">
+                                  <FontAwesomeIcon icon={faLock} />
+                                </span>
+                                <input
+                                  type="password"
+                                  className="form-control"
+                                  placeholder="Password"
+                                  value={passwords[index] || ""}
+                                  onChange={(e) =>
+                                    handlePasswordChange(index, e.target.value)
+                                  }
+                                />
+                              </div>
+                            </>
+                          )}
                         </>
                       )}
                     </div>
