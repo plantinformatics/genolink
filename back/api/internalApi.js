@@ -53,4 +53,57 @@ router.get("/getAllFigs", async (req, res) => {
   }
 });
 
+router.post("/getFigsByAccessions", async (req, res) => {
+  try {
+    const { accessionIds } = req.body;
+
+    if (
+      !accessionIds ||
+      !Array.isArray(accessionIds) ||
+      accessionIds.length === 0
+    ) {
+      return res
+        .status(400)
+        .send({ message: "A list of accession IDs is required." });
+    }
+
+    const links = await db.FigAccessionLink.findAll({
+      where: { accession_id: accessionIds },
+      attributes: ["accession_id", "fig_id"],
+    });
+
+    if (links.length === 0) {
+      return res
+        .status(404)
+        .send({ message: "No figs found for the provided accession IDs." });
+    }
+
+    const figIds = [...new Set(links.map((link) => link.fig_id))];
+
+    const figs = await db.Fig.findAll({
+      where: { id: figIds },
+      attributes: ["id", "fig_name"],
+    });
+
+    const figMap = {};
+    figs.forEach((fig) => {
+      figMap[fig.id] = fig.fig_name;
+    });
+
+    const result = {};
+    links.forEach((link) => {
+      if (!result[link.accession_id]) {
+        result[link.accession_id] = [];
+      }
+      result[link.accession_id].push(figMap[link.fig_id]);
+    });
+
+    res.status(200).send(result);
+    logger.info("Fetched figs for provided accession IDs successfully.");
+  } catch (error) {
+    logger.error("Error fetching figs by accession IDs:", error);
+    res.status(500).send({ message: "Internal server error" });
+  }
+});
+
 module.exports = router;

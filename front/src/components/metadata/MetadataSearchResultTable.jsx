@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "../../tableStyles.css";
 import { useSelector, useDispatch } from "react-redux";
 import LoadingComponent from "../LoadingComponent";
@@ -7,6 +7,7 @@ import {
   setCheckedAccessionNames,
 } from "../../redux/passport/passportActions";
 import { genesysApi } from "../../pages/Home";
+import { genolinkInternalApi } from "../../pages/Home";
 
 const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
   const searchResults = useSelector((state) => state.passport.searchResults);
@@ -29,6 +30,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
       (hasGenotype ? totalPreGenotypedAccessions : totalAccessions) / 500
     )
   );
+  const [figMapping, setFigMapping] = useState({});
   const dispatch = useDispatch();
   const checkedAccessions = useSelector(
     (state) => state.passport.checkedAccessions
@@ -39,6 +41,26 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
   const isLoadingGenotypedAccessions = useSelector(
     (state) => state.genotype.isLoadingGenotypedAccessions
   );
+
+  useEffect(() => {
+    if (!searchResults || searchResults.length === 0) return;
+
+    const accessionIds = searchResults.map((item) => item.accessionNumber);
+
+    const fetchFigs = async () => {
+      try {
+        const mapping = await genolinkInternalApi.getFigsByAccessions(
+          accessionIds
+        );
+        setFigMapping(mapping); // mapping = { acc1: ["fig1", "fig2"], acc2: ["fig3"] }
+      } catch (error) {
+        console.error("Failed to fetch figs by accessions:", error);
+      }
+    };
+
+    fetchFigs();
+  }, [searchResults]);
+
   function getSampleStatus(number) {
     const sampStatMapping = {
       100: "Wild",
@@ -194,6 +216,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
               <th scope="col">Last Updated</th>
               <th scope="col">isGenotyped</th>
               <th scope="col">GenotypeID</th>
+              <th scope="col">FIGS set</th>
             </tr>
           </thead>
           <tbody>
@@ -406,6 +429,18 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
                     }}
                   >
                     {genotypeID}
+                  </td>
+                  <td
+                    className="cell"
+                    style={{
+                      overflow: expandedRow === index ? "visible" : "hidden",
+                      whiteSpace: expandedRow === index ? "normal" : "nowrap",
+                    }}
+                  >
+                    {figMapping[item.accessionNumber] &&
+                    figMapping[item.accessionNumber].length > 0
+                      ? figMapping[item.accessionNumber].join(", ")
+                      : ""}
                   </td>
                 </tr>
               );

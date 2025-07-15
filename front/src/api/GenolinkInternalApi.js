@@ -67,6 +67,18 @@ class GenolinkInternalApi extends BaseApi {
       throw error;
     }
   }
+
+  async getFigsByAccessions(accessionIds) {
+    try {
+      const response = await this.post("/api/internalApi/getFigsByAccessions", {
+        accessionIds,
+      });
+      return response;
+    } catch (error) {
+      console.error("Error fetching figs by accessions:", error);
+      throw error;
+    }
+  }
 }
 
 export default GenolinkInternalApi;
