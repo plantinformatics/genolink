@@ -1,6 +1,7 @@
 import BaseApi from "./BaseApi";
 import { genesysServer } from "../config/apiConfig";
 import oidcConfig from "../config/oidcConfig";
+import { genolinkInternalApi } from "../pages/Home";
 import {
   setInstituteCheckedBoxes,
   setActiveFilters,
@@ -532,6 +533,12 @@ class GenesysApi extends BaseApi {
             this.genotypedAccessions.includes(result.accessionNumber)
           );
         }
+
+        const accessionIds = allResults.map((item) => item.accessionNumber);
+        const figMapping = await genolinkInternalApi.getFigsByAccessions(
+          accessionIds
+        );
+
         const fieldsToExport = {
           "Institute Code": "instituteCode",
           "Holding Institute": "institute.fullName",
@@ -549,9 +556,14 @@ class GenesysApi extends BaseApi {
           "Last Updated": "lastModifiedDate",
           isGenotyped: "isGenotyped",
           GenotypeID: "GenotypeID",
+          "FIGs Set": "figsSet",
         };
 
-        const tsvContent = this.generateTSV(allResults, fieldsToExport);
+        const tsvContent = this.generateTSV(
+          allResults,
+          fieldsToExport,
+          figMapping
+        );
 
         this.downloadFile(
           tsvContent,
@@ -566,7 +578,7 @@ class GenesysApi extends BaseApi {
     }
   }
 
-  generateTSV(data, fieldsMap) {
+  generateTSV(data, fieldsMap, figMapping) {
     const header = Object.keys(fieldsMap).join("\t");
 
     const rows = data.map((item) => {
@@ -584,6 +596,13 @@ class GenesysApi extends BaseApi {
             );
             return index !== -1 ? this.genotypedSamples[index] : "N/A";
           }
+
+          if (fieldPath === "figsSet") {
+            return figMapping[item.accessionNumber]
+              ? figMapping[item.accessionNumber].join(", ")
+              : "";
+          }
+
           if (fieldPath === "institute.fullName") {
             return item["institute.fullName"] || "";
           }
