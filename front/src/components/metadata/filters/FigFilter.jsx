@@ -6,7 +6,13 @@ const FigFilter = () => {
   const reduxFigs = useSelector((state) => state.passport.figs);
   const selectedFig = useSelector((state) => state.passport.selectedFig);
 
-  const handleFigChange = (e) => {
+  const handleClick = (fig) => {
+    if (selectedFig === fig) {
+      dispatch(setSelectedFig("")); // unselect
+    }
+  };
+
+  const handleChange = (e) => {
     dispatch(setSelectedFig(e.target.value));
   };
 
@@ -36,7 +42,8 @@ const FigFilter = () => {
               name="figOption"
               value={fig}
               checked={selectedFig === fig}
-              onChange={handleFigChange}
+              onChange={handleChange}
+              onClick={() => handleClick(fig)}
               style={{
                 marginRight: "8px",
               }}

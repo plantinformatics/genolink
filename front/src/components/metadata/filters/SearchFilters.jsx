@@ -950,7 +950,7 @@ const SearchFilters = ({ tokenReady }) => {
                     fontWeight: "500",
                   }}
                 >
-                  FIG{" "}
+                  FIGS set{" "}
                   <span style={{ float: "right" }}>
                     {isFigsDrawerOpen ? "\u25B2" : "\u25BC"}
                   </span>
