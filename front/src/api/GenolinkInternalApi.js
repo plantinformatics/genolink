@@ -70,10 +70,22 @@ class GenolinkInternalApi extends BaseApi {
 
   async getFigsByAccessions(accessionIds) {
     try {
-      const response = await this.post("/api/internalApi/getFigsByAccessions", {
-        accessionIds,
-      });
-      return response;
+      const batchSize = 5000;
+      const figMapping = {};
+
+      for (let i = 0; i < accessionIds.length; i += batchSize) {
+        const chunk = accessionIds.slice(i, i + batchSize);
+        const response = await this.post(
+          "/api/internalApi/getFigsByAccessions",
+          {
+            accessionIds: chunk,
+          }
+        );
+
+        Object.assign(figMapping, response);
+      }
+
+      return figMapping;
     } catch (error) {
       console.error("Error fetching figs by accessions:", error);
       throw error;

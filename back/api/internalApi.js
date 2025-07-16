@@ -73,9 +73,7 @@ router.post("/getFigsByAccessions", async (req, res) => {
     });
 
     if (links.length === 0) {
-      return res
-        .status(404)
-        .send({ message: "No figs found for the provided accession IDs." });
+      return res.status(200).send({});
     }
 
     const figIds = [...new Set(links.map((link) => link.fig_id))];
