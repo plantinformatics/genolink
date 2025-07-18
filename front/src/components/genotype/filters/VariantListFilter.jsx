@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { setVariantList } from "../../../redux/genotype/genotypeActions";
 import { useDispatch } from "react-redux";
+import styles from "./VariantListFilter.module.css";
 
 const VariantListFilter = () => {
   const [inputValue, setInputValue] = useState("");
@@ -19,11 +20,10 @@ const VariantListFilter = () => {
     <input
       id="variantIds"
       type="text"
-      className="form-control"
+      className={`${styles.formControl} ${styles.variantInput}`}
       value={inputValue}
       onChange={handleInputChange}
       placeholder="Enter variants, separated by commas"
-      style={{ width: "282px", marginTop: "10px" }}
     />
   );
 };
