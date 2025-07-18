@@ -2,7 +2,7 @@
 
 This section provides step-by-step instructions for uploading mapping files to the Genolink backend. Two types of mappings are supported:
 
-1. **Sample ↔ Accession Mapping**  
+1. **Sample(GenotypeID) ↔ Accession Mapping**  
    Use `uploadSampleAccessions.js` to upload a CSV file mapping sample IDs to accession numbers.
 
 2. **Accession ↔ FIG Mapping**  
