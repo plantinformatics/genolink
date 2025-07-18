@@ -1,4 +1,4 @@
-# Upload Sample ↔ Accession Mapping
+# Upload Sample(GenotypeID) ↔ Accession Mapping
 
 This guide explains how to upload sample-to-accession mappings into the Genolink database.
 
