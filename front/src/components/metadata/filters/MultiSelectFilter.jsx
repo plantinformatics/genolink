@@ -8,6 +8,7 @@ import {
   setGermplasmStorageCheckedBoxes,
 } from "../../../redux/passport/passportActions";
 import { useDispatch } from "react-redux";
+import styles from "./MultiSelectFilter.module.css";
 
 const sampStatMapping = {
   100: "Wild",
@@ -230,15 +231,9 @@ const MultiSelectFilter = ({ options, type }) => {
   };
 
   return (
-    <div className="container-fluid mt-2">
+    <div className={styles.passportFilterContainer}>
       {options && (
-        <div
-          className="d-flex flex-column"
-          style={{
-            maxHeight: "600px",
-            overflowY: "auto",
-          }}
-        >
+        <div className={styles.passportFilterSubContainer}>
           {options
             .filter((option) => option[0] !== "101")
             .sort((a, b) => {
@@ -256,11 +251,11 @@ const MultiSelectFilter = ({ options, type }) => {
               return (
                 <label
                   key={option[0]}
-                  className="form-check"
+                  className={styles.formCheck}
                   style={{ marginLeft: indentation }}
                 >
                   <input
-                    className="form-check-input"
+                    className={styles.formCheckInput}
                     type="checkbox"
                     value={option[0]}
                     checked={
@@ -283,7 +278,7 @@ const MultiSelectFilter = ({ options, type }) => {
                     }
                   />
                   <div
-                    style={{ whiteSpace: "pre" }}
+                    className={styles.whiteSpace}
                     key={option[0] + "-" + option[1]}
                   >
                     {type === "sampStatCheckedBoxes"
