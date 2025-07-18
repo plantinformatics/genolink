@@ -1,0 +1,16 @@
+.figRadioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 40px;
+}
+
+.figRadioLabel {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+.figRadioInput {
+  margin-right: 8px;
+}

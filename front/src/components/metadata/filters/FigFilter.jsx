@@ -1,5 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import { setSelectedFig } from "../../../redux/passport/passportActions";
+import styles from "./FigFilter.module.css";
 
 const FigFilter = () => {
   const dispatch = useDispatch();
@@ -17,26 +18,12 @@ const FigFilter = () => {
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "8px",
-        marginBottom: "40px",
-      }}
-    >
+    <div className={styles.figRadioGroup}>
       {reduxFigs.length === 0 ? (
         <p>No figs available.</p>
       ) : (
         reduxFigs.map((fig, index) => (
-          <label
-            key={index}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              fontSize: "14px",
-            }}
-          >
+          <label key={index} className={styles.figRadioLabel}>
             <input
               type="radio"
               name="figOption"
@@ -44,9 +31,7 @@ const FigFilter = () => {
               checked={selectedFig === fig}
               onChange={handleChange}
               onClick={() => handleClick(fig)}
-              style={{
-                marginRight: "8px",
-              }}
+              className={styles.figRadioInput}
             />
             {fig}
           </label>
