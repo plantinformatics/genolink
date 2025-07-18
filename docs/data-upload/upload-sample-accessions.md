@@ -13,29 +13,29 @@ The CSV file must include the following *headers*:
 | AGG 4143 WHEA  | AGG4143WHEA1-B00003-1-02             |
 | AGG 4681 WHEA  | AGG4681WHEA2-B00003-1-03             |
 
-*Save this file in the `uploads/` folder of the backend.*
+*Save this file in the `/back/uploads/` folder.*
 
 ---
 
 ## 2. Upload via Node.js (Direct Server)
 
-Run this command in the *backend root directory*:
-
+Run this command in the */back* directory:
+```bash
 node scripts/uploadSampleAccessions.js uploads/YOUR_FILE.csv
-
+```
 *Example:*
+```bash
 node scripts/uploadSampleAccessions.js uploads/sample_accessions.csv
-
+```
 ---
 
 ## 3. Upload via Docker
 
 If you are running Genolink via *Docker Compose*, use:
-
+```bash 
 docker exec -it genolink_app_1 node scripts/uploadSampleAccessions.js uploads/YOUR_FILE.csv
-
+```
 *Example:*
+```bash
 docker exec -it genolink_app_1 node scripts/uploadSampleAccessions.js uploads/sample_accessions.csv
-
-
-*Ensure the uploads/ directory on the host is mounted to the container using docker-compose.yml.*
+```
