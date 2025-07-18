@@ -1,6 +1,6 @@
 # Upload Accession ↔ FIG Mapping
 
-This guide explains how to upload **accession-to-FIG** mappings into the Genolink database.
+This guide explains how to upload **accession-to-fig** mappings into the Genolink database.
 
 ---
 
@@ -13,7 +13,7 @@ The CSV file must include the following *headers*:
 | AGG40824CHIC    | Ascochyta Blight |
 | AGG40824CHIC    | Virus           |
 
-> Save this file in the `/back/uploads/` folder.
+Save this file in the `/back/uploads/` folder.
 
 ---
 
