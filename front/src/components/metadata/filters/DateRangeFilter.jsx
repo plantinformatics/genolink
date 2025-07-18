@@ -4,6 +4,7 @@ import {
   setCreationEndDate,
 } from "../../../redux/passport/passportActions";
 import { useDispatch } from "react-redux";
+import styles from "./DateRangeFilter.module.css";
 
 const DateRangeFilter = ({ type }) => {
   const [selectedDate, setSelectedDate] = useState(null);
@@ -24,7 +25,7 @@ const DateRangeFilter = ({ type }) => {
           <input
             type="date"
             id="dateInput"
-            className="form-control"
+            className={styles.formControl}
             value={selectedDate}
             onChange={handleDateChange}
           />
