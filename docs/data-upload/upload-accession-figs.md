@@ -19,7 +19,7 @@ Save this file in the `/back/uploads/` folder.
 
 ## 2. Upload via Node.js (Direct Server)
 
-Run this command in the */back* directory:
+Run this command in the `/back` directory:
 
 ```bash
 node scripts/uploadAccessionFigs.js uploads/YOUR_FILE.csv
