@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setAccessionNumbers } from "../../../redux/passport/passportActions";
+import styles from "./AccessionFilter.module.css";
 
 const AccessionFilter = () => {
   const dispatch = useDispatch();
@@ -51,7 +52,7 @@ const AccessionFilter = () => {
           value={inputValue}
           onChange={onChangeAccession}
           onBlur={handleBlur}
-          style={{ width: "500px", padding: "8px", marginLeft: "150px" }}
+          className={styles.accessionSearchBox}
           placeholder="Enter Accession Numbers separated by commas..."
         />
       </div>
@@ -60,7 +61,7 @@ const AccessionFilter = () => {
           type="file"
           onChange={handleFileUpload}
           accept=".txt"
-          style={{ padding: "4px", width: "250px" }}
+          className={styles.inputFile}
         />
       </div>
     </>
