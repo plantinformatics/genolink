@@ -19,7 +19,7 @@ The CSV file must include the following *headers*:
 
 ## 2. Upload via Node.js (Direct Server)
 
-Run this command in the */back* directory:
+Run this command in the `/back` directory:
 ```bash
 node scripts/uploadSampleAccessions.js uploads/YOUR_FILE.csv
 ```
