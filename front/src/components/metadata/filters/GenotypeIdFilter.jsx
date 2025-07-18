@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setGenotypeIds } from "../../../redux/passport/passportActions";
+import styles from "./GenotypeIdFilter.module.css";
 
 const GenotypeIdFilter = () => {
   const dispatch = useDispatch();
@@ -49,7 +50,7 @@ const GenotypeIdFilter = () => {
           value={inputValue}
           onChange={onChangeGenotypeId}
           onBlur={handleBlur}
-          style={{ width: "500px", padding: "8px", marginLeft: "150px" }}
+          className={styles.genotypeIdSearchBox}
           placeholder="Enter GenotypeIds separated by commas..."
         />
       </div>
@@ -58,7 +59,7 @@ const GenotypeIdFilter = () => {
           type="file"
           onChange={handleFileUpload}
           accept=".txt"
-          style={{ padding: "4px", width: "250px" }}
+          className={styles.inputFile}
         />
       </div>
     </>
