@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { setGenotypeCurrentPage } from "../../redux/genotype/genotypeActions";
 import { useDispatch, useSelector } from "react-redux";
+import styles from "./GenotypeSearchResultsTable.module.css";
 
 const GenotypeSearchResultsTable = () => {
   const dispatch = useDispatch();
@@ -167,49 +168,55 @@ const GenotypeSearchResultsTable = () => {
 
   return (
     <div>
-      <div className="table-wrapper">
+      <div className={styles.tableWrapper}>
         {platform === "Gigwa" ? (
-          <table className="scrollable-table table table-bordered table-striped">
+          <table
+            className={`${styles.table} ${styles.tableBordered} ${styles.tableStriped} ${styles.scrollableTable}`}
+          >
             <thead>
               <tr>
                 <th
-                  className="vertical-header"
+                  className={styles.verticalHeader}
                   onClick={() => handleSort("id")}
                 >
                   <span>#</span>
                 </th>
                 <th
-                  className="vertical-header"
+                  className={styles.verticalHeader}
                   onClick={() => handleSort("referenceName")}
                 >
                   <span>CHROM</span>
                 </th>
                 <th
-                  className="vertical-header"
+                  className={styles.verticalHeader}
                   onClick={() => handleSort("start")}
                 >
                   <span>POS</span>
                 </th>
                 <th
-                  className="vertical-header"
+                  className={styles.verticalHeader}
                   onClick={() => handleSort("id")}
                 >
                   <span>ID</span>
                 </th>
                 <th
-                  className="vertical-header"
+                  className={styles.verticalHeader}
                   onClick={() => handleSort("referenceBases")}
                 >
                   <span>REF</span>
                 </th>
                 <th
-                  className="vertical-header"
+                  className={styles.verticalHeader}
                   onClick={() => handleSort("alternateBases")}
                 >
                   <span>ALT</span>
                 </th>
                 {unionSamples.map((sample) => (
-                  <th className="vertical-header" key={sample} title={sample}>
+                  <th
+                    className={styles.verticalHeader}
+                    key={sample}
+                    title={sample}
+                  >
                     <span>{sample}</span>
                   </th>
                 ))}
@@ -263,15 +270,17 @@ const GenotypeSearchResultsTable = () => {
             </tbody>
           </table>
         ) : platform === "Germinate" ? (
-          <table className="table table-bordered table-striped">
+          <table
+            className={`${styles.table} ${styles.tableBordered} ${styles.tableStriped}`}
+          >
             <thead>
               <tr>
-                <th className="vertical-header">#</th>
-                <th className="vertical-header">CHROM</th>
-                <th className="vertical-header">POS</th>
-                <th className="vertical-header">ID</th>
+                <th className={styles.verticalHeader}>#</th>
+                <th className={styles.verticalHeader}>CHROM</th>
+                <th className={styles.verticalHeader}>POS</th>
+                <th className={styles.verticalHeader}>ID</th>
                 {samples.map((sample) => (
-                  <th className="vertical-header" key={sample}>
+                  <th className={styles.verticalHeader} key={sample}>
                     {sample}
                   </th>
                 ))}
@@ -303,16 +312,20 @@ const GenotypeSearchResultsTable = () => {
           </table>
         ) : null}
       </div>
-      <div className="d-flex">
+      <div className={styles.dFlex}>
         <button
-          className="btn btn-primary mr-1"
+          className={`${styles.btn} ${styles.btnPrimary} ${
+            genotypeCurrentPage === 1 ? styles.btnPrimaryDisabled : ""
+          }`}
           onClick={() => dispatch(setGenotypeCurrentPage(1))}
           disabled={genotypeCurrentPage === 1}
         >
           First
         </button>
         <button
-          className="btn btn-primary mr-1"
+          className={`${styles.btn} ${styles.btnPrimary} ${
+            genotypeCurrentPage === 1 ? styles.btnPrimaryDisabled : ""
+          }`}
           onClick={() =>
             dispatch(
               setGenotypeCurrentPage(Math.max(genotypeCurrentPage - 1, 1))
@@ -325,8 +338,8 @@ const GenotypeSearchResultsTable = () => {
         {getVisiblePages().map((page) => (
           <button
             key={page}
-            className={`btn btn-primary mr-1 ${
-              genotypeCurrentPage === page ? "active" : ""
+            className={`${styles.btn} ${styles.btnPrimary} ${
+              genotypeCurrentPage === page ? styles.btnPrimaryActive : ""
             }`}
             onClick={() => dispatch(setGenotypeCurrentPage(page))}
           >
@@ -334,7 +347,9 @@ const GenotypeSearchResultsTable = () => {
           </button>
         ))}
         <button
-          className="btn btn-primary mr-1"
+          className={`${styles.btn} ${styles.btnPrimary} ${
+            genotypeCurrentPage === totalPages ? styles.btnPrimaryDisabled : ""
+          }`}
           onClick={() =>
             dispatch(
               setGenotypeCurrentPage(
@@ -347,7 +362,9 @@ const GenotypeSearchResultsTable = () => {
           Next
         </button>
         <button
-          className="btn btn-primary mr-1"
+          className={`${styles.btn} ${styles.btnPrimary} ${
+            genotypeCurrentPage === totalPages ? styles.btnPrimaryDisabled : ""
+          }`}
           onClick={() => dispatch(setGenotypeCurrentPage(totalPages))}
           disabled={genotypeCurrentPage === totalPages}
         >
