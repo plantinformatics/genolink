@@ -10,8 +10,8 @@ The CSV file must include the following *headers*:
 
 | accession       | fig              |
 |-----------------|------------------|
-| AGG40824CHIC    | Ascochyta Blight |
-| AGG40824CHIC    | Virus           |
+| AGG 40824 CHIC    | Ascochyta Blight |
+| AGG 40824 CHIC    | Virus           |
 
 Save this file in the `/back/uploads/` folder.
 
