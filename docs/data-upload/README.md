@@ -15,5 +15,5 @@ Both scripts can be executed in two ways:
 ---
 
 ### Quick Links:
-- [Upload Sample ↔ Accession Mapping](./upload-sample-accessions.md)
+- [Upload Sample(GenotypeID) ↔ Accession Mapping](./upload-sample-accessions.md)
 - [Upload Accession ↔ FIG Mapping](./upload-accession-figs.md)
