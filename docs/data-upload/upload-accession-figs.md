@@ -29,6 +29,8 @@ Example:
 node scripts/uploadAccessionFigs.js uploads/accession_figs.csv
 ```
 
+---
+
 ## 3. Upload via Docker
 If you are running Genolink via Docker Compose, use:
 
