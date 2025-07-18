@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import LoadingComponent from "../../LoadingComponent";
 import { useDispatch, useSelector } from "react-redux";
 import { FaCircleXmark } from "react-icons/fa6";
+import styles from "./SearchFilters.module.css";
+
 import {
   setInstituteCheckedBoxes,
   setResetTrigger,
@@ -499,91 +501,48 @@ const SearchFilters = ({ tokenReady }) => {
   return (
     <>
       <div
+        className={styles.mainLayout}
         style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(280px, auto) 1fr",
           gridTemplateRows:
             isLoading || isResetLoading
               ? "auto 1fr 5px 1fr auto"
               : `120px ${genesysHeight}px 5px auto 140px`,
           gridAutoRows: isLoading || isResetLoading ? "none" : "min-content",
-          gap: "0px",
           height: isLoading || isResetLoading ? "100vh" : "150vh",
-          padding: "10px",
         }}
       >
         {/* div1: Genolink Title */}
-        <div
-          style={{
-            gridColumn: "1 / 3",
-            gridRow: "1",
-            background: "green",
-            color: "white",
-            textAlign: "center",
-            padding: "10px",
-            display: "flex",
-            alignItems: "center",
-            flexDirection: "column",
-          }}
-        >
-          <div
-            style={{ display: "flex", alignItems: "center", maxWidth: "100%" }}
-          >
+        <div className={styles.genolinkContainer}>
+          <div className={styles.genolinkSubContainer}>
             <img
               src="/Genolink.png"
               alt="Genolink-logo"
-              style={{
-                marginRight: "10px",
-                verticalAlign: "middle",
-                height: "40px",
-              }}
+              className={styles.genolinkLogo}
             />
-            <h2 style={{ margin: "0", fontSize: "24px", fontWeight: "bold" }}>
-              Genolink
-            </h2>
+            <h2 className={styles.genolinkHeader}>Genolink</h2>
           </div>
 
-          <p
-            style={{
-              margin: "5px 0 0",
-              fontSize: "14px",
-              color: "rgba(255, 255, 255, 0.8)",
-            }}
-          >
+          <p className={styles.dataSourceNote}>
             Powered by{" "}
             <a
               href="https://www.genesys-pgr.org/"
               target="_blank"
               rel="noopener noreferrer"
-              style={{
-                color: "white",
-                textDecoration: "none",
-                fontWeight: "bold",
-              }}
+              className={styles.sourceLink}
               onMouseOver={(e) => (e.target.style.textDecoration = "underline")}
               onMouseOut={(e) => (e.target.style.textDecoration = "none")}
             >
               Genesys-PGR
             </a>
           </p>
-          <p
-            style={{
-              margin: "5px 0 0",
-              fontSize: "14px",
-              color: "rgba(255, 255, 255, 0.8)",
-            }}
-          >
+          <p className={styles.dataSourceNote}>
             Passport data sourced from Genesys-PGR. Use of this service means
             you agree to their{" "}
             <a
               href="https://www.genesys-pgr.org/content/legal/terms"
               target="_blank"
               rel="noopener noreferrer"
-              style={{
-                color: "white",
-                textDecoration: "none",
-                fontWeight: "bold",
-              }}
+              className={styles.sourceLink}
               onMouseOver={(e) => (e.target.style.textDecoration = "underline")}
               onMouseOut={(e) => (e.target.style.textDecoration = "none")}
             >
@@ -594,20 +553,7 @@ const SearchFilters = ({ tokenReady }) => {
         </div>
 
         {/* div3: Genesys Filter */}
-        <div
-          style={{
-            maxWidth: "340px",
-            overflowX: "auto",
-            gridColumn: "1",
-            gridRow: "2 / 5",
-            background: "#50748c00",
-            borderRight: "3px solid gray",
-            padding: "10px",
-            minWidth: "320px",
-            overflow: "auto",
-            height: "100%",
-          }}
-        >
+        <div className={styles.genesysFilterContainer}>
           <h4>Filters</h4>
           {initialRequestSent &&
             (!isLoading && !isLoadingGenotypedAccessions ? (
@@ -615,10 +561,10 @@ const SearchFilters = ({ tokenReady }) => {
             ) : (
               <LoadingComponent />
             ))}
-          <div style={{ display: "flex", marginBottom: "10px" }}>
+          <div className={styles.filterActions}>
             <button
               type="button"
-              className="btn btn-secondary"
+              className={styles.buttonSecondary}
               id="reset-filter-button"
               onClick={handleResetFilter}
             >
@@ -628,7 +574,7 @@ const SearchFilters = ({ tokenReady }) => {
               <select
                 value={filterMode}
                 onChange={(e) => setFilterMode(e.target.value)}
-                style={{ marginLeft: "10px", width: "161px" }}
+                className={styles.filterModeSelect}
               >
                 <option value="Passport Filter">Passport Filter</option>
                 <option value="Accession Filter">Accession Filter</option>
@@ -645,11 +591,11 @@ const SearchFilters = ({ tokenReady }) => {
               Active Filters
             </h5>
             {activeFilters.length > 0 ? (
-              <ul className="active-filters-list">
+              <ul className={styles.activeFiltersList}>
                 {activeFilters.map((filter, index) => (
-                  <li key={index} className="active-filter-item">
-                    <div className="filter-label">{filter.type}:</div>
-                    <div className="filter-value">
+                  <li key={index} className={styles.activeFilterItem}>
+                    <div className={styles.filterLabel}>{filter.type}:</div>
+                    <div className={styles.filterValue}>
                       {Array.isArray(filter.value) &&
                       filter.type === "Accession Numbers" &&
                       filter.value.length > 2
@@ -661,7 +607,7 @@ const SearchFilters = ({ tokenReady }) => {
                         : filter.value}
                     </div>
                     <button
-                      className="remove-filter-button"
+                      className={styles.removeFilterButton}
                       onClick={() => removeFilter(filter)}
                     >
                       <FaCircleXmark color="red" />
@@ -676,21 +622,11 @@ const SearchFilters = ({ tokenReady }) => {
             <>
               <div>
                 <button
-                  className="btn btn-info"
                   onClick={() => setIsDateDrawerOpen(!isDateDrawerOpen)}
-                  style={{
-                    display: "inline-block",
-                    width: "280px",
-                    textAlign: "left",
-                    position: "relative",
-                    border: "2px solid #ebba35",
-                    backgroundColor: "beige",
-                    marginBottom: "5px",
-                    fontWeight: "500",
-                  }}
+                  className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
                 >
                   Date{" "}
-                  <span style={{ float: "right" }}>
+                  <span className={styles.drawerArrow}>
                     {isDateDrawerOpen ? "\u25B2" : "\u25BC"}
                   </span>
                 </button>
@@ -703,23 +639,13 @@ const SearchFilters = ({ tokenReady }) => {
               </div>
               <div>
                 <button
-                  className="btn btn-info"
                   onClick={() =>
                     setIsInstituteDrawerOpen(!isInstituteDrawerOpen)
                   }
-                  style={{
-                    display: "inline-block",
-                    width: "280px",
-                    textAlign: "left",
-                    position: "relative",
-                    border: "2px solid #ebba35",
-                    backgroundColor: "beige",
-                    marginBottom: "5px",
-                    fontWeight: "500",
-                  }}
+                  className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
                 >
                   Holding Institute{" "}
-                  <span style={{ float: "right" }}>
+                  <span className={styles.drawerArrow}>
                     {isInstituteDrawerOpen ? "\u25B2" : "\u25BC"}
                   </span>
                 </button>
@@ -730,34 +656,18 @@ const SearchFilters = ({ tokenReady }) => {
                       type="institueCheckedBoxes"
                     />
                   ) : (
-                    <p
-                      style={{
-                        padding: "0 10px",
-                        color: "gray",
-                        fontStyle: "italic",
-                      }}
-                    >
+                    <p className={styles.unAwailableFilter}>
                       No available filters.
                     </p>
                   ))}
               </div>
               <div>
                 <button
-                  className="btn btn-info"
                   onClick={() => setIsCropDrawerOpen(!isCropDrawerOpen)}
-                  style={{
-                    display: "inline-block",
-                    width: "280px",
-                    textAlign: "left",
-                    position: "relative",
-                    border: "2px solid #ebba35",
-                    backgroundColor: "beige",
-                    marginBottom: "5px",
-                    fontWeight: "500",
-                  }}
+                  className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
                 >
                   Crops{" "}
-                  <span style={{ float: "right" }}>
+                  <span className={styles.drawerArrow}>
                     {isCropDrawerOpen ? "\u25B2" : "\u25BC"}
                   </span>
                 </button>
@@ -768,34 +678,18 @@ const SearchFilters = ({ tokenReady }) => {
                       type="cropCheckedBoxes"
                     />
                   ) : (
-                    <p
-                      style={{
-                        padding: "0 10px",
-                        color: "gray",
-                        fontStyle: "italic",
-                      }}
-                    >
+                    <p className={styles.unAwailableFilter}>
                       No available filters.
                     </p>
                   ))}
               </div>
               <div>
                 <button
-                  className="btn btn-info"
                   onClick={() => setIsTaxonomyDrawerOpen(!isTaxonomyDrawerOpen)}
-                  style={{
-                    display: "inline-block",
-                    width: "280px",
-                    textAlign: "left",
-                    position: "relative",
-                    border: "2px solid #ebba35",
-                    backgroundColor: "beige",
-                    marginBottom: "5px",
-                    fontWeight: "500",
-                  }}
+                  className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
                 >
                   Taxonomy{" "}
-                  <span style={{ float: "right" }}>
+                  <span className={styles.drawerArrow}>
                     {isTaxonomyDrawerOpen ? "\u25B2" : "\u25BC"}
                   </span>
                 </button>
@@ -806,34 +700,18 @@ const SearchFilters = ({ tokenReady }) => {
                       type="taxonomyCheckedBoxes"
                     />
                   ) : (
-                    <p
-                      style={{
-                        padding: "0 10px",
-                        color: "gray",
-                        fontStyle: "italic",
-                      }}
-                    >
+                    <p className={styles.unAwailableFilter}>
                       No available filters.
                     </p>
                   ))}
               </div>
               <div>
                 <button
-                  className="btn btn-info"
                   onClick={() => setIsOriginDrawerOpen(!isOriginDrawerOpen)}
-                  style={{
-                    display: "inline-block",
-                    width: "280px",
-                    textAlign: "left",
-                    position: "relative",
-                    border: "2px solid #ebba35",
-                    backgroundColor: "beige",
-                    marginBottom: "5px",
-                    fontWeight: "500",
-                  }}
+                  className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
                 >
                   Origin Of Material{" "}
-                  <span style={{ float: "right" }}>
+                  <span className={styles.drawerArrow}>
                     {isOriginDrawerOpen ? "\u25B2" : "\u25BC"}
                   </span>
                 </button>
@@ -844,34 +722,18 @@ const SearchFilters = ({ tokenReady }) => {
                       type="originOfMaterialCheckedBoxes"
                     />
                   ) : (
-                    <p
-                      style={{
-                        padding: "0 10px",
-                        color: "gray",
-                        fontStyle: "italic",
-                      }}
-                    >
+                    <p className={styles.unAwailableFilter}>
                       No available filters.
                     </p>
                   ))}
               </div>
               <div>
                 <button
-                  className="btn btn-info"
                   onClick={() => setIsSampStatDrawerOpen(!isSampStatDrawerOpen)}
-                  style={{
-                    display: "inline-block",
-                    width: "280px",
-                    textAlign: "left",
-                    position: "relative",
-                    border: "2px solid #ebba35",
-                    backgroundColor: "beige",
-                    marginBottom: "5px",
-                    fontWeight: "500",
-                  }}
+                  className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
                 >
                   Biological Status Of Accession{" "}
-                  <span style={{ float: "right" }}>
+                  <span className={styles.drawerArrow}>
                     {isSampStatDrawerOpen ? "\u25B2" : "\u25BC"}
                   </span>
                 </button>
@@ -882,38 +744,22 @@ const SearchFilters = ({ tokenReady }) => {
                       type="sampStatCheckedBoxes"
                     />
                   ) : (
-                    <p
-                      style={{
-                        padding: "0 10px",
-                        color: "gray",
-                        fontStyle: "italic",
-                      }}
-                    >
+                    <p className={styles.unAwailableFilter}>
                       No available filters.
                     </p>
                   ))}
               </div>
               <div>
                 <button
-                  className="btn btn-info"
                   onClick={() =>
                     setIsGermplasmStorageDrawerOpen(
                       !isGermplasmStorageDrawerOpen
                     )
                   }
-                  style={{
-                    display: "inline-block",
-                    width: "280px",
-                    textAlign: "left",
-                    position: "relative",
-                    border: "2px solid #ebba35",
-                    backgroundColor: "beige",
-                    marginBottom: "5px",
-                    fontWeight: "500",
-                  }}
+                  className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
                 >
                   Type Of Germplasm Storage{" "}
-                  <span style={{ float: "right" }}>
+                  <span className={styles.drawerArrow}>
                     {isGermplasmStorageDrawerOpen ? "\u25B2" : "\u25BC"}
                   </span>
                 </button>
@@ -924,13 +770,7 @@ const SearchFilters = ({ tokenReady }) => {
                       type="germplasmStorageCheckedBoxes"
                     />
                   ) : (
-                    <p
-                      style={{
-                        padding: "0 10px",
-                        color: "gray",
-                        fontStyle: "italic",
-                      }}
-                    >
+                    <p className={styles.unAwailableFilter}>
                       No available filters.
                     </p>
                   ))}
@@ -938,20 +778,10 @@ const SearchFilters = ({ tokenReady }) => {
               <div>
                 <button
                   onClick={() => setIsFigsDrawerOpen(!isFigsDrawerOpen)}
-                  className="btn btn-info"
-                  style={{
-                    display: "inline-block",
-                    width: "280px",
-                    textAlign: "left",
-                    position: "relative",
-                    border: "2px solid #ebba35",
-                    backgroundColor: "beige",
-                    marginBottom: "5px",
-                    fontWeight: "500",
-                  }}
+                  className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
                 >
                   FIGS set{" "}
-                  <span style={{ float: "right" }}>
+                  <span className={styles.drawerArrow}>
                     {isFigsDrawerOpen ? "\u25B2" : "\u25BC"}
                   </span>
                 </button>
@@ -959,13 +789,7 @@ const SearchFilters = ({ tokenReady }) => {
                   (figs && figs.length > 0 ? (
                     <FigFilter />
                   ) : (
-                    <p
-                      style={{
-                        padding: "0 10px",
-                        color: "gray",
-                        fontStyle: "italic",
-                      }}
-                    >
+                    <p className={styles.unAwailableFilter}>
                       No available filters.
                     </p>
                   ))}
@@ -984,7 +808,7 @@ const SearchFilters = ({ tokenReady }) => {
                 type="checkbox"
                 checked={hasGenotype}
                 onChange={handleChange}
-                style={{ marginRight: "8px" }}
+                className={styles.mR8}
                 disabled={wildSearchValue}
               />
               Check for genotype
@@ -994,38 +818,16 @@ const SearchFilters = ({ tokenReady }) => {
 
         {/* div2: Genesys Result */}
         <div
+          className={styles.genesysResultContainer}
           style={{
-            gridColumn: "2",
-            gridRow: "2",
             backgroundImage: `url(${wheatImage})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            padding: "10px",
-            overflow: "auto",
-            minHeight: "100px",
           }}
         >
           {isLoading || isResetLoading ? (
             <LoadingComponent />
           ) : (
-            <div
-              className="container"
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                height: "100vh",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  margin: "20px",
-                  top: "0",
-                  position: "sticky",
-                  zIndex: 1,
-                }}
-              >
+            <div className={styles.pageLayout}>
+              <div className={styles.filterBar}>
                 {filterMode === "Passport Filter" ? (
                   <input
                     type="text"
@@ -1034,11 +836,7 @@ const SearchFilters = ({ tokenReady }) => {
                       dispatch(setWildSearchValue(e.target.value))
                     }
                     placeholder="Wild Search"
-                    style={{
-                      width: "500px",
-                      padding: "8px",
-                      marginLeft: "250px",
-                    }}
+                    className={styles.wildSearchInput}
                   />
                 ) : filterMode === "Accession Filter" ? (
                   <AccessionFilter />
@@ -1047,38 +845,26 @@ const SearchFilters = ({ tokenReady }) => {
                 )}
                 <button
                   type="button"
-                  className="button-primary"
+                  className={`${styles.buttonPrimary} ${styles.searchButton}`}
                   onClick={() => handleSearch(wildSearchValue)}
-                  style={{
-                    backgroundColor: "#0056b3",
-                    color: "white",
-                    padding: "8px 16px",
-                    border: "none",
-                    cursor: "pointer",
-                    marginLeft: "10px",
-                  }}
                 >
                   {searchButtonName}
                 </button>
               </div>
 
-              <div style={{ flex: "1 1 auto" }}>
+              <div className={styles.searchResultsContainer}>
                 {initialRequestStatus === "pending" && <LoadingComponent />}
 
                 {initialRequestStatus === "error" && !mappingFailed && (
-                  <div style={{ padding: "20px", textAlign: "center" }}>
-                    <div
-                      className="alert alert-danger"
-                      role="alert"
-                      style={{ display: "inline-block", textAlign: "left" }}
-                    >
+                  <div className={styles.alertBox}>
+                    <div role="alert" className={styles.alertMessage}>
                       <strong>Error:</strong> Unable to load data from Genesys.
                       <br />
                       Please check your connection or click the button below.
                       <br />
                       <button
                         onClick={() => window.location.reload()}
-                        className="btn btn-danger mt-2"
+                        className={styles.buttonDanger}
                       >
                         Refresh Page
                       </button>
@@ -1089,12 +875,8 @@ const SearchFilters = ({ tokenReady }) => {
                 {(initialRequestStatus === "success" &&
                   searchResults?.length === 0) ||
                 (mappingFailed && searchResults?.length === 0) ? (
-                  <div style={{ padding: "20px", textAlign: "center" }}>
-                    <div
-                      className="alert alert-warning"
-                      role="alert"
-                      style={{ display: "inline-block", textAlign: "left" }}
-                    >
+                  <div className={styles.noResultWrapper}>
+                    <div className={styles.alertWarning} role="alert">
                       <strong>No data found.</strong> The selected filters
                       returned no results.
                       <br />
@@ -1118,97 +900,58 @@ const SearchFilters = ({ tokenReady }) => {
         </div>
         {/* Horizontal Divider */}
         <div
-          style={{
-            gridColumn: "2",
-            gridRow: "3",
-            background: "gray",
-            height: "3px",
-            cursor: "row-resize",
-          }}
+          className={styles.horizontalDivider}
           onMouseDown={handleHorizontalDrag}
         ></div>
         {/* div4: Genotype Result */}
-        <div
-          style={{
-            gridColumn: "2",
-            gridRow: "4",
-            background: "linear-gradient(to right, #EEF1F2,#F1F3F4, #F3F6F7)",
-            padding: "10px",
-            overflow: "auto",
-            minHeight: "50px",
-          }}
-        >
+        <div className={styles.genotypeResultContainer}>
           <GenotypeExplorer />
         </div>
-        <div
-          style={{
-            gridColumn: "1 / 3",
-            gridRow: "5",
-            background: "green",
-            color: "white",
-            padding: "20px",
-            flexDirection: "column",
-            alignItems: "center",
-            textAlign: "center",
-          }}
-        >
-          <p
-            style={{
-              textAlign: "center",
-              margin: "0 0 10px 0",
-              fontSize: "15px",
-            }}
-          >
+        <div className={styles.footerSection}>
+          <p className={styles.footerDescription}>
             Genolink is a middleware connecting genotype databases with
             Genesys-PGR. Funded by the $30M Australian Grains Genebank
             Partnership, it enhances genetic resource potential for Australian
             grain growers.{" "}
             <a
               href="https://agriculture.vic.gov.au/crops-and-horticulture/the-australian-grains-genebank"
-              style={{ color: "white", textDecoration: "underline" }}
+              className={styles.footerLink}
               target="_blank"
               rel="noopener noreferrer"
             >
               Learn More
             </a>
           </p>
-          <div
-            style={{
-              display: "flex",
-              gap: "20px",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
+          <div className={styles.logoContainer}>
             <img
               src="/agriculture-victoria-logo.png"
               alt="Agriculture-Victoria-logo"
-              style={{ height: "60px" }}
+              className={styles.partnerLogo}
             />
             <img
               src="/Australian-Grains-Genebank-logo.jpg"
               alt="Australian-Grains-Genebank-logo"
-              style={{ height: "60px" }}
+              className={styles.partnerLogo}
             />
             <img
               src="/Genesys-logo.jpg"
               alt="Genesys-logo.jpg"
-              style={{ height: "60px" }}
+              className={styles.partnerLogo}
             />
             <img
               src="/Germinate-logo.png"
               alt="Germinate-logo"
-              style={{ height: "60px" }}
+              className={styles.partnerLogo}
             />
             <img
               src="/Gigwa-logo.png"
               alt="Gigwa-logo"
-              style={{ height: "60px" }}
+              className={styles.partnerLogo}
             />
             <img
               src="/GRDC-logo.jpg"
               alt="GRDC-logo"
-              style={{ height: "60px" }}
+              className={styles.partnerLogo}
             />
           </div>
         </div>
