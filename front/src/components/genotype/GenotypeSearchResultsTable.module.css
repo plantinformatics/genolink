@@ -30,14 +30,12 @@
   overflow-x: auto;
   overflow-y: auto;
   max-height: 800px;
-  padding-right: 21px;
+  position: relative;
 }
 
 .scrollableTable {
-  display: block;
   width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+  border-collapse: collapse;
 }
 
 .scrollableTable thead tr {
