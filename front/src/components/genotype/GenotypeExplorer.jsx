@@ -24,6 +24,7 @@ import {
   genolinkServer,
   REQUIRE_GIGWA_CREDENTIALS,
 } from "../../config/apiConfig";
+import styles from "./GenotypeExplorer.module.css";
 
 const GenotypeExplorer = () => {
   const [genolinkGerminateApi, setGenolinkGerminateApi] = useState(
@@ -883,16 +884,16 @@ const GenotypeExplorer = () => {
   return (
     Array.isArray(searchResults) && (
       <div>
-        <div className="geno-data">
+        <div className={styles.genoData}>
           <h2>Genotype Data</h2>
           <br />
           {isGenomDataLoading && <LoadingComponent />}
           {!isGenomDataLoading && (
             <div>
-              <div className="search-container">
+              <div className={styles.searchContainer}>
                 {platforms.length > 1 && (
                   <select
-                    style={{ width: "1290px" }}
+                    className={styles.platformSelector}
                     onChange={handleOptionChange}
                     value={selectedOption}
                   >
@@ -906,7 +907,7 @@ const GenotypeExplorer = () => {
                 {genomData.length === 0 ? (
                   <button
                     type="button"
-                    className="button-primary"
+                    className={styles.buttonPrimary}
                     onClick={handleSearch}
                   >
                     {isGenomeSearchSubmit ? "Search Genotype" : "Lookup Data"}
@@ -914,7 +915,7 @@ const GenotypeExplorer = () => {
                 ) : (
                   <button
                     type="button"
-                    className="button-primary"
+                    className={styles.buttonPrimary}
                     onClick={handleReset}
                   >
                     Reset
@@ -930,7 +931,7 @@ const GenotypeExplorer = () => {
                       <h5>{server?.replace(/^https?:\/\//, "")}</h5>
                       {REQUIRE_GIGWA_CREDENTIALS && (
                         <>
-                          <div className="access-mode-toggle">
+                          <div className={styles.accessModeToggle}>
                             <label>
                               <input
                                 type="radio"
@@ -957,13 +958,13 @@ const GenotypeExplorer = () => {
 
                           {accessMode[index] === "private" && (
                             <>
-                              <div className="input-group mb-3">
-                                <span className="input-group-addon">
+                              <div className={styles.inputGroup}>
+                                <span className={styles.inputGroupAddon}>
                                   <FontAwesomeIcon icon={faUser} />
                                 </span>
                                 <input
                                   type="text"
-                                  className="form-control"
+                                  className={styles.formControl}
                                   placeholder="Username"
                                   value={usernames[index] || ""}
                                   onChange={(e) =>
@@ -971,13 +972,13 @@ const GenotypeExplorer = () => {
                                   }
                                 />
                               </div>
-                              <div className="input-group mb-3">
-                                <span className="input-group-addon">
+                              <div className={styles.inputGroup}>
+                                <span className={styles.inputGroupAddon}>
                                   <FontAwesomeIcon icon={faLock} />
                                 </span>
                                 <input
                                   type="password"
-                                  className="form-control"
+                                  className={styles.formControl}
                                   placeholder="Password"
                                   value={passwords[index] || ""}
                                   onChange={(e) =>
@@ -1000,15 +1001,7 @@ const GenotypeExplorer = () => {
                   <div>
                     <h3>Search Summary</h3>
                     {selectedGigwaServers.map((server, index) => (
-                      <div
-                        key={server}
-                        style={{
-                          border: "1px solid #ccc",
-                          margin: "8px 0",
-                          padding: "8px",
-                          borderRadius: "4px",
-                        }}
-                      >
+                      <div key={server} className={styles.serverSummaryBox}>
                         <h4>Server: {server?.replace(/^https?:\/\//, "")}</h4>
                         <h5>
                           {numberOfMappedAccessions[index]} of{" "}
@@ -1025,47 +1018,28 @@ const GenotypeExplorer = () => {
                     {!copied ? (
                       <button
                         type="button"
-                        className="btn btn-outline-secondary ml-2"
-                        style={{
-                          marginLeft: "10px",
-                          padding: "5px 10px",
-                          fontSize: "16px",
-                          display: "inline-flex",
-                          alignItems: "center",
-                        }}
+                        className={styles.copySampleButton}
                         onClick={handleCopySampleNames}
                       >
                         <FontAwesomeIcon
                           icon={faCopy}
-                          style={{ marginRight: "5px" }}
+                          className={styles.copyIcon}
                         />
                         Copy Sample-Names
                       </button>
                     ) : (
-                      <span style={{ color: "green", marginLeft: "10px" }}>
-                        Copied!
-                      </span>
+                      <span className={styles.copySuccessText}>Copied!</span>
                     )}
                   </div>
 
                   <br />
-                  <div
-                    style={{
-                      backgroundColor: "beige",
-                      padding: "10px",
-                      borderRadius: "5px",
-                    }}
-                  >
+                  <div className={styles.datasetSelectorContainer}>
                     <h4>Select Dataset:</h4>
                     {datasets &&
                       datasets.map((datasetGroup, groupIndex) => (
                         <fieldset
                           key={groupIndex}
-                          style={{
-                            marginBottom: "10px",
-                            border: "1px solid #ccc",
-                            padding: "10px",
-                          }}
+                          className={styles.datasetGroupFieldset}
                         >
                           <legend>
                             Server:{" "}
@@ -1075,10 +1049,7 @@ const GenotypeExplorer = () => {
                             )}
                           </legend>
                           {datasetGroup.map((dataset) => (
-                            <label
-                              key={dataset}
-                              style={{ display: "block", margin: "5px 0" }}
-                            >
+                            <label key={dataset} className={styles.radioLabel}>
                               <input
                                 type="radio"
                                 name={`dataset-group-${groupIndex}`}
@@ -1105,7 +1076,7 @@ const GenotypeExplorer = () => {
                     <select
                       value={searchType || ""}
                       onChange={(e) => handleSearchTypeChange(e.target.value)}
-                      style={{ backgroundColor: "beige" }}
+                      className={styles.filterTypeSelect}
                     >
                       <option value="" disabled>
                         Filter Type
@@ -1129,12 +1100,10 @@ const GenotypeExplorer = () => {
                           {/* Button to toggle the drawer */}
                           <button
                             onClick={toggleDrawer}
-                            className="select-style-button"
+                            className={styles.selectStyleButton}
                           >
                             Chromosomes{" "}
-                            <span
-                              style={{ float: "right", marginLeft: "6.5px" }}
-                            >
+                            <span className={styles.dropdownArrowRight}>
                               {"\u2304"}
                             </span>
                           </button>
@@ -1144,9 +1113,9 @@ const GenotypeExplorer = () => {
                             <div className="drawer">
                               <div>
                                 {linkageGroups.map((group) => (
-                                  <div key={group} className="form-check">
+                                  <div key={group} className={styles.formCheck}>
                                     <input
-                                      className="form-check-input"
+                                      className={styles.formCheckInput}
                                       type={
                                         selectedOption === "Germinate"
                                           ? "radio"
@@ -1159,7 +1128,7 @@ const GenotypeExplorer = () => {
                                       onChange={() => handleInputChange(group)}
                                     />
                                     <label
-                                      className="form-check-label"
+                                      className={styles.formCheckLabel}
                                       htmlFor={group}
                                     >
                                       {selectedOption === "Germinate"
@@ -1192,10 +1161,10 @@ const GenotypeExplorer = () => {
                     {/* Button to toggle the drawer */}
                     <button
                       onClick={toggleDrawer}
-                      className="select-style-button"
+                      className={styles.selectStyleButton}
                     >
                       Chromosomes{" "}
-                      <span style={{ float: "right", marginLeft: "6.5px" }}>
+                      <span className={styles.dropdownArrowRight}>
                         {"\u2304"}
                       </span>
                     </button>
@@ -1205,9 +1174,9 @@ const GenotypeExplorer = () => {
                       <div className="drawer">
                         <div>
                           {linkageGroups.map((group) => (
-                            <div key={group} className="form-check">
+                            <div key={group} className={styles.formCheck}>
                               <input
-                                className="form-check-input"
+                                className={styles.formCheckInput}
                                 type={
                                   selectedOption === "Germinate"
                                     ? "radio"
@@ -1220,7 +1189,7 @@ const GenotypeExplorer = () => {
                                 onChange={() => handleInputChange(group)}
                               />
                               <label
-                                className="form-check-label"
+                                className={styles.formCheckLabel}
                                 htmlFor={group}
                               >
                                 {selectedOption === "Germinate"
@@ -1271,7 +1240,7 @@ const GenotypeExplorer = () => {
                       </select>
                       <button
                         onClick={handleExportVCF}
-                        style={{ marginLeft: "10px" }}
+                        className={styles.vcfExportButton}
                       >
                         Export VCF
                       </button>
