@@ -481,6 +481,7 @@ POST https://genolink.plantinformatics.io/api/gigwa/brapi/v2/search/variants
         ]
     }
 }
+```
 
 2_ after extracting variantDbIds you can add them to the body of the request to /allelematrix endpoint like:
 
