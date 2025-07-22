@@ -418,3 +418,139 @@ POST https://genolink.plantinformatics.io/api/gigwa/brapi/v2/search/allelematrix
     }
 }
 ``` 
+**Note:** If you want to filter genotype data by specific variants you need to do the following steps:
+1_ fetch the list of variantDbIds by sending a request to the following URL:
+#### Request: 
+```bash 
+POST https://genolink.plantinformatics.io/api/gigwa/brapi/v2/search/variants
+``` 
+#### Request Body: 
+```json 
+{
+    "selectedGigwaServer": "https://gigwa.plantinformatics.io",
+    "start": 1,
+    "end": 70000,
+        "variantSetDbIds": [
+            "AGG_BARLEY§1§240806-Raw-MorexV3"
+        ]
+}
+``` 
+#### Response: 
+```json 
+{
+    "metadata": {
+        "status": [
+            {
+                "message": "Returned variant positions are based on referenceSetDbId AGG_BARLEY§1§0",
+                "messageType": "INFO"
+            }
+        ],
+        "pagination": {
+            "pageSize": 10000,
+            "totalCount": 1,
+            "currentPageToken": "0",
+            "nextPageToken": "1"
+        }
+    },
+    "result": {
+        "data": [
+            {
+                "additionalInfo": {
+                    "AC": 208,
+                    "MAF": 0.00746805,
+                    "qual": 100,
+                    "AN": 27852
+                },
+                "alternateBases": [
+                    "T"
+                ],
+                "end": 61162,
+                "referenceBases": "C",
+                "referenceDbId": "AGG_BARLEY§1§0§chr2H",
+                "referenceName": "chr2H",
+                "referenceSetDbId": "AGG_BARLEY§1§0",
+                "start": 61162,
+                "variantDbId": "AGG_BARLEY§AVRIG01436",
+                "variantNames": [
+                    "AVRIG01436"
+                ],
+                "variantType": "SNP"
+            }
+        ]
+    }
+}
+
+2_ after extracting variantDbIds you can add them to the body of the request to /allelematrix endpoint like:
+#### Request: 
+```bash 
+POST https://genolink.plantinformatics.io/api/gigwa/brapi/v2/search/allelematrix
+``` 
+#### Request Body: 
+```json 
+{
+    "callSetDbIds": [
+        "AGG_BARLEY§13006",
+        "AGG_BARLEY§13007"
+    ],
+    "selectedGigwaServer": "https://gigwa.plantinformatics.io",
+    "variantSetDbIds": [
+        "AGG_BARLEY§1§240806-Raw-MorexV3"
+    ],
+    "variantDbIds": ["AGG_BARLEY§AVRIG01436"]
+}
+``` 
+#### Response: 
+```json 
+{
+    "metadata": {
+        "status": [
+            {}
+        ]
+    },
+    "result": {
+        "callSetDbIds": [
+            "AGG_BARLEY§13006",
+            "AGG_BARLEY§13007"
+        ],
+        "dataMatrices": [
+            {
+                "dataMatrix": [
+                    [
+                        "0",
+                        "0"
+                    ]
+                ],
+                "dataMatrixAbbreviation": "GT",
+                "dataMatrixName": "Genotype",
+                "dataType": "string"
+            }
+        ],
+        "pagination": [
+            {
+                "dimension": "VARIANTS",
+                "page": 0,
+                "pageSize": 1000,
+                "totalCount": 1,
+                "totalPages": 1
+            },
+            {
+                "dimension": "CALLSETS",
+                "page": 0,
+                "pageSize": 10000,
+                "totalCount": 2,
+                "totalPages": 1
+            }
+        ],
+        "sepPhased": "|",
+        "sepUnphased": "/",
+        "unknownString": ".",
+        "variantDbIds": [
+            "AGG_BARLEY§AVRIG01436"
+        ],
+        "variantSetDbIds": [
+            "AGG_BARLEY§1§240806-Raw-MorexV3"
+        ]
+    }
+}
+ ``` 
+
