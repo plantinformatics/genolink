@@ -417,7 +417,9 @@ POST https://genolink.plantinformatics.io/api/gigwa/brapi/v2/search/allelematrix
         ]
     }
 }
-``` 
+```
+---
+
 **Note:** If you want to filter genotype data by specific variants you need to do the following steps:
 
 1_ fetch the list of variantDbIds by sending a request to the following URL:
