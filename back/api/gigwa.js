@@ -141,6 +141,73 @@ router.post("/brapi/v2/search/variantsets", async (req, res) => {
   }
 });
 
+// Return a list of filtered Variants
+///////////////////////////////////////////////////////////////////////////////////////////////////
+router.post("/brapi/v2/search/variants", async (req, res) => {
+  try {
+    const { selectedGigwaServer } = req.body;
+    if (!selectedGigwaServer) {
+      return res
+        .status(400)
+        .json({ error: "Please specify Gigwa server in your payload" });
+    }
+    let token = "";
+    if (req.body.gigwaToken) {
+      token = req.body.gigwaToken;
+    } else {
+      token = await axios.post(
+        `${selectedGigwaServer}/gigwa/rest/gigwa/generateToken`,
+        req.body.username && req.body.password
+          ? { username: req.body.username, password: req.body.password }
+          : undefined,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
+    }
+    const response = await axios.post(
+      `${selectedGigwaServer}/gigwa/rest/brapi/v2/search/variants`,
+      req.body,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    res.send(response.data);
+  } catch (error) {
+    if (error.response) {
+      logger.error(
+        `API Error in /brapi/v2/search/variants: ${
+          error.response.status
+        } - ${JSON.stringify(error.response.data)}`
+      );
+
+      const errorMessage = error.response.data.metadata?.status
+        .map((status) => status.message)
+        .join(", ");
+
+      res.status(error.response.status).send({
+        message: errorMessage,
+        status: error.response.status,
+      });
+    } else if (error.request) {
+      logger.error(
+        "API Error in /brapi/v2/search/variants: No response received"
+      );
+      res.status(500).send("API request failed: No response received");
+    } else {
+      logger.error(`API Error in /brapi/v2/search/variants: ${error.message}`);
+      res.status(500).send("API request failed: " + error.message);
+    }
+  }
+});
+
 // Return a filtered list of Sample objects
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 router.post("/brapi/v2/search/samples", async (req, res) => {
