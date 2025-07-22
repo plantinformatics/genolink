@@ -419,7 +419,9 @@ POST https://genolink.plantinformatics.io/api/gigwa/brapi/v2/search/allelematrix
 }
 ``` 
 **Note:** If you want to filter genotype data by specific variants you need to do the following steps:
+
 1_ fetch the list of variantDbIds by sending a request to the following URL:
+
 #### Request: 
 ```bash 
 POST https://genolink.plantinformatics.io/api/gigwa/brapi/v2/search/variants
@@ -481,6 +483,7 @@ POST https://genolink.plantinformatics.io/api/gigwa/brapi/v2/search/variants
 }
 
 2_ after extracting variantDbIds you can add them to the body of the request to /allelematrix endpoint like:
+
 #### Request: 
 ```bash 
 POST https://genolink.plantinformatics.io/api/gigwa/brapi/v2/search/allelematrix
