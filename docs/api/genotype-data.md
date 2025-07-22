@@ -17,6 +17,7 @@ POST https://genolink.plantinformatics.io/api/gigwa/samplesDatasetInfo
 #### Request Body: 
 ```json 
 {
+    "selectedGigwaServer": "https://gigwa.plantinformatics.io",
     "Samples": [
         "AGG422086BARL2-B00005-8-88",
         "AGG422088BARL2-B00005-9-09"
@@ -56,7 +57,6 @@ POST https://genolink.plantinformatics.io/api/gigwa/samplesDatasetInfo
     }
 ]
  ``` 
-
 
 ### 1.2 Get Genotype Data:
 Once the `callSetDbIds` and `variantSetDbIds` are obtained, send a `POST` request to the `/allelematrix` endpoint to retrieve the genotype data. 
@@ -114,10 +114,137 @@ POST https://genolink.plantinformatics.io/api/gigwa/brapi/v2/search/allelematrix
         ]
     }
 }
+```
+
+## Scenario 2: Users may not know the sample names, only the accession numbers
+If the user knows the specific accession numbers for which they need to retrieve genotype data, the following steps must be followed: 
+
+### 2.1 Get Sample Information: 
+The user needs to send a `POST` request to the `/samplesDatasetInfo` endpoint, providing the accession numbers as an array in the request body. This request will return the `callSetDbIds` and `variantSetDbIds` (datasets that the samples belongs to). 
+#### Request: 
+```bash 
+POST https://genolink.plantinformatics.io/api/gigwa/samplesDatasetInfo 
 ``` 
-## Scenario 2: Users Don’t Know the Sample Names 
+#### Request Body: 
+```json 
+{
+    "selectedGigwaServer": "https://gigwa.plantinformatics.io",
+    "Accessions": [
+        "AGG 422086 BARL",
+        "AGG 422088 BARL"
+    ]
+}
+```
+OR
+```json 
+{
+    "selectedGigwaServer": "https://gigwa.plantinformatics.io",
+    "Accessions": [
+        {
+            "Accession": "AGG 422086 BARL",
+        },
+        {
+            "Accession": "AGG 422088 BARL",
+        }
+    ]
+}
+```
+#### Response: 
+```json 
+[
+    {
+        "sampleName": "AGG422086BARL2-B00005-8-88-1-240806-Raw-MorexV3",
+        "callSetDbId": "AGG_BARLEY§13006",
+        "variantSetDbId": [
+            "AGG_BARLEY§1§240806-Raw-MorexV3"
+        ]
+    },
+    {
+        "sampleName": "AGG422088BARL2-B00005-9-09-1-240806-Raw-MorexV3",
+        "callSetDbId": "AGG_BARLEY§13007",
+        "variantSetDbId": [
+            "AGG_BARLEY§1§240806-Raw-MorexV3"
+        ]
+    },
+    {
+        "sampleName": "AGG422086BARL2-B00005-8-88-2-240806-FilledIn-MorexV3",
+        "callSetDbId": "AGG_BARLEY§26995",
+        "variantSetDbId": [
+            "AGG_BARLEY§2§240806-FilledIn-MorexV3"
+        ]
+    },
+    {
+        "sampleName": "AGG422088BARL2-B00005-9-09-2-240806-FilledIn-MorexV3",
+        "callSetDbId": "AGG_BARLEY§26996",
+        "variantSetDbId": [
+            "AGG_BARLEY§2§240806-FilledIn-MorexV3"
+        ]
+    }
+]
+```
+
+### 2.2 Get Genotype Data:
+Once the `callSetDbIds` and `variantSetDbIds` are obtained, send a `POST` request to the `/allelematrix` endpoint to retrieve the genotype data. 
+#### Request: 
+```bash 
+POST https://genolink.plantinformatics.io/api/gigwa/brapi/v2/search/allelematrix 
+``` 
+#### Request Body: 
+```json 
+{
+    "callSetDbIds": [
+        "AGG_BARLEY§13006",
+        "AGG_BARLEY§13007"
+    ],
+    "selectedGigwaServer": "https://gigwa.plantinformatics.io",
+    "variantSetDbIds": [
+        "AGG_BARLEY§1§240806-Raw-MorexV3"
+    ]
+}
+``` 
+#### Response: 
+```json 
+{
+    "metadata": {
+        "status": [
+            {}
+        ]
+    },
+    "result": {
+        "callSetDbIds": [
+            "AGG_BARLEY§13006",
+            "AGG_BARLEY§13007"
+        ],
+        "dataMatrices": [
+            {
+                "dataMatrix": [
+                    [
+                        "0",
+                        "1"
+                    ],
+                    [
+                        "0",
+                        "0"
+                    ],
+                    [
+                        "0",
+                        "."
+                    ],
+                    [
+                        "1",
+                        "1"
+                    ]
+                ]
+            }
+        ]
+    }
+}
+```
+
+## Scenario 3: Users Don’t Know the Sample Names and Accession Numbers
 If the user does not know the sample names and needs to search for them using filters, follow these steps: 
-### 2.1 Search for Samples: 
+
+### 3.1 Search for Samples: 
 The user must first use the `/passportQuery` endpoint to search for samples using filters like accession, institute, date range, crop, and country of origin. 
 #### Request: 
 ```bash 
@@ -181,7 +308,8 @@ POST https://genolink.plantinformatics.io/api/genesys/passportQuery
 ```bash 
 GET https://genolink.plantinformatics.io/api/genesys/passportFilter/possibleValues 
 ```
-### 2.2 Get Sample Information: 
+
+### 3.2 Get Sample Information: 
 After obtaining the sample names, send a `POST` request to the `/samplesDatasetInfo` endpoint to get the `callSetDbIds` and `variantSetDbIds` for each sample. 
 #### Request: 
 ```bash 
@@ -235,8 +363,9 @@ POST https://genolink.plantinformatics.io/api/gigwa/samplesDatasetInfo
         ]
     }
 ]
-``` 
-### 2.3 Get Genotype Data: 
+```
+
+### 3.3 Get Genotype Data: 
 Finally, after obtaining the necessary dataset information, send a `POST` request to the `/allelematrix` endpoint to retrieve the genotype data. 
 #### Request: 
 ```bash 
