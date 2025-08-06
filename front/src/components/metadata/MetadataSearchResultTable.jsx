@@ -8,6 +8,7 @@ import {
 } from "../../redux/passport/passportActions";
 import { genesysApi } from "../../pages/Home";
 import { genolinkInternalApi } from "../../pages/Home";
+import country2Region from "../../constants/Country2Region.json";
 
 const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
   const searchResults = useSelector((state) => state.passport.searchResults);
@@ -211,6 +212,8 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
               <th scope="col">Biological status of accession</th>
               <th scope="col">Donor Institute</th>
               <th scope="col">Provenance of Material</th>
+              <th scope="col">Region</th>
+              <th scope="col">Sub-Region</th>
               <th scope="col">Acquisition Date</th>
               <th scope="col">DOI</th>
               <th scope="col">Last Updated</th>
@@ -384,6 +387,32 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
                     }}
                   >
                     {item["countryOfOrigin.name"] || ""}
+                  </td>
+                  <td
+                    className="cell"
+                    style={{
+                      overflow: expandedRow === index ? "visible" : "hidden",
+                      whiteSpace: expandedRow === index ? "normal" : "nowrap",
+                    }}
+                  >
+                    {country2Region.find(
+                      (country) =>
+                        country["country-code"] ==
+                        item["countryOfOrigin.codeNum"]
+                    )?.["region"] || ""}
+                  </td>
+                  <td
+                    className="cell"
+                    style={{
+                      overflow: expandedRow === index ? "visible" : "hidden",
+                      whiteSpace: expandedRow === index ? "normal" : "nowrap",
+                    }}
+                  >
+                    {country2Region.find(
+                      (country) =>
+                        country["country-code"] ==
+                        item["countryOfOrigin.codeNum"]
+                    )?.["sub-region"] || ""}
                   </td>
                   <td
                     className="cell"
