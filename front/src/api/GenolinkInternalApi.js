@@ -6,9 +6,19 @@ class GenolinkInternalApi extends BaseApi {
     super(genolinkServer);
   }
 
-  async getAllAccessions() {
+  // async getAllAccessions() {
+  //   try {
+  //     const response = await this.get("/api/internalApi/getAllAccessions");
+  //     return response;
+  //   } catch (error) {
+  //     console.error("Error fetching all accessions:", error);
+  //     throw error;
+  //   }
+  // }
+
+  async getAllGenotypeStatus() {
     try {
-      const response = await this.get("/api/internalApi/getAllAccessions");
+      const response = await this.get("/api/internalApi/getGenotypeStatus");
       return response;
     } catch (error) {
       console.error("Error fetching all accessions:", error);
@@ -28,9 +38,12 @@ class GenolinkInternalApi extends BaseApi {
 
   async genotypeIdMapping(genotypeIds) {
     try {
-      const response = await this.post("/api/internalApi/genotypIdMapping", {
-        genotypeIds,
-      });
+      const response = await this.post(
+        "/api/internalApi/mapGenotypIdToAccession",
+        {
+          genotypeIds,
+        }
+      );
       return response;
     } catch (error) {
       if (
@@ -49,7 +62,7 @@ class GenolinkInternalApi extends BaseApi {
 
   async figMapping(figs) {
     try {
-      const response = await this.post("/api/internalApi/figMapping", {
+      const response = await this.post("/api/internalApi/mapFigToAccession", {
         figs,
       });
       return response;
