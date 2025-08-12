@@ -2,62 +2,84 @@ const express = require("express");
 const router = express.Router();
 const db = require("../models");
 const logger = require("../middlewares/logger");
-const { Parser } = require("json2csv");
+// const { Parser } = require("json2csv");
 
-const accessionMappingHandler = require("../utils/accessionMappingHandler");
-const genotypeIdMappingHandler = require("../utils/genotypeIdMappingHandler");
-const figMappingHandler = require("../utils/figMappingHandler");
+// const accessionMappingHandler = require("../utils/accessionMappingHandler");
+const mapAccessionToGenotypeIdHandler = require("../utils/mapAccessionToGenotypeIdHandler");
+// const genotypeIdMappingHandler = require("../utils/genotypeIdMappingHandler");
+const mapGenotypeIdToAccessionHandler = require("../utils/mapGenotypeIdToAccessionHandler");
+// const figMappingHandler = require("../utils/figMappingHandler");
+const mapFigToAccessionHandler = require("../utils/mapFigToAccessionHandler");
 
-router.post("/accessionMapping", accessionMappingHandler);
+// router.post("/accessionMapping", accessionMappingHandler);
+router.post("/mapAccessionToGenotypeId", mapAccessionToGenotypeIdHandler);
 
-router.post("/genotypIdMapping", genotypeIdMappingHandler);
+// router.post("/genotypIdMapping", genotypeIdMappingHandler);
+router.post("/mapGenotypIdToAccession", mapGenotypeIdToAccessionHandler);
 
-router.post("/figMapping", figMappingHandler);
+// router.post("/figMapping", figMappingHandler);
+router.post("/mapFigToAccession", mapFigToAccessionHandler);
 
-router.get("/getAllAccessionsCsv", async (req, res) => {
+// router.get("/getAllAccessionsCsv", async (req, res) => {
+//   try {
+//     const accessionsWithSamples = await db.SampleAccession.findAll({
+//       attributes: ["Accession", "Sample"],
+//       raw: true,
+//     });
+
+//     if (!accessionsWithSamples || accessionsWithSamples.length === 0) {
+//       return res.status(404).send("No data found.");
+//     }
+
+//     const json2csvParser = new Parser({ fields: ["Accession", "Sample"] });
+//     const csv = json2csvParser.parse(accessionsWithSamples);
+
+//     res.header("Content-Type", "text/csv");
+//     res.attachment("sample_accessions.csv");
+//     res.status(200).send(csv);
+//     logger.info("Exported Sample ↔ Accession data as CSV successfully.");
+//   } catch (error) {
+//     logger.error("Error exporting Sample ↔ Accession CSV:", error);
+//     res.status(500).send({ message: "Internal server error" });
+//   }
+// });
+
+// router.get("/getAllAccessions", async (req, res) => {
+//   try {
+//     const totalAccessions = await db.SampleAccession.count();
+
+//     const accessionsWithSamples = await db.SampleAccession.findAll({
+//       attributes: ["Accession", "Sample"], // Include Sample alongside Accession
+//     });
+
+//     const accessions = accessionsWithSamples.map((sa) => sa.Accession);
+//     const samples = accessionsWithSamples.map((sa) => sa.Sample);
+
+//     res.status(200).send({
+//       genotypedAccessions: accessions,
+//       samples,
+//       totalAccessions,
+//     });
+//     logger.info("Fetched all accessions and samples successfully.");
+//   } catch (error) {
+//     logger.error("Error fetching all accessions and samples:", error);
+//     res.status(500).send({ message: "Internal server error" });
+//   }
+// });
+
+router.get("/getGenotypeStatus", async (req, res) => {
   try {
-    const accessionsWithSamples = await db.SampleAccession.findAll({
-      attributes: ["Accession", "Sample"],
+    const rows = await db.SampleAccession.findAll({
+      attributes: ["Accession", "Sample", "Status"],
       raw: true,
     });
 
-    if (!accessionsWithSamples || accessionsWithSamples.length === 0) {
-      return res.status(404).send("No data found.");
-    }
+    res.status(200).json({ rows });
 
-    const json2csvParser = new Parser({ fields: ["Accession", "Sample"] });
-    const csv = json2csvParser.parse(accessionsWithSamples);
-
-    res.header("Content-Type", "text/csv");
-    res.attachment("sample_accessions.csv");
-    res.status(200).send(csv);
-    logger.info("Exported Sample ↔ Accession data as CSV successfully.");
+    logger.info("Fetched all accessions, samples, and statuses successfully.");
   } catch (error) {
-    logger.error("Error exporting Sample ↔ Accession CSV:", error);
-    res.status(500).send({ message: "Internal server error" });
-  }
-});
-
-router.get("/getAllAccessions", async (req, res) => {
-  try {
-    const totalAccessions = await db.SampleAccession.count();
-
-    const accessionsWithSamples = await db.SampleAccession.findAll({
-      attributes: ["Accession", "Sample"], // Include Sample alongside Accession
-    });
-
-    const accessions = accessionsWithSamples.map((sa) => sa.Accession);
-    const samples = accessionsWithSamples.map((sa) => sa.Sample);
-
-    res.status(200).send({
-      genotypedAccessions: accessions,
-      samples,
-      totalAccessions,
-    });
-    logger.info("Fetched all accessions and samples successfully.");
-  } catch (error) {
-    logger.error("Error fetching all accessions and samples:", error);
-    res.status(500).send({ message: "Internal server error" });
+    logger.error("Error fetching accessions:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
