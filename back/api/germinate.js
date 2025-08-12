@@ -109,9 +109,12 @@ router.post("/brapi/v2/callset/calls", checkCredentials, async (req, res) => {
   try {
     const token = await generateGerminateToken(req);
     const sampleObj = await axios
-      .post(`${config.genolinkServer}/api/internalApi/accessionMapping`, {
-        Accessions: req.body.accession,
-      })
+      .post(
+        `${config.genolinkServer}/api/internalApi/mapAccessionToGenotypeId`,
+        {
+          Accessions: req.body.accession,
+        }
+      )
       .then((response) => response.data);
     const sampleName = sampleObj.Samples.map((obj) => obj.Sample);
     const desiredCallSetDbId = await axios
@@ -150,9 +153,12 @@ router.post(
     try {
       const token = await generateGerminateToken(req);
       const sampleObj = await axios
-        .post(`${config.genolinkServer}/api/internalApi/accessionMapping`, {
-          Accessions: req.body.accession,
-        })
+        .post(
+          `${config.genolinkServer}/api/internalApi/mapAccessionToGenotypeId`,
+          {
+            Accessions: req.body.accession,
+          }
+        )
         .then((response) => response.data);
       const sampleName = sampleObj.Samples.map((obj) => obj.Sample);
       const desiredCallSetDbId = await axios
@@ -197,9 +203,12 @@ router.post(
       const token = await generateGerminateToken(req);
 
       const sampleObj = await axios
-        .post(`${config.genolinkServer}/api/internalApi/accessionMapping`, {
-          Accessions: req.body.accession,
-        })
+        .post(
+          `${config.genolinkServer}/api/internalApi/mapAccessionToGenotypeId`,
+          {
+            Accessions: req.body.accession,
+          }
+        )
         .then((response) => response.data);
       const sampleName = sampleObj.Samples.map((obj) => obj.Sample);
 
@@ -243,9 +252,12 @@ router.post(
     try {
       const token = await generateGerminateToken(req);
       const sampleObj = await axios
-        .post(`${config.genolinkServer}/api/internalApi/accessionMapping`, {
-          Accessions: req.body.accession,
-        })
+        .post(
+          `${config.genolinkServer}/api/internalApi/mapAccessionToGenotypeId`,
+          {
+            Accessions: req.body.accession,
+          }
+        )
         .then((response) => response.data);
       const sampleName = sampleObj.Samples.map((obj) => obj.Sample);
       const desiredCallSetDbId = await axios
@@ -290,9 +302,12 @@ router.post(
       const token = await generateGerminateToken(req);
 
       const sampleObj = await axios
-        .post(`${config.genolinkServer}/api/internalApi/accessionMapping`, {
-          Accessions: req.body.accession,
-        })
+        .post(
+          `${config.genolinkServer}/api/internalApi/mapAccessionToGenotypeId`,
+          {
+            Accessions: req.body.accession,
+          }
+        )
         .then((response) => response.data);
       const sampleName = sampleObj.Samples.map((obj) => obj.Sample);
       const desiredCallSetDbId = await axios
@@ -318,7 +333,9 @@ router.post(
       );
       res.send({ data: response.data, sample: sampleName });
     } catch (error) {
-      logger.error(`API Error in /brapi/v2/callset/calls/mapid/:mapid: ${error.message}`);
+      logger.error(
+        `API Error in /brapi/v2/callset/calls/mapid/:mapid: ${error.message}`
+      );
       res.status(500).send("API request failed: " + error);
     }
   }
@@ -343,7 +360,9 @@ router.post(
       );
       res.send(response.data);
     } catch (error) {
-      logger.error(`API Error in /brapi/v2/maps/:mapid/linkagegroups: ${error.message}`);
+      logger.error(
+        `API Error in /brapi/v2/maps/:mapid/linkagegroups: ${error.message}`
+      );
       res.status(500).send("API request failed: " + error);
     }
   }
@@ -370,14 +389,17 @@ router.post("/brapi/v2/maps", checkCredentials, async (req, res) => {
   }
 });
 
-router.post('/brapi/v2/callsets/chromosomes', async (req, res) => {
+router.post("/brapi/v2/callsets/chromosomes", async (req, res) => {
   try {
     const token = await generateGerminateToken(req);
 
     const sampleObj = await axios
-      .post(`${config.genolinkServer}/api/internalApi/accessionMapping`, {
-        Accessions: req.body.accession,
-      })
+      .post(
+        `${config.genolinkServer}/api/internalApi/mapAccessionToGenotypeId`,
+        {
+          Accessions: req.body.accession,
+        }
+      )
       .then((response) => response.data);
     const sampleName = sampleObj.Samples.map((obj) => obj.Sample);
 
@@ -401,14 +423,13 @@ router.post('/brapi/v2/callsets/chromosomes', async (req, res) => {
         },
       }
     );
-    res.send({ chromosomes: response.data});
+    res.send({ chromosomes: response.data });
   } catch (error) {
     logger.error(
       `API Error in /brapi/v2/callset/chromosomes: ${error.message}`
     );
     res.status(500).send("API request failed: " + error);
   }
-}
-)
+});
 
 module.exports = router;
