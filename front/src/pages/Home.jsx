@@ -19,9 +19,19 @@ const Home = () => {
         setTokenReady(true);
         genesysToken = genesysApi.getToken();
 
-        const accessionResult = await genolinkInternalApi.getAllAccessions();
-        genesysApi.setGenotypedAccessions(accessionResult.genotypedAccessions);
-        genesysApi.setGenotypedSamples(accessionResult.samples);
+        const accessionResult =
+          await genolinkInternalApi.getAllGenotypeStatus();
+        genesysApi.setGenotypeStatus(accessionResult.rows);
+        genesysApi.setGenotypedAccessions(
+          accessionResult.rows
+            .filter((row) => row.Status === "Completed")
+            .map((row) => row.Accession)
+        );
+        genesysApi.setGenotypedSamples(
+          accessionResult.rows
+            .filter((row) => row.Status === "Completed")
+            .map((row) => row.Sample)
+        );
         // await genolinkGigwaApi.getGigwaToken(
         //   "",
         //   ""
