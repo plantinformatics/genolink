@@ -217,18 +217,19 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
               <th scope="col">Acquisition Date</th>
               <th scope="col">DOI</th>
               <th scope="col">Last Updated</th>
-              <th scope="col">Genotype Status</th>
+              <th scope="col">AGG-SP Status</th>
               <th scope="col">GenotypeID</th>
               <th scope="col">FIGS set</th>
             </tr>
           </thead>
           <tbody>
             {searchResults?.map((item, index) => {
-              const status = Array.isArray(genesysApi.genotypeStatus)
-                ? genesysApi.genotypeStatus.find(
+              const status =
+                (Array.isArray(genesysApi.genotypeStatus) &&
+                  genesysApi.genotypeStatus.find(
                     (r) => r.Accession === item.accessionNumber
-                  )?.Status ?? ""
-                : "";
+                  )?.Status) ??
+                (item.accessionNumber.startsWith("AGG") ? "TBC" : "N/A");
               const genotypedIndex = Array.isArray(
                 genesysApi.genotypedAccessions
               )

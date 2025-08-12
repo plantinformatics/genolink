@@ -566,7 +566,7 @@ class GenesysApi extends BaseApi {
           "Acquisition Date": "acquisitionDate",
           DOI: "doi",
           "Last Updated": "lastModifiedDate",
-          "Genotype Status": "status",
+          "AGG-SP Status": "status",
           GenotypeID: "GenotypeID",
           "FIGs Set": "figsSet",
         };
@@ -600,7 +600,8 @@ class GenesysApi extends BaseApi {
             return (
               this.genotypeStatus?.find?.(
                 (r) => r.Accession === item.accessionNumber
-              )?.Status ?? ""
+              )?.Status ??
+              (item.accessionNumber.startsWith("AGG") ? "TBC" : "N/A")
             );
           }
 
