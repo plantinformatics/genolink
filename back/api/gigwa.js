@@ -580,9 +580,12 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
       );
     }
     const samplesObj = await axios
-      .post(`${config.genolinkServer}/api/internalApi/accessionMapping`, {
-        Accessions: accessions,
-      })
+      .post(
+        `${config.genolinkServer}/api/internalApi/mapAccessionToGenotypeId`,
+        {
+          Accessions: accessions,
+        }
+      )
       .then((response) => response.data);
 
     const samples = samplesObj.Samples.map((obj) => obj.Sample || []);
@@ -905,9 +908,12 @@ router.post("/samplesDatasetInfo", async (req, res) => {
 
     if (!samples && accessions.length > 0) {
       samples = await axios
-        .post(`${config.genolinkServer}/api/internalApi/accessionMapping`, {
-          Accessions: accessions,
-        })
+        .post(
+          `${config.genolinkServer}/api/internalApi/mapAccessionToGenotypeId`,
+          {
+            Accessions: accessions,
+          }
+        )
         .then((response) =>
           response.data.Samples.map((obj) => obj.Sample || [])
         );
