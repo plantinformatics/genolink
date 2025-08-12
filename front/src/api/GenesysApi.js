@@ -24,6 +24,15 @@ class GenesysApi extends BaseApi {
     super(genesysServer);
     this.genotypedAccessions = [];
     this.genotypedSamples = [];
+    this.genotypeStatus = [];
+  }
+
+  setGenotypeStatus(genotypeStatus) {
+    this.genotypeStatus = genotypeStatus;
+  }
+
+  getGenotypeStatus() {
+    return this.genotypeStatus;
   }
 
   setGenotypedAccessions(genotypedAccessions) {
@@ -557,7 +566,7 @@ class GenesysApi extends BaseApi {
           "Acquisition Date": "acquisitionDate",
           DOI: "doi",
           "Last Updated": "lastModifiedDate",
-          isGenotyped: "isGenotyped",
+          "Genotype Status": "status",
           GenotypeID: "GenotypeID",
           "FIGs Set": "figsSet",
         };
@@ -587,10 +596,12 @@ class GenesysApi extends BaseApi {
     const rows = data.map((item) => {
       return Object.entries(fieldsMap)
         .map(([_, fieldPath]) => {
-          if (fieldPath === "isGenotyped") {
-            return this.genotypedAccessions.includes(item.accessionNumber)
-              ? "Yes"
-              : "No";
+          if (fieldPath === "status") {
+            return (
+              this.genotypeStatus?.find?.(
+                (r) => r.Accession === item.accessionNumber
+              )?.Status ?? ""
+            );
           }
 
           if (fieldPath === "GenotypeID") {
