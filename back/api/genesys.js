@@ -260,6 +260,16 @@ router.post("/accession/query", async (req, res) => {
       );
     }
 
+    const accToGid = new Map();
+    if (Array.isArray(genotypeIds)) {
+      for (const gid of genotypeIds) {
+        const acc = sampleNameToAccession(gid);
+        if (!acc) continue;
+        if (!accToGid.has(acc)) accToGid.set(acc, []);
+        accToGid.get(acc).push(gid);
+      }
+    }
+
     const queryParams = [];
 
     if (req.query.p) queryParams.push(`p=${req.query.p}`);
@@ -310,7 +320,18 @@ router.post("/accession/query", async (req, res) => {
     };
 
     const response = await sendRequestWithRetry();
-    res.send(response.data);
+    const data = response.data;
+
+    if (Array.isArray(data?.content)) {
+      data.content = data.content.map((row) => {
+        const gids = accToGid.get(row.accessionNumber) || [];
+        return {
+          ...row,
+          genotypeID: gids[0] || "",
+        };
+      });
+    }
+    res.send(data);
   } catch (error) {
     logger.error(`API Error in /accession/query: ${error}`);
     res.status(500).send("API request failed: " + error);
@@ -336,9 +357,12 @@ router.post("/passportQuery", async (req, res) => {
     );
 
     const samplesObj = await axios
-      .post(`${config.genolinkServer}/api/internalApi/accessionMapping`, {
-        Accessions: allAccessionNumbers,
-      })
+      .post(
+        `${config.genolinkServer}/api/internalApi/mapAccessionToGenotypeId`,
+        {
+          Accessions: allAccessionNumbers,
+        }
+      )
       .then((response) => response.data);
 
     res.send(samplesObj);
