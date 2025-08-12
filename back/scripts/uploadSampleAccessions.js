@@ -2,7 +2,6 @@ const fs = require("fs");
 const csvParser = require("csv-parser");
 const db = require("../models");
 
-// Get file path from command line argument
 const csvFilePath = process.argv[2];
 
 if (!csvFilePath) {
@@ -11,14 +10,7 @@ if (!csvFilePath) {
   process.exit(1);
 }
 
-// Utility function to clean unwanted characters
-const cleanText = (text) => {
-  return text
-    ?.replace(/^\uFEFF/, "") // Remove BOM
-    .replace(/[\u200B\u00A0]/g, "") // Remove zero-width & non-breaking spaces
-    .replace(/\s+/g, " ") // Collapse multiple spaces
-    .trim();
-};
+const VALID_STATUSES = ["Completed", "Pending", "Excluded", "TBC"];
 
 const parseCSV = (filePath) => {
   return new Promise((resolve, reject) => {
@@ -26,15 +18,27 @@ const parseCSV = (filePath) => {
     fs.createReadStream(filePath)
       .pipe(csvParser())
       .on("data", (data) => {
-        const record = {
-          Accession: cleanText(data.accession),
-          Sample: cleanText(data.sample),
-        };
-        if (record.Accession && record.Sample) {
-          sampleAccessions.push(record);
-        } else {
-          console.warn("Skipped invalid row:", record);
+        const accession = data.accession?.trim();
+        const sample = data.sample?.trim() || null;
+        const status = data.status?.trim();
+
+        if (!accession) {
+          console.warn("Skipped row with missing accession:", data);
+          return;
         }
+
+        if (!VALID_STATUSES.includes(status)) {
+          console.warn(
+            `Invalid status "${status}" for accession ${accession}. Skipped.`
+          );
+          return;
+        }
+
+        sampleAccessions.push({
+          Accession: accession,
+          Sample: sample,
+          Status: status,
+        });
       })
       .on("end", () => resolve(sampleAccessions))
       .on("error", reject);
@@ -44,7 +48,6 @@ const parseCSV = (filePath) => {
 (async () => {
   try {
     await db.sequelize.authenticate();
-    console.log("DB connected.");
 
     const sampleAccessions = await parseCSV(csvFilePath);
 
