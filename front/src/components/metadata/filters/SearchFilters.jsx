@@ -322,19 +322,27 @@ const SearchFilters = ({ tokenReady }) => {
 
     if (genotypeIds && genotypeIds.length > 0) {
       accessionNums1 = await genolinkInternalApi.genotypeIdMapping(genotypeIds);
-      accessionNums1 = accessionNums1.map((acc) => acc.trim().toUpperCase());
+      accessionNums1 = accessionNums1.map((acc) =>
+        acc.replace(/"/g, "").trim().toUpperCase()
+      );
     }
 
     if (selectedFig) {
       const convertedFig = await genolinkInternalApi.figMapping(selectedFig);
       accessionNums2 = [...convertedFig];
-      accessionNums2 = accessionNums2.map((acc) => acc.trim().toUpperCase());
+      accessionNums2 = accessionNums2.map((acc) =>
+        acc.replace(/"/g, "").trim().toUpperCase()
+      );
     }
 
     let sets = [];
     if (accessionNumbers.length > 0)
       sets.push(
-        new Set(accessionNumbers.map((acc) => acc.trim().toUpperCase()))
+        new Set(
+          accessionNumbers.map((acc) =>
+            acc.replace(/"/g, "").trim().toUpperCase()
+          )
+        )
       );
     if (accessionNums1 && accessionNums1.length > 0)
       sets.push(new Set(accessionNums1));
