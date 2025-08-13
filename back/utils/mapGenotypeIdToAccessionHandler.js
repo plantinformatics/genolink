@@ -5,6 +5,10 @@ const mapGenotypeIdToAccessionHandler = async (req, res) => {
   try {
     const { genotypeIds } = req.body;
 
+    genotypeIds.forEach((val, idx, arr) => {
+      arr[idx] = val.replace(/"/g, "");
+    });
+
     if (!genotypeIds || genotypeIds.length === 0) {
       res.status(400).send({ message: "genotypeId list is required" });
       logger.warn("genotypeId list was empty or not provided.");
