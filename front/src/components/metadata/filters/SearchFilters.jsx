@@ -317,16 +317,42 @@ const SearchFilters = ({ tokenReady }) => {
     setHasGenotype(!hasGenotype);
   };
   const handleSearch = async (userInput = "") => {
-    let accessionNums = [];
-    if (filterMode === "GenotypeId Filter") {
-      if (genotypeIds && genotypeIds.length > 0) {
-        accessionNums = await genolinkInternalApi.genotypeIdMapping(
-          genotypeIds
-        );
-      }
-    } else if (selectedFig) {
+    let accessionNums1;
+    let accessionNums2;
+
+    if (genotypeIds && genotypeIds.length > 0) {
+      accessionNums1 = await genolinkInternalApi.genotypeIdMapping(genotypeIds);
+      accessionNums1 = accessionNums1.map((acc) => acc.trim().toUpperCase());
+    }
+
+    if (selectedFig) {
       const convertedFig = await genolinkInternalApi.figMapping(selectedFig);
-      accessionNums = [...accessionNums, ...convertedFig];
+      accessionNums2 = [...convertedFig];
+      accessionNums2 = accessionNums2.map((acc) => acc.trim().toUpperCase());
+    }
+
+    let sets = [];
+    if (accessionNumbers.length > 0)
+      sets.push(
+        new Set(accessionNumbers.map((acc) => acc.trim().toUpperCase()))
+      );
+    if (accessionNums1 && accessionNums1.length > 0)
+      sets.push(new Set(accessionNums1));
+    if (accessionNums2 && accessionNums2.length > 0)
+      sets.push(new Set(accessionNums2));
+
+    let commonAccessions = [];
+
+    if (sets.length > 0) {
+      commonAccessions = [
+        ...sets.reduce((a, b) => new Set([...a].filter((x) => b.has(x)))),
+      ];
+    }
+
+    if (sets.length === 0) {
+      commonAccessions = [];
+    } else if (commonAccessions.length === 0) {
+      commonAccessions = ["Empty"];
     }
 
     dispatch(setResetTrigger(false));
@@ -337,8 +363,7 @@ const SearchFilters = ({ tokenReady }) => {
 
       _text: userInput || (wildSearchValue && wildSearchValue.trim()),
 
-      accessionNumbers:
-        accessionNums.length > 0 ? accessionNums : accessionNumbers,
+      accessionNumbers: [...commonAccessions],
 
       institute:
         instituteCheckedBoxes.length > 0 ? { code: instituteCheckedBoxes } : [],
