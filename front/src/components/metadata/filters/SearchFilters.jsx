@@ -50,7 +50,7 @@ const SearchFilters = ({ tokenReady }) => {
     useState(false);
   const [isFigsDrawerOpen, setIsFigsDrawerOpen] = useState(false);
   const [filterMode, setFilterMode] = useState("Passport Filter");
-  const [isFilterApplied, setIsFilterApplied] = useState(false);
+  // const [isFilterApplied, setIsFilterApplied] = useState(false);
   const [initialRequestSent, setInitialRequestSent] = useState(false);
   const [initialRequestStatus, setInitialRequestStatus] = useState("pending");
   const [filterBody, setFilterBody] = useState({});
@@ -384,7 +384,7 @@ const SearchFilters = ({ tokenReady }) => {
 
       setFilterCode(filterCode);
       setIsLoading(false);
-      setIsFilterApplied(true);
+      // setIsFilterApplied(true);
 
       const newFilters = [];
       if (userInput) newFilters.push({ type: "Text", value: userInput });
@@ -428,7 +428,7 @@ const SearchFilters = ({ tokenReady }) => {
     } catch (error) {
       console.error("Error applying filter:", error);
       setIsLoading(false);
-      setIsFilterApplied(false);
+      // setIsFilterApplied(false);
     }
   };
   useEffect(() => {
@@ -456,9 +456,9 @@ const SearchFilters = ({ tokenReady }) => {
     }
   }, [resetTrigger]);
 
-  useEffect(() => {
-    setIsFilterApplied(activeFilters.length > 0);
-  }, [activeFilters]);
+  // useEffect(() => {
+  //   setIsFilterApplied(activeFilters.length > 0);
+  // }, [activeFilters]);
 
   const handleResetFilter = async () => {
     setIsResetLoading(true);
@@ -570,17 +570,17 @@ const SearchFilters = ({ tokenReady }) => {
             >
               Reset Filter
             </button>
-            {!isFilterApplied ? (
-              <select
-                value={filterMode}
-                onChange={(e) => setFilterMode(e.target.value)}
-                className={styles.filterModeSelect}
-              >
-                <option value="Passport Filter">Passport Filter</option>
-                <option value="Accession Filter">Accession Filter</option>
-                <option value="GenotypeId Filter">GenotypeId Filter</option>
-              </select>
-            ) : null}
+            {/* {!isFilterApplied ? ( */}
+            <select
+              value={filterMode}
+              onChange={(e) => setFilterMode(e.target.value)}
+              className={styles.filterModeSelect}
+            >
+              <option value="Passport Filter">Passport Filter</option>
+              <option value="Accession Filter">Accession Filter</option>
+              <option value="GenotypeId Filter">GenotypeId Filter</option>
+            </select>
+            {/* ) : null} */}
           </div>
           <div>
             <h5
