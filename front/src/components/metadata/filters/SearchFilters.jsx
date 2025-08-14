@@ -23,6 +23,7 @@ import {
   setSelectedFig,
 } from "../../../redux/passport/passportActions";
 
+import WildSearchFilter from "./WildSearchFilter";
 import MultiSelectFilter from "./MultiSelectFilter";
 import AccessionFilter from "./AccessionFilter";
 import GenotypeIdFilter from "./GenotypeIdFilter";
@@ -862,15 +863,7 @@ const SearchFilters = ({ tokenReady }) => {
             <div className={styles.pageLayout}>
               <div className={styles.filterBar}>
                 {filterMode === "Passport Filter" ? (
-                  <input
-                    type="text"
-                    value={wildSearchValue || ""}
-                    onChange={(e) =>
-                      dispatch(setWildSearchValue(e.target.value))
-                    }
-                    placeholder="Wild Search"
-                    className={styles.wildSearchInput}
-                  />
+                  <WildSearchFilter />
                 ) : filterMode === "Accession Filter" ? (
                   <AccessionFilter />
                 ) : (
@@ -880,6 +873,7 @@ const SearchFilters = ({ tokenReady }) => {
                   type="button"
                   className={`${styles.buttonPrimary} ${styles.searchButton}`}
                   onClick={() => handleSearch(wildSearchValue)}
+                  onMouseDown={() => document.activeElement?.blur()}
                 >
                   {searchButtonName}
                 </button>
