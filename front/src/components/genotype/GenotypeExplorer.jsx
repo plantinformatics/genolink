@@ -312,11 +312,13 @@ const GenotypeExplorer = () => {
     setIsExportGenomDataLoading(true);
     if (!exportServer) {
       alert("Please select a server for export.");
+      setIsExportGenomDataLoading(false);
       return;
     }
     const apiInstance = genolinkGigwaApisRef.current[exportServer];
     if (!apiInstance) {
       alert("API instance for the selected server was not found.");
+      setIsExportGenomDataLoading(false);
       return;
     }
 
