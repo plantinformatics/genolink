@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import GenesysApi from "../api/GenesysApi";
 import SearchFilters from "../components/metadata/filters/SearchFilters";
 import GenolinkGigwaApi from "../api/GenolinkGigwaApi";
@@ -8,42 +8,78 @@ export const genesysApi = new GenesysApi();
 export const genolinkGigwaApi = new GenolinkGigwaApi();
 export const genolinkInternalApi = new GenolinkInternalApi();
 
+const TOKEN_EXPIRES_IN_SECONDS = 259_199;
+const REFRESH_BUFFER_SECONDS = 600; // refresh 10 min early
+
 const Home = () => {
   const [tokenReady, setTokenReady] = useState(false);
-  let genesysToken;
+  const [token, setToken] = useState(null);
+  const refreshTimer = useRef(null);
 
-  useEffect(() => {
-    const initialize = async () => {
+  // schedule a refresh before expiry
+  const scheduleRefresh = (expiresInSec) => {
+    const waitMs = Math.max(
+      1000,
+      (expiresInSec - REFRESH_BUFFER_SECONDS) * 1000
+    );
+    if (refreshTimer.current) clearTimeout(refreshTimer.current);
+    refreshTimer.current = setTimeout(async () => {
       try {
         await genesysApi.fetchAndSetToken();
-        setTokenReady(true);
-        genesysToken = genesysApi.getToken();
+        setToken(genesysApi.getToken()); // re-render + remount child via key
+        scheduleRefresh(TOKEN_EXPIRES_IN_SECONDS);
+      } catch (e) {
+        console.error("Token refresh failed:", e);
+        // fallback: try again in 1 minute
+        refreshTimer.current = setTimeout(async () => {
+          try {
+            await genesysApi.fetchAndSetToken();
+            setToken(genesysApi.getToken());
+            scheduleRefresh(TOKEN_EXPIRES_IN_SECONDS);
+          } catch (err) {
+            console.error("Retry refresh failed:", err);
+          }
+        }, 60 * 1000);
+      }
+    }, waitMs);
+  };
 
-        const accessionResult =
-          await genolinkInternalApi.getAllGenotypeStatus();
-        genesysApi.setGenotypeStatus(accessionResult.rows);
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        await genesysApi.fetchAndSetToken();
+        if (cancelled) return;
+        setToken(genesysApi.getToken());
+
+        const { rows } = await genolinkInternalApi.getAllGenotypeStatus();
+        if (cancelled) return;
+
+        genesysApi.setGenotypeStatus(rows);
         genesysApi.setGenotypedAccessions(
-          accessionResult.rows
-            .filter((row) => row.Status === "Completed")
-            .map((row) => row.Accession)
+          rows.filter((r) => r.Status === "Completed").map((r) => r.Accession)
         );
         genesysApi.setGenotypedSamples(
-          accessionResult.rows
-            .filter((row) => row.Status === "Completed")
-            .map((row) => row.Sample)
+          rows.filter((r) => r.Status === "Completed").map((r) => r.Sample)
         );
-        // await genolinkGigwaApi.getGigwaToken(
-        //   "",
-        //   ""
-        // );
-      } catch (error) {
-        console.error("Error in setting Genesys Token:", error);
-      }
-    };
-    initialize();
-  }, [genesysToken]);
 
-  return <SearchFilters tokenReady={tokenReady} />;
+        setTokenReady(true);
+
+        // schedule refresh ~10 min before expiry
+        scheduleRefresh(TOKEN_EXPIRES_IN_SECONDS);
+      } catch (e) {
+        console.error("Init error:", e);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      if (refreshTimer.current) clearTimeout(refreshTimer.current);
+    };
+  }, []);
+
+  return <SearchFilters key={token || "no-token"} tokenReady={tokenReady} />;
 };
 
 export default Home;
