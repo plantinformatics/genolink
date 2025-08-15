@@ -960,26 +960,6 @@ const SearchFilters = ({ tokenReady }) => {
               alt="Australian-Grains-Genebank-logo"
               className={styles.partnerLogo}
             />
-            <img
-              src="/Genesys-logo.jpg"
-              alt="Genesys-logo.jpg"
-              className={styles.partnerLogo}
-            />
-            <img
-              src="/Germinate-logo.png"
-              alt="Germinate-logo"
-              className={styles.partnerLogo}
-            />
-            <img
-              src="/Gigwa-logo.png"
-              alt="Gigwa-logo"
-              className={styles.partnerLogo}
-            />
-            <img
-              src="/GRDC-logo.jpg"
-              alt="GRDC-logo"
-              className={styles.partnerLogo}
-            />
           </div>
         </div>
       </div>
