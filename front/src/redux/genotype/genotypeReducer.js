@@ -11,7 +11,7 @@ const initialState = {
   selectedSamplesDetails: [],
   genotypeCurrentPage: 1,
   variantList: [],
-  selectedGroups: [],
+  selectedGroups: "",
   isGenomeSearchSubmit: false,
   numberOfGenesysAccessions: null,
   numberOfPresentAccessions: null,

@@ -187,11 +187,7 @@ const GenotypeExplorer = () => {
     checkedAccessionsObject,
   ]);
   const handleInputChange = (groupName) => {
-    const updatedGroups = selectedGroups.includes(groupName)
-      ? selectedGroups.filter((group) => group !== groupName)
-      : [...selectedGroups, groupName];
-
-    dispatch(genotypeActions.setSelectedGroups(updatedGroups));
+    dispatch(genotypeActions.setSelectedGroups(groupName));
   };
 
   const handleUsernameChange = (index, value) => {
@@ -334,7 +330,7 @@ const GenotypeExplorer = () => {
       variantList: variantList,
       selectedSamplesDetails: exportSamples,
       variantPage: genotypeCurrentPage,
-      linkagegroups: selectedGroups.join(";"),
+      linkagegroups: selectedGroups ? selectedGroups : "",
       start: posStart || -1,
       end: posEnd || -1,
     };
@@ -627,7 +623,7 @@ const GenotypeExplorer = () => {
             selectedSamplesDetails: selectedSamplesDetails[index],
             variantList,
             variantPage: page - 1,
-            linkagegroups: selectedGroups.join(";"),
+            linkagegroups: selectedGroups ? selectedGroups : "",
             posStart: posStart || -1,
             posEnd: posEnd || -1,
           });
@@ -649,9 +645,9 @@ const GenotypeExplorer = () => {
                 selectedGigwaServer: selectedGigwaServers[index],
                 callSetDbIds: sampleDbIds[index],
                 variantSetDbIds: selectedVariantSetDbId[index],
-                positionRanges: selectedGroups.map(
-                  (group) => `${group}:${posStart}-${posEnd}`
-                ),
+                positionRanges: selectedGroups
+                  ? [`${selectedGroups}:${posStart}-${posEnd}`]
+                  : [],
                 dataMatrixAbbreviations: ["GT"],
                 pagination: [
                   { dimension: "variants", page: page - 1, pageSize: 1000 },
@@ -1097,51 +1093,21 @@ const GenotypeExplorer = () => {
                           setPosEnd={setPosEnd}
                         />
                         <div>
-                          <h2>Chromosomes</h2>
-
-                          {/* Button to toggle the drawer */}
-                          <button
-                            onClick={toggleDrawer}
-                            className={styles.selectStyleButton}
+                          <select
+                            value={selectedGroups || ""}
+                            onChange={(e) => handleInputChange(e.target.value)}
                           >
-                            Chromosomes{" "}
-                            <span className={styles.dropdownArrowRight}>
-                              {"\u2304"}
-                            </span>
-                          </button>
-
-                          {/* Drawer content */}
-                          {isDrawerOpen && (
-                            <div className="drawer">
-                              <div>
-                                {linkageGroups.map((group) => (
-                                  <div key={group} className={styles.formCheck}>
-                                    <input
-                                      className={styles.formCheckInput}
-                                      type={
-                                        selectedOption === "Germinate"
-                                          ? "radio"
-                                          : "checkbox"
-                                      }
-                                      id={group}
-                                      name="linkageGroup"
-                                      value={group}
-                                      checked={selectedGroups.includes(group)}
-                                      onChange={() => handleInputChange(group)}
-                                    />
-                                    <label
-                                      className={styles.formCheckLabel}
-                                      htmlFor={group}
-                                    >
-                                      {selectedOption === "Germinate"
-                                        ? CHROMConverter(group)
-                                        : group}
-                                    </label>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
+                            <option value="" disabled>
+                              Select a chromosome
+                            </option>
+                            {linkageGroups.map((group) => (
+                              <option key={group} value={group}>
+                                {selectedOption === "Germinate"
+                                  ? CHROMConverter(group)
+                                  : group}
+                              </option>
+                            ))}
+                          </select>
                         </div>
                       </>
                     ) : searchType === "VariantIDs" ? (
@@ -1158,51 +1124,24 @@ const GenotypeExplorer = () => {
                     setPosEnd={setPosEnd}
                   />
                   <div>
-                    <h2>Chromosomes</h2>
-
-                    {/* Button to toggle the drawer */}
-                    <button
-                      onClick={toggleDrawer}
-                      className={styles.selectStyleButton}
+                    <select
+                      id="linkageGroupSelect"
+                      className={styles.formControl}
+                      value={selectedGroups || ""}
+                      onChange={(e) => handleInputChange(e.target.value)}
                     >
-                      Chromosomes{" "}
-                      <span className={styles.dropdownArrowRight}>
-                        {"\u2304"}
-                      </span>
-                    </button>
+                      <option value="" disabled>
+                        Select a chromosome
+                      </option>
 
-                    {/* Drawer content */}
-                    {isDrawerOpen && (
-                      <div className="drawer">
-                        <div>
-                          {linkageGroups.map((group) => (
-                            <div key={group} className={styles.formCheck}>
-                              <input
-                                className={styles.formCheckInput}
-                                type={
-                                  selectedOption === "Germinate"
-                                    ? "radio"
-                                    : "checkbox"
-                                }
-                                id={group}
-                                name="linkageGroup"
-                                value={group}
-                                checked={selectedGroups.includes(group)}
-                                onChange={() => handleInputChange(group)}
-                              />
-                              <label
-                                className={styles.formCheckLabel}
-                                htmlFor={group}
-                              >
-                                {selectedOption === "Germinate"
-                                  ? CHROMConverter(group)
-                                  : group}
-                              </label>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                      {linkageGroups.map((group) => (
+                        <option key={group} value={group}>
+                          {selectedOption === "Germinate"
+                            ? CHROMConverter(group)
+                            : group}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </>
               )}
