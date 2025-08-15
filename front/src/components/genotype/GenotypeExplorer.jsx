@@ -1097,7 +1097,7 @@ const GenotypeExplorer = () => {
                           setPosEnd={setPosEnd}
                         />
                         <div>
-                          <h2>Linkage Groups</h2>
+                          <h2>Chromosomes</h2>
 
                           {/* Button to toggle the drawer */}
                           <button
@@ -1158,7 +1158,7 @@ const GenotypeExplorer = () => {
                     setPosEnd={setPosEnd}
                   />
                   <div>
-                    <h2>Linkage Groups</h2>
+                    <h2>Chromosomes</h2>
 
                     {/* Button to toggle the drawer */}
                     <button
