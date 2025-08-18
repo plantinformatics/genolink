@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const db = require("../models");
 const logger = require("../middlewares/logger");
+const { Op } = require("sequelize");
 // const { Parser } = require("json2csv");
 
 // const accessionMappingHandler = require("../utils/accessionMappingHandler");
@@ -148,6 +149,65 @@ router.post("/getFigsByAccessions", async (req, res) => {
   } catch (error) {
     logger.error("Error fetching figs by accession IDs:", error);
     res.status(500).send({ message: "Internal server error" });
+  }
+});
+
+router.post("/getGenotypeStatusByAccessions", async (req, res) => {
+  try {
+    const { accessions } = req.body ?? {};
+
+    if (!Array.isArray(accessions) || accessions.length === 0) {
+      return res.status(400).json({
+        message: "Body must include a non-empty 'accessions' array.",
+      });
+    }
+
+    const cleaned = [
+      ...new Set(
+        accessions
+          .filter((x) => typeof x === "string")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      ),
+    ];
+
+    if (cleaned.length === 0) {
+      return res.status(400).json({
+        message: "No valid accession strings provided.",
+      });
+    }
+
+    const CHUNK_SIZE = 1000;
+    const chunks = [];
+    for (let i = 0; i < cleaned.length; i += CHUNK_SIZE) {
+      chunks.push(cleaned.slice(i, i + CHUNK_SIZE));
+    }
+
+    const results = [];
+    for (const chunk of chunks) {
+      const rows = await db.SampleAccession.findAll({
+        attributes: ["Accession", "Status"],
+        where: { Accession: { [Op.in]: chunk } },
+        raw: true,
+      });
+      results.push(...rows);
+    }
+
+    const statusByAccession = new Map(
+      results.map((r) => [r.Accession, r.Status])
+    );
+    const rows = cleaned.map((acc) => ({
+      accession: acc,
+      status: statusByAccession.has(acc) ? statusByAccession.get(acc) : null,
+    }));
+
+    res.status(200).json({ rows });
+    logger.info(
+      `Fetched statuses for ${cleaned.length} accessions (found ${results.length}).`
+    );
+  } catch (error) {
+    logger.error("Error fetching genotype statuses by accessions:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
