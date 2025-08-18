@@ -5,6 +5,9 @@ const config = require("../config/appConfig");
 const logger = require("../middlewares/logger");
 const generateGenesysToken = require("../utils/generateGenesysToken");
 const sampleNameToAccession = require("../utils/sampleNameToAccession");
+const country2Region = require("../shared-data/Country2Region.json");
+const { Op } = require("sequelize");
+const db = require("../models");
 
 let cachedToken = null;
 
@@ -277,10 +280,13 @@ router.post("/accession/query", async (req, res) => {
     if (req.query.s) queryParams.push(`s=${req.query.s}`);
     if (req.query.d) queryParams.push(`d=${req.query.d}`);
     if (req.query.f) queryParams.push(`d=${req.query.f}`);
-    if (req.query.select) queryParams.push(`select=${req.query.select}`);
+    if (req.query.select)
+      queryParams.push(
+        `select=accessionNumber, countryOfOrigin.codeNum, ${req.query.select}`
+      );
     else {
       queryParams.push(
-        "select=instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases,donorName, donorCode, sampStat, remarks.remark, countryOfOrigin.codeNum"
+        "select=instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases,donorName, donorCode, sampStat, remarks.remark, countryOfOrigin.codeNum, region, subRegion"
       );
     }
 
@@ -289,6 +295,14 @@ router.post("/accession/query", async (req, res) => {
     if (queryParams.length > 0) {
       url += `?${queryParams.join("&")}`;
     }
+
+    const wantsRegion =
+      !req.query.select || req.query.select.includes("region");
+    const wantsSubRegion =
+      !req.query.select || req.query.select.includes("subRegion");
+    const wantsGenotypeStatus =
+      !!req.query.select && req.query.select.includes("genotypeStatus");
+
     const sendRequestWithRetry = async () => {
       try {
         const token = await getCachedToken();
@@ -322,13 +336,61 @@ router.post("/accession/query", async (req, res) => {
     const response = await sendRequestWithRetry();
     const data = response.data;
 
+    let statusMap = null;
+
+    if (
+      wantsGenotypeStatus &&
+      Array.isArray(data?.content) &&
+      data.content.length
+    ) {
+      const accessions = [
+        ...new Set(
+          data.content
+            .map((r) => r.accessionNumber)
+            .filter((v) => typeof v === "string" && v.trim().length)
+        ),
+      ];
+      if (accessions.length) {
+        const CHUNK = 1000;
+        const results = [];
+        for (let i = 0; i < accessions.length; i += CHUNK) {
+          const chunk = accessions.slice(i, i + CHUNK);
+          const rows = await db.SampleAccession.findAll({
+            attributes: ["Accession", "Status"],
+            where: { Accession: { [Op.in]: chunk } },
+            raw: true,
+          });
+          results.push(...rows);
+        }
+        statusMap = new Map(results.map((r) => [r.Accession, r.Status]));
+      }
+    }
+
     if (Array.isArray(data?.content)) {
       data.content = data.content.map((row) => {
         const gids = accToGid.get(row.accessionNumber) || [];
-        return {
+        const base = {
           ...row,
           genotypeID: gids[0] || "",
         };
+
+        // lookup region mapping
+        const mapping = country2Region.find(
+          (c) => c["country-code"] == row["countryOfOrigin.codeNum"]
+        );
+
+        if (wantsRegion && mapping) {
+          base.region = mapping["region"] || "";
+        }
+        if (wantsSubRegion && mapping) {
+          base.subRegion = mapping["sub-region"] || "";
+        }
+        if (statusMap) {
+          const s = statusMap.get(row.accessionNumber);
+          if (typeof s !== "undefined") base.genotypeStatus = s;
+        }
+
+        return base;
       });
     }
     res.send(data);
