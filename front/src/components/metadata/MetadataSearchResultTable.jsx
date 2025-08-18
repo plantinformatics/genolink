@@ -8,7 +8,7 @@ import {
 } from "../../redux/passport/passportActions";
 import { genesysApi } from "../../pages/Home";
 import { genolinkInternalApi } from "../../pages/Home";
-import country2Region from "../../constants/Country2Region.json";
+import country2Region from "../../../shared-data/Country2Region.json";
 
 const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
   const searchResults = useSelector((state) => state.passport.searchResults);
