@@ -13,6 +13,8 @@ RUN npm install
 # Copy the rest of the frontend application code, excluding node_modules
 COPY front/ .
 
+COPY shared-data ./shared-data
+
 # Set environment variables for the build
 ARG VITE_Genesys_OIDC_CLIENT_ID
 ARG VITE_Genesys_OIDC_CLIENT_SECRET
@@ -43,6 +45,8 @@ RUN npm install
 
 # Copy the rest of the backend application code, excluding node_modules
 COPY back/ .
+
+COPY shared-data ./shared-data
 
 # Copy the frontend build files from the previous stage
 COPY --from=frontend-build /app/dist ./dist
