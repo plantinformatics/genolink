@@ -936,10 +936,11 @@ const SearchFilters = ({ tokenReady }) => {
         </div>
         <div className={styles.footerSection}>
           <p className={styles.footerDescription}>
-            Genolink is a middleware connecting genotype databases with
-            Genesys-PGR. Funded by the $30M Australian Grains Genebank
-            Partnership, it enhances genetic resource potential for Australian
-            grain growers.{" "}
+            The Australian Grains Genebank (AGG) Strategic Partnership is a $30M
+            joint investment between the Victorian State Government and the
+            Grains Research and Development Corporation (GRDC) that aims to
+            unlock the genetic potential of plant genetic resources for the
+            benefit of Australian grain growers.{" "}
             <a
               href="https://agriculture.vic.gov.au/crops-and-horticulture/the-australian-grains-genebank"
               className={styles.footerLink}
