@@ -2826,12 +2826,12 @@
         "alpha-3": "TWN",
         "country-code": "158",
         "iso_3166-2": "ISO 3166-2:TW",
-        "region": null,
-        "sub-region": null,
-        "intermediate-region": null,
-        "region-code": null,
-        "sub-region-code": null,
-        "intermediate-region-code": null
+        "region": "Asia",
+        "sub-region": "Eastern Asia",
+        "intermediate-region": "",
+        "region-code": "142",
+        "sub-region-code": "030",
+        "intermediate-region-code": ""
     },
     {
         "name": "Tajikistan",
@@ -3235,5 +3235,44 @@
         "region-code": "002",
         "sub-region-code": "202",
         "intermediate-region-code": "014"
+    },
+    {
+        "name": "Yugoslavia, Socialist Federal Republic of",
+        "alpha-2": "YU",
+        "alpha-3": "YUG",
+        "country-code": "890",
+        "iso_3166-2": "ISO 3166-2:YU",
+        "region": "Europe",
+        "sub-region": "Southern Europe",
+        "intermediate-region": "",
+        "region-code": "150",
+        "sub-region-code": "039",
+        "intermediate-region-code": ""
+    },
+    {
+        "name": "USSR, Union of Soviet Socialist Republics",
+        "alpha-2": "SU",
+        "alpha-3": "SUN",
+        "country-code": "810",
+        "iso_3166-2": "ISO 3166-2:SU",
+        "region": "Europe",
+        "sub-region": "Eastern Europe",
+        "intermediate-region": "",
+        "region-code": "150",
+        "sub-region-code": "151",
+        "intermediate-region-code": ""
+    },
+    {
+        "name": "Czechoslovakia, Czechoslovak Socialist Republic",
+        "alpha-2": "CS",
+        "alpha-3": "CSK",
+        "country-code": "200",
+        "iso_3166-2": "ISO 3166-2:CS",
+        "region": "Europe",
+        "sub-region": "Eastern Europe",
+        "intermediate-region": "",
+        "region-code": "150",
+        "sub-region-code": "151",
+        "intermediate-region-code": ""
     }
 ]
