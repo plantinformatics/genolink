@@ -279,7 +279,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
                       whiteSpace: expandedRow === index ? "normal" : "nowrap",
                     }}
                   >
-                    {item.instituteCode || ""}
+                    {item.instituteCode || "N/A"}
                   </td>
                   <td
                     className="cell"
@@ -290,7 +290,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
                   >
                     {item["institute.fullName"]
                       ? item["institute.fullName"]
-                      : ""}
+                      : "N/A"}
                   </td>
                   <td
                     className="cell"
@@ -304,7 +304,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      {item.accessionNumber || ""}
+                      {item.accessionNumber || "N/A"}
                     </a>
                   </td>
 
@@ -315,7 +315,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
                       whiteSpace: expandedRow === index ? "normal" : "nowrap",
                     }}
                   >
-                    {item.accessionName || ""}
+                    {item.accessionName || "N/A"}
                   </td>
                   <td
                     className="cell"
@@ -334,7 +334,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
                               }`
                           )
                           .join(", ")
-                      : ""}
+                      : "N/A"}
                   </td>
                   <td
                     className="cell"
@@ -343,7 +343,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
                       whiteSpace: expandedRow === index ? "normal" : "nowrap",
                     }}
                   >
-                    {item["remarks.remark"] || ""}
+                    {item["remarks.remark"] || "N/A"}
                   </td>
                   <td
                     className="cell"
@@ -352,7 +352,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
                       whiteSpace: expandedRow === index ? "normal" : "nowrap",
                     }}
                   >
-                    {item["taxonomy.taxonName"] || ""}
+                    {item["taxonomy.taxonName"] || "N/A"}
                   </td>
                   <td
                     className="cell"
@@ -361,7 +361,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
                       whiteSpace: expandedRow === index ? "normal" : "nowrap",
                     }}
                   >
-                    {item.cropName || ""}
+                    {item.cropName || "N/A"}
                   </td>
                   <td
                     className="cell"
@@ -370,7 +370,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
                       whiteSpace: expandedRow === index ? "normal" : "nowrap",
                     }}
                   >
-                    {getSampleStatus(item.sampStat) || ""}
+                    {getSampleStatus(item.sampStat) || "N/A"}
                   </td>
                   <td
                     className="cell"
@@ -383,7 +383,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
                       ? `${item.donorName}, ${item.donorCode}`
                       : item.donorName
                       ? item.donorName
-                      : item.donorCode || ""}
+                      : item.donorCode || "N/A"}
                   </td>
                   <td
                     className="cell"
@@ -392,20 +392,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
                       whiteSpace: expandedRow === index ? "normal" : "nowrap",
                     }}
                   >
-                    {item["countryOfOrigin.name"] || ""}
-                  </td>
-                  <td
-                    className="cell"
-                    style={{
-                      overflow: expandedRow === index ? "visible" : "hidden",
-                      whiteSpace: expandedRow === index ? "normal" : "nowrap",
-                    }}
-                  >
-                    {country2Region.find(
-                      (country) =>
-                        country["country-code"] ==
-                        item["countryOfOrigin.codeNum"]
-                    )?.["region"] || ""}
+                    {item["countryOfOrigin.name"] || "N/A"}
                   </td>
                   <td
                     className="cell"
@@ -418,7 +405,20 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
                       (country) =>
                         country["country-code"] ==
                         item["countryOfOrigin.codeNum"]
-                    )?.["sub-region"] || ""}
+                    )?.["region"] || "N/A"}
+                  </td>
+                  <td
+                    className="cell"
+                    style={{
+                      overflow: expandedRow === index ? "visible" : "hidden",
+                      whiteSpace: expandedRow === index ? "normal" : "nowrap",
+                    }}
+                  >
+                    {country2Region.find(
+                      (country) =>
+                        country["country-code"] ==
+                        item["countryOfOrigin.codeNum"]
+                    )?.["sub-region"] || "N/A"}
                   </td>
                   <td
                     className="cell"
@@ -436,7 +436,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
                       whiteSpace: expandedRow === index ? "normal" : "nowrap",
                     }}
                   >
-                    {item.doi || ""}
+                    {item.doi || "N/A"}
                   </td>
                   <td
                     className="cell"
@@ -445,7 +445,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
                       whiteSpace: expandedRow === index ? "normal" : "nowrap",
                     }}
                   >
-                    {item.lastModifiedDate || ""}
+                    {item.lastModifiedDate || "N/A"}
                   </td>
                   <td
                     className="cell"
@@ -475,7 +475,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
                     {figMapping[item.accessionNumber] &&
                     figMapping[item.accessionNumber].length > 0
                       ? figMapping[item.accessionNumber].join(", ")
-                      : ""}
+                      : "N/A"}
                   </td>
                 </tr>
               );
