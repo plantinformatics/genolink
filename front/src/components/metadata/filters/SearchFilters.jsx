@@ -961,6 +961,17 @@ const SearchFilters = ({ tokenReady }) => {
               alt="Australian-Grains-Genebank-logo"
               className={styles.partnerLogo}
             />
+            <a
+              href="https://grdc.com.au"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                src="/GRDC-logo.jpg"
+                alt="GRDC-logo"
+                className={styles.partnerLogo}
+              />
+            </a>
           </div>
         </div>
       </div>
