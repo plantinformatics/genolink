@@ -209,6 +209,8 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
               <th scope="col">Remarks</th>
               <th scope="col">Taxonomy</th>
               <th scope="col">Crop Name</th>
+              <th scope="col">Genus</th>
+              <th scope="col">Species</th>
               <th scope="col">Biological status of accession</th>
               <th scope="col">Donor Institute</th>
               <th scope="col">Provenance of Material</th>
@@ -362,6 +364,24 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
                     }}
                   >
                     {item.cropName || "N/A"}
+                  </td>
+                  <td
+                    className="cell"
+                    style={{
+                      overflow: expandedRow === index ? "visible" : "hidden",
+                      whiteSpace: expandedRow === index ? "normal" : "nowrap",
+                    }}
+                  >
+                    {item["taxonomy.genus"] || "N/A"}
+                  </td>
+                  <td
+                    className="cell"
+                    style={{
+                      overflow: expandedRow === index ? "visible" : "hidden",
+                      whiteSpace: expandedRow === index ? "normal" : "nowrap",
+                    }}
+                  >
+                    {item["taxonomy.species"] || "N/A"}
                   </td>
                   <td
                     className="cell"
