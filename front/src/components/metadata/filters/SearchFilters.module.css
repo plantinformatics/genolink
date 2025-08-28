@@ -120,10 +120,6 @@
   height: 100%;
 }
 
-.drawerArrow {
-  float: right;
-}
-
 .fileInput {
   width: 210px;
   margin-left: 5px;
@@ -259,15 +255,33 @@
   margin-left: 10px;
 }
 
+.drawerContent {
+  display: none; /* hidden by default */
+  margin-top: 5px;
+}
+
+.drawer.open .drawerContent {
+  display: block; /* visible when parent has .open */
+}
+
 .passportFilterDrawers {
   display: inline-block;
   width: 280px;
   text-align: left;
-  position: relative;
   border: 2px solid #ebba35;
   background-color: beige;
   margin-bottom: 5px;
   font-weight: 500;
+  cursor: pointer;
+}
+
+.drawerArrow::after {
+  content: "▼";
+  float: right;
+}
+
+.drawer.open .drawerArrow::after {
+  content: "▲";
 }
 
 .unAwailableFilter {

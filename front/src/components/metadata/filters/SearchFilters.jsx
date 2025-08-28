@@ -41,15 +41,6 @@ const SearchFilters = ({ tokenReady }) => {
   );
   const [isResetLoading, setIsResetLoading] = useState(false);
   const [filterCode, setFilterCode] = useState(null);
-  const [isDateDrawerOpen, setIsDateDrawerOpen] = useState(false);
-  const [isInstituteDrawerOpen, setIsInstituteDrawerOpen] = useState(false);
-  const [isCropDrawerOpen, setIsCropDrawerOpen] = useState(false);
-  const [isTaxonomyDrawerOpen, setIsTaxonomyDrawerOpen] = useState(false);
-  const [isOriginDrawerOpen, setIsOriginDrawerOpen] = useState(false);
-  const [isSampStatDrawerOpen, setIsSampStatDrawerOpen] = useState(false);
-  const [isGermplasmStorageDrawerOpen, setIsGermplasmStorageDrawerOpen] =
-    useState(false);
-  const [isFigsDrawerOpen, setIsFigsDrawerOpen] = useState(false);
   const [filterMode, setFilterMode] = useState("Passport Filter");
   // const [isFilterApplied, setIsFilterApplied] = useState(false);
   const [initialRequestSent, setInitialRequestSent] = useState(false);
@@ -478,14 +469,6 @@ const SearchFilters = ({ tokenReady }) => {
       dispatch(setOriginOfMaterialCheckedBoxes([]));
       dispatch(setSampStatCheckedBoxes([]));
       dispatch(setGermplasmStorageCheckedBoxes([]));
-      setIsCropDrawerOpen(false);
-      setIsDateDrawerOpen(false);
-      setIsInstituteDrawerOpen(false);
-      setIsOriginDrawerOpen(false);
-      setIsTaxonomyDrawerOpen(false);
-      setIsSampStatDrawerOpen(false);
-      setIsGermplasmStorageDrawerOpen(false);
-      setIsFigsDrawerOpen(false);
       dispatch(setCheckedAccessions({}));
     }
   }, [resetTrigger]);
@@ -654,37 +637,34 @@ const SearchFilters = ({ tokenReady }) => {
 
           {filterMode === "Passport Filter" && (
             <>
-              <div>
+              <div className={styles.drawer}>
                 <button
-                  onClick={() => setIsDateDrawerOpen(!isDateDrawerOpen)}
                   className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
+                  onClick={(e) => {
+                    // toggle a CSS class on the parent
+                    e.currentTarget.parentElement.classList.toggle(styles.open);
+                  }}
                 >
-                  Date{" "}
-                  <span className={styles.drawerArrow}>
-                    {isDateDrawerOpen ? "\u25B2" : "\u25BC"}
-                  </span>
+                  Date <span className={styles.drawerArrow}></span>
                 </button>
-                {isDateDrawerOpen && (
-                  <>
-                    <DateRangeFilter type="start" />
-                    <DateRangeFilter type="end" />
-                  </>
-                )}
+
+                <div className={styles.drawerContent}>
+                  <DateRangeFilter type="start" />
+                  <DateRangeFilter type="end" />
+                </div>
               </div>
-              <div>
+              <div className={styles.drawer}>
                 <button
-                  onClick={() =>
-                    setIsInstituteDrawerOpen(!isInstituteDrawerOpen)
-                  }
                   className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
+                  onClick={(e) => {
+                    e.currentTarget.parentElement.classList.toggle(styles.open);
+                  }}
                 >
-                  Holding Institute{" "}
-                  <span className={styles.drawerArrow}>
-                    {isInstituteDrawerOpen ? "\u25B2" : "\u25BC"}
-                  </span>
+                  Holding Institute <span className={styles.drawerArrow}></span>
                 </button>
-                {isInstituteDrawerOpen &&
-                  (instituteCode && instituteCode.length > 0 ? (
+
+                <div className={styles.drawerContent}>
+                  {instituteCode && instituteCode.length > 0 ? (
                     <MultiSelectFilter
                       options={instituteCode}
                       type="institueCheckedBoxes"
@@ -693,20 +673,21 @@ const SearchFilters = ({ tokenReady }) => {
                     <p className={styles.unAwailableFilter}>
                       No available filters.
                     </p>
-                  ))}
+                  )}
+                </div>
               </div>
-              <div>
+              <div className={styles.drawer}>
                 <button
-                  onClick={() => setIsCropDrawerOpen(!isCropDrawerOpen)}
                   className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
+                  onClick={(e) => {
+                    e.currentTarget.parentElement.classList.toggle(styles.open);
+                  }}
                 >
-                  Crops{" "}
-                  <span className={styles.drawerArrow}>
-                    {isCropDrawerOpen ? "\u25B2" : "\u25BC"}
-                  </span>
+                  Crops <span className={styles.drawerArrow}></span>
                 </button>
-                {isCropDrawerOpen &&
-                  (cropList && cropList.length > 0 ? (
+
+                <div className={styles.drawerContent}>
+                  {cropList && cropList.length > 0 ? (
                     <MultiSelectFilter
                       options={cropList}
                       type="cropCheckedBoxes"
@@ -715,20 +696,21 @@ const SearchFilters = ({ tokenReady }) => {
                     <p className={styles.unAwailableFilter}>
                       No available filters.
                     </p>
-                  ))}
+                  )}
+                </div>
               </div>
-              <div>
+              <div className={styles.drawer}>
                 <button
-                  onClick={() => setIsTaxonomyDrawerOpen(!isTaxonomyDrawerOpen)}
                   className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
+                  onClick={(e) => {
+                    e.currentTarget.parentElement.classList.toggle(styles.open);
+                  }}
                 >
-                  Taxonomy{" "}
-                  <span className={styles.drawerArrow}>
-                    {isTaxonomyDrawerOpen ? "\u25B2" : "\u25BC"}
-                  </span>
+                  Taxonomy <span className={styles.drawerArrow}></span>
                 </button>
-                {isTaxonomyDrawerOpen &&
-                  (taxonomyList && taxonomyList.length > 0 ? (
+
+                <div className={styles.drawerContent}>
+                  {taxonomyList && taxonomyList.length > 0 ? (
                     <MultiSelectFilter
                       options={taxonomyList}
                       type="taxonomyCheckedBoxes"
@@ -737,20 +719,22 @@ const SearchFilters = ({ tokenReady }) => {
                     <p className={styles.unAwailableFilter}>
                       No available filters.
                     </p>
-                  ))}
+                  )}
+                </div>
               </div>
-              <div>
+              <div className={styles.drawer}>
                 <button
-                  onClick={() => setIsOriginDrawerOpen(!isOriginDrawerOpen)}
                   className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
+                  onClick={(e) => {
+                    e.currentTarget.parentElement.classList.toggle(styles.open);
+                  }}
                 >
                   Origin Of Material{" "}
-                  <span className={styles.drawerArrow}>
-                    {isOriginDrawerOpen ? "\u25B2" : "\u25BC"}
-                  </span>
+                  <span className={styles.drawerArrow}></span>
                 </button>
-                {isOriginDrawerOpen &&
-                  (originOfMaterialList && originOfMaterialList.length > 0 ? (
+
+                <div className={styles.drawerContent}>
+                  {originOfMaterialList && originOfMaterialList.length > 0 ? (
                     <MultiSelectFilter
                       options={originOfMaterialList}
                       type="originOfMaterialCheckedBoxes"
@@ -759,20 +743,22 @@ const SearchFilters = ({ tokenReady }) => {
                     <p className={styles.unAwailableFilter}>
                       No available filters.
                     </p>
-                  ))}
+                  )}
+                </div>
               </div>
-              <div>
+              <div className={styles.drawer}>
                 <button
-                  onClick={() => setIsSampStatDrawerOpen(!isSampStatDrawerOpen)}
                   className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
+                  onClick={(e) => {
+                    e.currentTarget.parentElement.classList.toggle(styles.open);
+                  }}
                 >
                   Biological Status Of Accession{" "}
-                  <span className={styles.drawerArrow}>
-                    {isSampStatDrawerOpen ? "\u25B2" : "\u25BC"}
-                  </span>
+                  <span className={styles.drawerArrow}></span>
                 </button>
-                {isSampStatDrawerOpen &&
-                  (sampStatList && sampStatList.length > 0 ? (
+
+                <div className={styles.drawerContent}>
+                  {sampStatList && sampStatList.length > 0 ? (
                     <MultiSelectFilter
                       options={sampStatList}
                       type="sampStatCheckedBoxes"
@@ -781,24 +767,22 @@ const SearchFilters = ({ tokenReady }) => {
                     <p className={styles.unAwailableFilter}>
                       No available filters.
                     </p>
-                  ))}
+                  )}
+                </div>
               </div>
-              <div>
+              <div className={styles.drawer}>
                 <button
-                  onClick={() =>
-                    setIsGermplasmStorageDrawerOpen(
-                      !isGermplasmStorageDrawerOpen
-                    )
-                  }
                   className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
+                  onClick={(e) => {
+                    e.currentTarget.parentElement.classList.toggle(styles.open);
+                  }}
                 >
                   Type Of Germplasm Storage{" "}
-                  <span className={styles.drawerArrow}>
-                    {isGermplasmStorageDrawerOpen ? "\u25B2" : "\u25BC"}
-                  </span>
+                  <span className={styles.drawerArrow}></span>
                 </button>
-                {isGermplasmStorageDrawerOpen &&
-                  (germplasmStorageList && germplasmStorageList.length > 0 ? (
+
+                <div className={styles.drawerContent}>
+                  {germplasmStorageList && germplasmStorageList.length > 0 ? (
                     <MultiSelectFilter
                       options={germplasmStorageList}
                       type="germplasmStorageCheckedBoxes"
@@ -807,26 +791,28 @@ const SearchFilters = ({ tokenReady }) => {
                     <p className={styles.unAwailableFilter}>
                       No available filters.
                     </p>
-                  ))}
+                  )}
+                </div>
               </div>
-              <div>
+              <div className={styles.drawer}>
                 <button
-                  onClick={() => setIsFigsDrawerOpen(!isFigsDrawerOpen)}
                   className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
+                  onClick={(e) => {
+                    e.currentTarget.parentElement.classList.toggle(styles.open);
+                  }}
                 >
-                  FIGS set{" "}
-                  <span className={styles.drawerArrow}>
-                    {isFigsDrawerOpen ? "\u25B2" : "\u25BC"}
-                  </span>
+                  FIGS set <span className={styles.drawerArrow}></span>
                 </button>
-                {isFigsDrawerOpen &&
-                  (figs && figs.length > 0 ? (
+
+                <div className={styles.drawerContent}>
+                  {figs && figs.length > 0 ? (
                     <FigFilter />
                   ) : (
                     <p className={styles.unAwailableFilter}>
                       No available filters.
                     </p>
-                  ))}
+                  )}
+                </div>
               </div>
             </>
           )}
