@@ -19,8 +19,36 @@ const WildSearchFilter = () => {
   };
 
   const handleBlur = () => {
-    const v = (inputValue || "").trim();
-    if (v !== (wildSearchValue || "")) dispatch(setWildSearchValue(v));
+    const raw = (inputValue || "").trim();
+
+    if (!raw) {
+      if ((wildSearchValue || "") !== "") {
+        dispatch(setWildSearchValue(""));
+      }
+      return;
+    }
+
+    // Split on commas that are OUTSIDE quotes
+    const hasCommaOutsideQuotes = /,(?=(?:[^"]*"[^"]*")*[^"]*$)/.test(raw);
+    if (!hasCommaOutsideQuotes) {
+      // No comma to normalize → keep exactly what the user typed
+      if (raw !== (wildSearchValue || "")) {
+        dispatch(setWildSearchValue(raw));
+      }
+      return;
+    }
+
+    // Actually split on commas outside quotes
+    const parts = raw.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
+
+    const normalized = parts
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .join(" | ");
+
+    if (normalized !== (wildSearchValue || "")) {
+      dispatch(setWildSearchValue(normalized));
+    }
   };
 
   return (
