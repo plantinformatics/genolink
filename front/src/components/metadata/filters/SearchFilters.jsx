@@ -3,6 +3,7 @@ import LoadingComponent from "../../LoadingComponent";
 import { useDispatch, useSelector } from "react-redux";
 import { FaCircleXmark } from "react-icons/fa6";
 import styles from "./SearchFilters.module.css";
+import store from "../../../redux/store";
 
 import {
   setInstituteCheckedBoxes,
@@ -59,26 +60,8 @@ const SearchFilters = ({ tokenReady }) => {
   );
 
   const activeFilters = useSelector((state) => state.passport.activeFilters);
-  const instituteCheckedBoxes = useSelector(
-    (state) => state.passport.instituteCheckedBoxes
-  );
   const wildSearchValue = useSelector(
     (state) => state.passport.wildSearchValue
-  );
-  const cropCheckedBoxes = useSelector(
-    (state) => state.passport.cropCheckedBoxes
-  );
-  const taxonomyCheckedBoxes = useSelector(
-    (state) => state.passport.taxonomyCheckedBoxes
-  );
-  const originOfMaterialCheckedBoxes = useSelector(
-    (state) => state.passport.originOfMaterialCheckedBoxes
-  );
-  const sampStatCheckedBoxes = useSelector(
-    (state) => state.passport.sampStatCheckedBoxes
-  );
-  const germplasmStorageCheckedBoxes = useSelector(
-    (state) => state.passport.germplasmStorageCheckedBoxes
   );
   const instituteCode = useSelector((state) => state.passport.instituteCode);
 
@@ -309,6 +292,16 @@ const SearchFilters = ({ tokenReady }) => {
     setHasGenotype(!hasGenotype);
   };
   const handleSearch = async (userInput = "") => {
+    const state = store.getState();
+    const {
+      instituteCheckedBoxes,
+      cropCheckedBoxes,
+      taxonomyCheckedBoxes,
+      originOfMaterialCheckedBoxes,
+      sampStatCheckedBoxes,
+      germplasmStorageCheckedBoxes,
+    } = state.passport;
+
     let accessionNums1;
     let accessionNums2;
 
