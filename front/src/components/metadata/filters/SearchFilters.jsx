@@ -71,7 +71,6 @@ const SearchFilters = ({ tokenReady }) => {
   );
   const genotypeIds = useSelector((state) => state.passport.genotypeIds);
   const figs = useSelector((state) => state.passport.figs);
-  const selectedFig = useSelector((state) => state.passport.selectedFig);
   const creationStartDate = useSelector(
     (state) => state.passport.creationStartDate
   );
@@ -300,6 +299,7 @@ const SearchFilters = ({ tokenReady }) => {
       originOfMaterialCheckedBoxes,
       sampStatCheckedBoxes,
       germplasmStorageCheckedBoxes,
+      selectedFig,
     } = state.passport;
 
     let accessionNums1;
