@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import LoadingComponent from "../../LoadingComponent";
 import { useDispatch, useSelector } from "react-redux";
 import { FaCircleXmark } from "react-icons/fa6";
@@ -37,9 +37,11 @@ import { genolinkInternalApi } from "../../../pages/Home";
 
 const SearchFilters = ({ tokenReady }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [genesysHeight, setGenesysHeight] = useState(
-    () => window.innerHeight * 0.6
-  );
+  // const [genesysHeight, setGenesysHeight] = useState(
+  //   () => window.innerHeight * 0.6
+  // );
+  const layoutRef = useRef(null);
+  const heightRef = useRef(window.innerHeight * 0.6);
   const [isResetLoading, setIsResetLoading] = useState(false);
   const [filterCode, setFilterCode] = useState(null);
   const [filterMode, setFilterMode] = useState("Passport Filter");
@@ -60,9 +62,11 @@ const SearchFilters = ({ tokenReady }) => {
   );
 
   const activeFilters = useSelector((state) => state.passport.activeFilters);
+
   const wildSearchValue = useSelector(
     (state) => state.passport.wildSearchValue
   );
+
   const instituteCode = useSelector((state) => state.passport.instituteCode);
 
   const resetTrigger = useSelector((state) => state.passport.resetTrigger);
@@ -90,6 +94,13 @@ const SearchFilters = ({ tokenReady }) => {
 
   const wheatImage = "/Wheat.PNG";
 
+  const setLayoutHeight = (px) => {
+    heightRef.current = px;
+    if (layoutRef.current) {
+      layoutRef.current.style.gridTemplateRows = `120px ${px}px 5px auto 140px`;
+    }
+  };
+
   const withRetryOn401 = async (fn, delay = 500) => {
     try {
       return await fn();
@@ -102,6 +113,12 @@ const SearchFilters = ({ tokenReady }) => {
       throw error;
     }
   };
+
+  useEffect(() => {
+    if (!isLoading && !isResetLoading) {
+      setLayoutHeight(heightRef.current);
+    }
+  }, [isLoading, isResetLoading]);
 
   useEffect(() => {
     if (activeFilters.length > 0 && searchButtonName !== "Update Search") {
@@ -477,7 +494,7 @@ const SearchFilters = ({ tokenReady }) => {
       const filterCode = await genesysApi.resetFilter(dispatch);
       setFilterCode(filterCode);
       setIsResetLoading(false);
-      setGenesysHeight(window.innerHeight * 0.66);
+      setLayoutHeight(window.innerHeight * 0.66);
       dispatch(setActiveFilters([]));
       dispatch(setResetTrigger(true));
       dispatch(setWildSearchValue(""));
@@ -496,7 +513,7 @@ const SearchFilters = ({ tokenReady }) => {
     const onMouseMove = (moveEvent) => {
       const delta = moveEvent.clientY - startY;
       const newTopHeight = Math.max(100, startTopHeight + delta);
-      setGenesysHeight(newTopHeight);
+      setLayoutHeight(newTopHeight);
     };
 
     const onMouseUp = () => {
@@ -511,12 +528,11 @@ const SearchFilters = ({ tokenReady }) => {
   return (
     <>
       <div
+        ref={layoutRef}
         className={styles.mainLayout}
         style={{
           gridTemplateRows:
-            isLoading || isResetLoading
-              ? "auto 1fr 5px 1fr auto"
-              : `120px ${genesysHeight}px 5px auto 140px`,
+            isLoading || isResetLoading ? "auto 1fr 5px 1fr auto" : undefined,
           gridAutoRows: isLoading || isResetLoading ? "none" : "min-content",
           height: isLoading || isResetLoading ? "100vh" : "150vh",
         }}
