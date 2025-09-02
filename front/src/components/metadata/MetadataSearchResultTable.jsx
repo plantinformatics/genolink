@@ -1,6 +1,14 @@
-import { useState, useEffect } from "react";
+import {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useTransition,
+} from "react";
+
 import "../../tableStyles.css";
 import { useSelector, useDispatch } from "react-redux";
+import ResultRow from "./ResultRow";
 import LoadingComponent from "../LoadingComponent";
 import {
   setCheckedAccessions,
@@ -9,6 +17,46 @@ import {
 import { genesysApi } from "../../pages/Home";
 import { genolinkInternalApi } from "../../pages/Home";
 import country2Region from "../../../shared-data/Country2Region.json";
+import { batch } from "react-redux";
+
+const sampStatMapping = {
+  100: "Wild",
+  110: "Natural",
+  120: "Semi-natural/wild",
+  130: "Semi-natural/sown",
+  200: "Weedy",
+  300: "Traditional cultivar/Landrace",
+  400: "Breeding/Research Material",
+  410: "Breeders Line",
+  411: "Synthetic population",
+  412: "Hybrid",
+  413: "Founder stock/base population",
+  414: "Inbred line",
+  415: "Segregating population",
+  416: "Clonal selection",
+  420: "Genetic stock",
+  421: "Mutant",
+  422: "Cytogenetic stocks",
+  423: "Other genetic stocks",
+  500: "Advanced/improved cultivar",
+  600: "GMO",
+  999: "Other",
+};
+
+function getSampleStatus(number) {
+  const key = String(number);
+  return sampStatMapping[key] || "Unknown status";
+}
+
+function formatDate(dateStr) {
+  if (dateStr && dateStr.length === 8) {
+    const year = dateStr.substring(0, 4);
+    const month = dateStr.substring(4, 6);
+    const day = dateStr.substring(6, 8);
+    return `${day}-${month}-${year}`;
+  }
+  return dateStr || "";
+}
 
 const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
   const searchResults = useSelector((state) => state.passport.searchResults);
@@ -32,6 +80,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
     )
   );
   const [figMapping, setFigMapping] = useState({});
+  const [isPending, startTransition] = useTransition();
   const dispatch = useDispatch();
   const checkedAccessions = useSelector(
     (state) => state.passport.checkedAccessions
@@ -42,6 +91,47 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
   const isLoadingGenotypedAccessions = useSelector(
     (state) => state.genotype.isLoadingGenotypedAccessions
   );
+
+  const statusByAcc = useMemo(() => {
+    const arr = Array.isArray(genesysApi.genotypeStatus)
+      ? genesysApi.genotypeStatus
+      : [];
+    const m = new Map();
+    for (const r of arr) m.set(r.Accession, r.Status);
+    return m;
+  }, [genesysApi.genotypeStatus]);
+
+  const genotypedIndexByAcc = useMemo(() => {
+    const accs = Array.isArray(genesysApi.genotypedAccessions)
+      ? genesysApi.genotypedAccessions
+      : [];
+    const m = new Map();
+    accs.forEach((acc, i) => m.set(acc, i));
+    return m;
+  }, [genesysApi.genotypedAccessions]);
+
+  const countryByCode = useMemo(() => {
+    const m = new Map();
+    for (const c of country2Region) {
+      m.set(String(c["country-code"]), {
+        region: c["region"],
+        subRegion: c["sub-region"],
+      });
+    }
+    return m;
+  }, []);
+
+  const genotypedSamples = genesysApi.genotypedSamples || [];
+
+  useEffect(() => {
+    if (!searchResults || searchResults.length === 0) {
+      setSelectAll(false);
+      return;
+    }
+    const selectedCount = Object.keys(checkedAccessions || {}).length;
+    // mark as selected when all currently-rendered rows are checked
+    setSelectAll(selectedCount > 0 && selectedCount >= searchResults.length);
+  }, [checkedAccessions, searchResults]);
 
   useEffect(() => {
     if (!searchResults || searchResults.length === 0) return;
@@ -62,70 +152,55 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
     fetchFigs();
   }, [searchResults]);
 
-  function getSampleStatus(number) {
-    const sampStatMapping = {
-      100: "Wild",
-      110: "Natural",
-      120: "Semi-natural/wild",
-      130: "Semi-natural/sown",
-      200: "Weedy",
-      300: "Traditional cultivar/Landrace",
-      400: "Breeding/Research Material",
-      410: "Breeders Line",
-      411: "Synthetic population",
-      412: "Hybrid",
-      413: "Founder stock/base population",
-      414: "Inbred line",
-      415: "Segregating population",
-      416: "Clonal selection",
-      420: "Genetic stock",
-      421: "Mutant",
-      422: "Cytogenetic stocks",
-      423: "Other genetic stocks",
-      500: "Advanced/improved cultivar",
-      600: "GMO",
-      999: "Other",
-    };
+  const handleCheckboxToggle = useCallback(
+    (item, currentlyChecked) => {
+      const newCheckedAccessions = { ...checkedAccessions };
+      const newCheckedAccessionNames = { ...checkedAccessionNames };
 
-    const key = String(number);
+      if (currentlyChecked) {
+        delete newCheckedAccessions[item.accessionNumber];
+        delete newCheckedAccessionNames[item.accessionNumber];
+      } else {
+        newCheckedAccessions[item.accessionNumber] = true;
+        newCheckedAccessionNames[item.accessionNumber] = item.accessionName;
+      }
+      // Keep UI responsive while Redux updates
+      startTransition(() => {
+        batch(() => {
+          dispatch(setCheckedAccessions(newCheckedAccessions));
+          dispatch(setCheckedAccessionNames(newCheckedAccessionNames));
+        });
+      });
+    },
+    [dispatch, checkedAccessions, checkedAccessionNames, startTransition]
+  );
 
-    return sampStatMapping[key] || "Unknown status";
-  }
-
-  const handleCheckboxChange = (item) => {
-    const newCheckedAccessions = { ...checkedAccessions };
-    const newCheckedAccessionNames = { ...checkedAccessionNames };
-
-    if (newCheckedAccessions[item.accessionNumber]) {
-      delete newCheckedAccessions[item.accessionNumber];
-      delete newCheckedAccessionNames[item.accessionNumber];
-    } else {
-      newCheckedAccessions[item.accessionNumber] = true;
-      newCheckedAccessionNames[item.accessionNumber] = item.accessionName;
-    }
-
-    dispatch(setCheckedAccessions(newCheckedAccessions));
-    dispatch(setCheckedAccessionNames(newCheckedAccessionNames));
-  };
-
-  const handleSelectAllChange = () => {
+  const handleSelectAllChange = useCallback(() => {
     const newCheckedAccessions = {};
     const newCheckedAccessionNames = {};
 
     if (selectAll) {
-      dispatch(setCheckedAccessions({}));
-      dispatch(setCheckedAccessionNames({}));
+      startTransition(() => {
+        batch(() => {
+          dispatch(setCheckedAccessions({}));
+          dispatch(setCheckedAccessionNames({}));
+        });
+      });
     } else {
       searchResults?.forEach((item) => {
         newCheckedAccessions[item.accessionNumber] = true;
         newCheckedAccessionNames[item.accessionNumber] = item.accessionName;
       });
-      dispatch(setCheckedAccessions(newCheckedAccessions));
-      dispatch(setCheckedAccessionNames(newCheckedAccessionNames));
+      startTransition(() => {
+        batch(() => {
+          dispatch(setCheckedAccessions(newCheckedAccessions));
+          dispatch(setCheckedAccessionNames(newCheckedAccessionNames));
+        });
+      });
     }
 
     setSelectAll(!selectAll);
-  };
+  }, [dispatch, selectAll, searchResults, startTransition]);
 
   const fetchMore = async () => {
     try {
@@ -147,19 +222,9 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
     }
   };
 
-  const formatDate = (dateStr) => {
-    if (dateStr && dateStr.length === 8) {
-      const year = dateStr.substring(0, 4);
-      const month = dateStr.substring(4, 6);
-      const day = dateStr.substring(6, 8);
-      return `${day}-${month}-${year}`;
-    }
-    return dateStr || "";
-  };
-
-  const handleRowClick = (index) => {
-    setExpandedRow(expandedRow === index ? null : index);
-  };
+  const handleRowClick = useCallback((index) => {
+    setExpandedRow((prev) => (prev === index ? null : index));
+  }, []);
 
   const handleExportPassportData = async () => {
     try {
@@ -226,278 +291,32 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
           </thead>
           <tbody>
             {searchResults?.map((item, index) => {
+              const acc = item.accessionNumber;
               const status =
-                (Array.isArray(genesysApi.genotypeStatus) &&
-                  genesysApi.genotypeStatus.find(
-                    (r) => r.Accession === item.accessionNumber
-                  )?.Status) ??
-                (item.accessionNumber.startsWith("AGG") ? "TBC" : "N/A");
-              const genotypedIndex = Array.isArray(
-                genesysApi.genotypedAccessions
-              )
-                ? genesysApi.genotypedAccessions.indexOf(item.accessionNumber)
-                : -1;
-              const isGenotyped = genotypedIndex !== -1;
+                statusByAcc.get(acc) ??
+                (acc?.startsWith("AGG") ? "TBC" : "N/A");
+              const gIdx = genotypedIndexByAcc.get(acc) ?? -1;
               const genotypeID =
-                isGenotyped && Array.isArray(genesysApi.genotypedSamples)
-                  ? genesysApi.genotypedSamples[genotypedIndex]
+                gIdx !== -1 && Array.isArray(genotypedSamples)
+                  ? genotypedSamples[gIdx]
                   : "N/A";
+              const isExpanded = expandedRow === index;
 
               return (
-                <tr
-                  key={item.uuid || item.id || index}
-                  style={{
-                    backgroundColor: "white",
-                    cursor: "pointer",
-                  }}
-                  onClick={() => handleRowClick(index)}
-                >
-                  <td
-                    className="cell"
-                    style={{
-                      overflow: expandedRow === index ? "visible" : "hidden",
-                      whiteSpace: expandedRow === index ? "normal" : "nowrap",
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={checkedAccessions[item.accessionNumber] || false}
-                      onChange={() => handleCheckboxChange(item)}
-                    />
-                  </td>
-                  <td
-                    className="cell"
-                    style={{
-                      overflow: expandedRow === index ? "visible" : "hidden",
-                      whiteSpace: expandedRow === index ? "normal" : "nowrap",
-                    }}
-                  >
-                    {index + 1}
-                  </td>
-                  <td
-                    className="cell"
-                    style={{
-                      overflow: expandedRow === index ? "visible" : "hidden",
-                      whiteSpace: expandedRow === index ? "normal" : "nowrap",
-                    }}
-                  >
-                    {item.instituteCode || "N/A"}
-                  </td>
-                  <td
-                    className="cell"
-                    style={{
-                      overflow: expandedRow === index ? "visible" : "hidden",
-                      whiteSpace: expandedRow === index ? "normal" : "nowrap",
-                    }}
-                  >
-                    {item["institute.fullName"]
-                      ? item["institute.fullName"]
-                      : "N/A"}
-                  </td>
-                  <td
-                    className="cell"
-                    style={{
-                      overflow: expandedRow === index ? "visible" : "hidden",
-                      whiteSpace: expandedRow === index ? "normal" : "nowrap",
-                    }}
-                  >
-                    <a
-                      href={`https://www.genesys-pgr.org/a/${item.uuid}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {item.accessionNumber || "N/A"}
-                    </a>
-                  </td>
-
-                  <td
-                    className="cell"
-                    style={{
-                      overflow: expandedRow === index ? "visible" : "hidden",
-                      whiteSpace: expandedRow === index ? "normal" : "nowrap",
-                    }}
-                  >
-                    {item.accessionName || "N/A"}
-                  </td>
-                  <td
-                    className="cell"
-                    style={{
-                      overflow: expandedRow === index ? "visible" : "hidden",
-                      whiteSpace: expandedRow === index ? "normal" : "nowrap",
-                    }}
-                  >
-                    {item.aliases && item.aliases.length > 0
-                      ? item.aliases
-                          .filter((alias) => alias.aliasType !== "ACCENAME")
-                          .map(
-                            (alias) =>
-                              `${alias.name}${
-                                alias.usedBy ? ` ${alias.usedBy}` : ""
-                              }`
-                          )
-                          .join(", ")
-                      : "N/A"}
-                  </td>
-                  <td
-                    className="cell"
-                    style={{
-                      overflow: expandedRow === index ? "visible" : "hidden",
-                      whiteSpace: expandedRow === index ? "normal" : "nowrap",
-                    }}
-                  >
-                    {item["remarks.remark"] || "N/A"}
-                  </td>
-                  <td
-                    className="cell"
-                    style={{
-                      overflow: expandedRow === index ? "visible" : "hidden",
-                      whiteSpace: expandedRow === index ? "normal" : "nowrap",
-                    }}
-                  >
-                    {item["taxonomy.taxonName"] || "N/A"}
-                  </td>
-                  <td
-                    className="cell"
-                    style={{
-                      overflow: expandedRow === index ? "visible" : "hidden",
-                      whiteSpace: expandedRow === index ? "normal" : "nowrap",
-                    }}
-                  >
-                    {item.cropName || "N/A"}
-                  </td>
-                  <td
-                    className="cell"
-                    style={{
-                      overflow: expandedRow === index ? "visible" : "hidden",
-                      whiteSpace: expandedRow === index ? "normal" : "nowrap",
-                    }}
-                  >
-                    {item["taxonomy.genus"] || "N/A"}
-                  </td>
-                  <td
-                    className="cell"
-                    style={{
-                      overflow: expandedRow === index ? "visible" : "hidden",
-                      whiteSpace: expandedRow === index ? "normal" : "nowrap",
-                    }}
-                  >
-                    {item["taxonomy.species"] || "N/A"}
-                  </td>
-                  <td
-                    className="cell"
-                    style={{
-                      overflow: expandedRow === index ? "visible" : "hidden",
-                      whiteSpace: expandedRow === index ? "normal" : "nowrap",
-                    }}
-                  >
-                    {getSampleStatus(item.sampStat) || "N/A"}
-                  </td>
-                  <td
-                    className="cell"
-                    style={{
-                      overflow: expandedRow === index ? "visible" : "hidden",
-                      whiteSpace: expandedRow === index ? "normal" : "nowrap",
-                    }}
-                  >
-                    {item.donorName && item.donorCode
-                      ? `${item.donorName}, ${item.donorCode}`
-                      : item.donorName
-                      ? item.donorName
-                      : item.donorCode || "N/A"}
-                  </td>
-                  <td
-                    className="cell"
-                    style={{
-                      overflow: expandedRow === index ? "visible" : "hidden",
-                      whiteSpace: expandedRow === index ? "normal" : "nowrap",
-                    }}
-                  >
-                    {item["countryOfOrigin.name"] || "N/A"}
-                  </td>
-                  <td
-                    className="cell"
-                    style={{
-                      overflow: expandedRow === index ? "visible" : "hidden",
-                      whiteSpace: expandedRow === index ? "normal" : "nowrap",
-                    }}
-                  >
-                    {country2Region.find(
-                      (country) =>
-                        country["country-code"] ==
-                        item["countryOfOrigin.codeNum"]
-                    )?.["region"] || "N/A"}
-                  </td>
-                  <td
-                    className="cell"
-                    style={{
-                      overflow: expandedRow === index ? "visible" : "hidden",
-                      whiteSpace: expandedRow === index ? "normal" : "nowrap",
-                    }}
-                  >
-                    {country2Region.find(
-                      (country) =>
-                        country["country-code"] ==
-                        item["countryOfOrigin.codeNum"]
-                    )?.["sub-region"] || "N/A"}
-                  </td>
-                  <td
-                    className="cell"
-                    style={{
-                      overflow: expandedRow === index ? "visible" : "hidden",
-                      whiteSpace: expandedRow === index ? "normal" : "nowrap",
-                    }}
-                  >
-                    {formatDate(item.acquisitionDate)}
-                  </td>
-                  <td
-                    className="cell"
-                    style={{
-                      overflow: expandedRow === index ? "visible" : "hidden",
-                      whiteSpace: expandedRow === index ? "normal" : "nowrap",
-                    }}
-                  >
-                    {item.doi || "N/A"}
-                  </td>
-                  <td
-                    className="cell"
-                    style={{
-                      overflow: expandedRow === index ? "visible" : "hidden",
-                      whiteSpace: expandedRow === index ? "normal" : "nowrap",
-                    }}
-                  >
-                    {item.lastModifiedDate || "N/A"}
-                  </td>
-                  <td
-                    className="cell"
-                    style={{
-                      overflow: expandedRow === index ? "visible" : "hidden",
-                      whiteSpace: expandedRow === index ? "normal" : "nowrap",
-                    }}
-                  >
-                    {status}
-                  </td>
-                  <td
-                    className="cell"
-                    style={{
-                      overflow: expandedRow === index ? "visible" : "hidden",
-                      whiteSpace: expandedRow === index ? "normal" : "nowrap",
-                    }}
-                  >
-                    {genotypeID}
-                  </td>
-                  <td
-                    className="cell"
-                    style={{
-                      overflow: expandedRow === index ? "visible" : "hidden",
-                      whiteSpace: expandedRow === index ? "normal" : "nowrap",
-                    }}
-                  >
-                    {figMapping[item.accessionNumber] &&
-                    figMapping[item.accessionNumber].length > 0
-                      ? figMapping[item.accessionNumber].join(", ")
-                      : "N/A"}
-                  </td>
-                </tr>
+                <ResultRow
+                  key={item.accessionNumber}
+                  item={item}
+                  index={index}
+                  isExpanded={isExpanded}
+                  onToggleCheckbox={handleCheckboxToggle}
+                  onRowClick={handleRowClick}
+                  status={status}
+                  genotypeID={genotypeID}
+                  figsForAcc={figMapping[acc]}
+                  formatDate={formatDate}
+                  getSampleStatus={getSampleStatus}
+                  countryByCode={countryByCode}
+                />
               );
             })}
           </tbody>
