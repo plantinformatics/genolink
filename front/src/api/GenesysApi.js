@@ -9,7 +9,9 @@ import {
   setSearchResults,
   setInstituteCode,
   setCropList,
-  setTaxonomyList,
+  setGenusList,
+  setGenusSpeciesList,
+  setSpeciesList,
   setOriginOfMaterialList,
   setSampStatList,
   setGermplasmStorageList,
@@ -145,7 +147,12 @@ class GenesysApi extends BaseApi {
 
       const codes = this.extractSuggestions(searchData, "institute.code");
       const crops = this.extractSuggestions(searchData, "crop.shortName");
-      const taxons = this.extractSuggestions(searchData, "taxonomy.genus");
+      const genus = this.extractSuggestions(searchData, "taxonomy.genus");
+      const genusSpecies = this.extractSuggestions(
+        searchData,
+        "taxonomy.genusSpecies"
+      );
+      const species = this.extractSuggestions(searchData, "taxonomy.species");
       const origins = this.extractSuggestions(
         searchData,
         "countryOfOrigin.code3"
@@ -155,7 +162,9 @@ class GenesysApi extends BaseApi {
 
       dispatch(setInstituteCode(codes));
       dispatch(setCropList(crops));
-      dispatch(setTaxonomyList(taxons));
+      dispatch(setGenusList(genus));
+      dispatch(setGenusSpeciesList(genusSpecies));
+      dispatch(setSpeciesList(species));
       dispatch(setOriginOfMaterialList(origins));
       dispatch(setSampStatList(sampStat));
       dispatch(setGermplasmStorageList(germplasmStorage));
@@ -276,8 +285,18 @@ class GenesysApi extends BaseApi {
           )
         );
         dispatch(
-          setTaxonomyList(
+          setGenusList(
             this.extractSuggestions(filterDataResponse, "taxonomy.genus")
+          )
+        );
+        dispatch(
+          setGenusSpeciesList(
+            this.extractSuggestions(filterDataResponse, "taxonomy.genusSpecies")
+          )
+        );
+        dispatch(
+          setSpeciesList(
+            this.extractSuggestions(filterDataResponse, "taxonomy.species")
           )
         );
         dispatch(
@@ -315,8 +334,18 @@ class GenesysApi extends BaseApi {
           )
         );
         dispatch(
-          setTaxonomyList(
+          setGenusList(
             this.extractSuggestions(filterDataResponse, "taxonomy.genus")
+          )
+        );
+        dispatch(
+          setGenusSpeciesList(
+            this.extractSuggestions(filterDataResponse, "taxonomy.genusSpecies")
+          )
+        );
+        dispatch(
+          setSpeciesList(
+            this.extractSuggestions(filterDataResponse, "taxonomy.species")
           )
         );
         dispatch(

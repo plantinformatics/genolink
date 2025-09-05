@@ -3,13 +3,17 @@ const initialState = {
   searchResults: {},
   instituteCheckedBoxes: [],
   cropCheckedBoxes: [],
-  taxonomyCheckedBoxes: [],
+  genusCheckedBoxes: [],
+  genusSpeciesCheckedBoxes: [],
+  speciesCheckedBoxes: [],
   originOfMaterialCheckedBoxes: [],
   sampStatCheckedBoxes: [],
   germplasmStorageCheckedBoxes: [],
   instituteCode: [],
   cropList: [],
-  taxonomyList: [],
+  genusList: [],
+  genusSpeciesList: [],
+  speciesList: [],
   originOfMaterialList: [],
   sampStatList: [],
   germplasmStorageList: [],
@@ -64,10 +68,20 @@ const rootReducer = (state = initialState, action) => {
         ...state,
         cropCheckedBoxes: action.payload,
       };
-    case "SET_TAXONOMY_CHECKED_BOXES":
+    case "SET_GENUS_CHECKED_BOXES":
       return {
         ...state,
-        taxonomyCheckedBoxes: action.payload,
+        genusCheckedBoxes: action.payload,
+      };
+    case "SET_GENUS_SPECIES_CHECKED_BOXES":
+      return {
+        ...state,
+        genusSpeciesCheckedBoxes: action.payload,
+      };
+    case "SET_SPECIES_CHECKED_BOXES":
+      return {
+        ...state,
+        speciesCheckedBoxes: action.payload,
       };
     case "SET_ORIGIN_OF_MATERIAL_CHECKED_BOXES":
       return {
@@ -94,10 +108,20 @@ const rootReducer = (state = initialState, action) => {
         ...state,
         cropList: action.payload,
       };
-    case "SET_TAXONOMY_LIST":
+    case "SET_GENUS_LIST":
       return {
         ...state,
-        taxonomyList: action.payload,
+        genusList: action.payload,
+      };
+    case "SET_GENUS_SPECIES_LIST":
+      return {
+        ...state,
+        genusSpeciesList: action.payload,
+      };
+    case "SET_SPECIES_LIST":
+      return {
+        ...state,
+        speciesList: action.payload,
       };
 
     case "SET_ORIGIN_OF_MATERIAL_LIST":

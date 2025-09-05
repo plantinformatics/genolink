@@ -16,8 +16,16 @@ export const setCropCheckedBoxes = (boxes) => ({
   type: "SET_CROP_CHECKED_BOXES",
   payload: boxes,
 });
-export const setTaxonomyCheckedBoxes = (boxes) => ({
-  type: "SET_TAXONOMY_CHECKED_BOXES",
+export const setGenusCheckedBoxes = (boxes) => ({
+  type: "SET_GENUS_CHECKED_BOXES",
+  payload: boxes,
+});
+export const setGenusSpeciesCheckedBoxes = (boxes) => ({
+  type: "SET_GENUS_SPECIES_CHECKED_BOXES",
+  payload: boxes,
+});
+export const setSpeciesCheckedBoxes = (boxes) => ({
+  type: "SET_SPECIES_CHECKED_BOXES",
   payload: boxes,
 });
 export const setOriginOfMaterialCheckedBoxes = (boxes) => ({
@@ -42,9 +50,19 @@ export const setCropList = (crops) => ({
   payload: crops,
 });
 
-export const setTaxonomyList = (tax) => ({
-  type: "SET_TAXONOMY_LIST",
-  payload: tax,
+export const setGenusList = (genus) => ({
+  type: "SET_GENUS_LIST",
+  payload: genus,
+});
+
+export const setGenusSpeciesList = (genusSpecies) => ({
+  type: "SET_GENUS_SPECIES_LIST",
+  payload: genusSpecies,
+});
+
+export const setSpeciesList = (species) => ({
+  type: "SET_SPECIES_LIST",
+  payload: species,
 });
 
 export const setOriginOfMaterialList = (origin) => ({

@@ -1,8 +1,9 @@
 import { useSelector } from "react-redux";
 import {
-  setInstituteCheckedBoxes,
   setCropCheckedBoxes,
-  setTaxonomyCheckedBoxes,
+  setGenusCheckedBoxes,
+  setGenusSpeciesCheckedBoxes,
+  setSpeciesCheckedBoxes,
   setOriginOfMaterialCheckedBoxes,
   setSampStatCheckedBoxes,
   setGermplasmStorageCheckedBoxes,
@@ -103,8 +104,14 @@ const MultiSelectFilter = ({ options, type }) => {
   const cropCheckedBoxes = useSelector(
     (state) => state.passport.cropCheckedBoxes
   );
-  const taxonomyCheckedBoxes = useSelector(
-    (state) => state.passport.taxonomyCheckedBoxes
+  const genusCheckedBoxes = useSelector(
+    (state) => state.passport.genusCheckedBoxes
+  );
+  const genusSpeciesCheckedBoxes = useSelector(
+    (state) => state.passport.genusSpeciesCheckedBoxes
+  );
+  const speciesCheckedBoxes = useSelector(
+    (state) => state.passport.speciesCheckedBoxes
   );
   const originOfMaterialCheckedBoxes = useSelector(
     (state) => state.passport.originOfMaterialCheckedBoxes
@@ -154,17 +161,39 @@ const MultiSelectFilter = ({ options, type }) => {
           )
         );
       }
-    else if (type === "taxonomyCheckedBoxes")
+    else if (type === "genusCheckedBoxes") {
       if (checked) {
-        dispatch(setTaxonomyCheckedBoxes([...taxonomyCheckedBoxes, option]));
+        dispatch(setGenusCheckedBoxes([...genusCheckedBoxes, option]));
       } else {
         dispatch(
-          setTaxonomyCheckedBoxes(
-            taxonomyCheckedBoxes.filter((item) => item !== option)
+          setGenusCheckedBoxes(
+            genusCheckedBoxes.filter((item) => item !== option)
           )
         );
       }
-    else if (type === "originOfMaterialCheckedBoxes")
+    } else if (type === "genusSpeciesCheckedBoxes") {
+      if (checked) {
+        dispatch(
+          setGenusSpeciesCheckedBoxes([...genusSpeciesCheckedBoxes, option])
+        );
+      } else {
+        dispatch(
+          setGenusSpeciesCheckedBoxes(
+            genusSpeciesCheckedBoxes.filter((item) => item !== option)
+          )
+        );
+      }
+    } else if (type === "speciesCheckedBoxes") {
+      if (checked) {
+        dispatch(setSpeciesCheckedBoxes([...speciesCheckedBoxes, option]));
+      } else {
+        dispatch(
+          setSpeciesCheckedBoxes(
+            speciesCheckedBoxes.filter((item) => item !== option)
+          )
+        );
+      }
+    } else if (type === "originOfMaterialCheckedBoxes")
       if (checked) {
         dispatch(
           setOriginOfMaterialCheckedBoxes([
@@ -259,12 +288,14 @@ const MultiSelectFilter = ({ options, type }) => {
                     type="checkbox"
                     value={option[0]}
                     checked={
-                      type === "institueCheckedBoxes"
-                        ? instituteCheckedBoxes.includes(option[0])
+                      type === "genusCheckedBoxes"
+                        ? genusCheckedBoxes.includes(option[0])
+                        : type === "genusSpeciesCheckedBoxes"
+                        ? genusSpeciesCheckedBoxes.includes(option[0])
+                        : type === "speciesCheckedBoxes"
+                        ? speciesCheckedBoxes.includes(option[0])
                         : type === "cropCheckedBoxes"
                         ? cropCheckedBoxes.includes(option[0])
-                        : type === "taxonomyCheckedBoxes"
-                        ? taxonomyCheckedBoxes.includes(option[0])
                         : type === "originOfMaterialCheckedBoxes"
                         ? originOfMaterialCheckedBoxes.includes(option[0])
                         : type === "sampStatCheckedBoxes"

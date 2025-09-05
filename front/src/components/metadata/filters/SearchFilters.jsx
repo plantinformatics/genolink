@@ -15,7 +15,9 @@ import {
   setCreationStartDate,
   setCreationEndDate,
   setCropCheckedBoxes,
-  setTaxonomyCheckedBoxes,
+  setGenusCheckedBoxes,
+  setGenusSpeciesCheckedBoxes,
+  setSpeciesCheckedBoxes,
   setOriginOfMaterialCheckedBoxes,
   setSampStatCheckedBoxes,
   setGermplasmStorageCheckedBoxes,
@@ -83,7 +85,11 @@ const SearchFilters = ({ tokenReady }) => {
     (state) => state.passport.creationEndDate
   );
   const cropList = useSelector((state) => state.passport.cropList);
-  const taxonomyList = useSelector((state) => state.passport.taxonomyList);
+  const genusList = useSelector((state) => state.passport.genusList);
+  const genusSpeciesList = useSelector(
+    (state) => state.passport.genusSpeciesList
+  );
+  const speciesList = useSelector((state) => state.passport.speciesList);
   const originOfMaterialList = useSelector(
     (state) => state.passport.originOfMaterialList
   );
@@ -228,8 +234,14 @@ const SearchFilters = ({ tokenReady }) => {
       case "Crop":
         dispatch(setCropCheckedBoxes([]));
         break;
-      case "Taxonomy":
-        dispatch(setTaxonomyCheckedBoxes([]));
+      case "Genus":
+        dispatch(setGenusCheckedBoxes([]));
+        break;
+      case "Genus Species":
+        dispatch(setGenusSpeciesCheckedBoxes([]));
+        break;
+      case "Species":
+        dispatch(setSpeciesCheckedBoxes([]));
         break;
       case "Origin of Material":
         dispatch(setOriginOfMaterialCheckedBoxes([]));
@@ -285,8 +297,20 @@ const SearchFilters = ({ tokenReady }) => {
           case "Crop":
             updatedBody.crop = filter.value;
             break;
-          case "Taxonomy":
+          case "Genus":
             updatedBody.taxonomy = { genus: filter.value };
+            break;
+          case "Genus Species":
+            updatedBody.taxonomy = {
+              ...updatedBody.taxonomy,
+              genusSpecies: filter.value,
+            };
+            break;
+          case "Species":
+            updatedBody.taxonomy = {
+              ...updatedBody.taxonomy,
+              species: filter.value,
+            };
             break;
           case "Origin of Material":
             updatedBody.countryOfOrigin = { code3: filter.value };
@@ -313,7 +337,9 @@ const SearchFilters = ({ tokenReady }) => {
     const {
       instituteCheckedBoxes,
       cropCheckedBoxes,
-      taxonomyCheckedBoxes,
+      genusCheckedBoxes,
+      genusSpeciesCheckedBoxes,
+      speciesCheckedBoxes,
       originOfMaterialCheckedBoxes,
       sampStatCheckedBoxes,
       germplasmStorageCheckedBoxes,
@@ -386,8 +412,13 @@ const SearchFilters = ({ tokenReady }) => {
 
       crop: cropCheckedBoxes.length > 0 ? cropCheckedBoxes : [],
 
-      taxonomy:
-        taxonomyCheckedBoxes.length > 0 ? { genus: taxonomyCheckedBoxes } : {},
+      taxonomy: {
+        ...(genusCheckedBoxes.length > 0 && { genus: genusCheckedBoxes }),
+        ...(genusSpeciesCheckedBoxes.length > 0 && {
+          genusSpecies: genusSpeciesCheckedBoxes,
+        }),
+        ...(speciesCheckedBoxes.length > 0 && { species: speciesCheckedBoxes }),
+      },
 
       countryOfOrigin:
         originOfMaterialCheckedBoxes.length > 0
@@ -440,8 +471,18 @@ const SearchFilters = ({ tokenReady }) => {
         newFilters.push({ type: "End Date", value: creationEndDate });
       if (cropCheckedBoxes.length > 0)
         newFilters.push({ type: "Crop", value: cropCheckedBoxes });
-      if (taxonomyCheckedBoxes.length > 0)
-        newFilters.push({ type: "Taxonomy", value: taxonomyCheckedBoxes });
+      if (genusCheckedBoxes.length > 0) {
+        newFilters.push({ type: "Genus", value: genusCheckedBoxes });
+      }
+      if (genusSpeciesCheckedBoxes.length > 0) {
+        newFilters.push({
+          type: "Genus Species",
+          value: genusSpeciesCheckedBoxes,
+        });
+      }
+      if (speciesCheckedBoxes.length > 0) {
+        newFilters.push({ type: "Species", value: speciesCheckedBoxes });
+      }
       if (originOfMaterialCheckedBoxes.length > 0)
         newFilters.push({
           type: "Origin of Material",
@@ -476,7 +517,9 @@ const SearchFilters = ({ tokenReady }) => {
       dispatch(setCreationEndDate(null));
       dispatch(setCreationStartDate(null));
       dispatch(setCropCheckedBoxes([]));
-      dispatch(setTaxonomyCheckedBoxes([]));
+      dispatch(setGenusCheckedBoxes([]));
+      dispatch(setGenusSpeciesCheckedBoxes([]));
+      dispatch(setSpeciesCheckedBoxes([]));
       dispatch(setOriginOfMaterialCheckedBoxes([]));
       dispatch(setSampStatCheckedBoxes([]));
       dispatch(setGermplasmStorageCheckedBoxes([]));
@@ -731,18 +774,46 @@ const SearchFilters = ({ tokenReady }) => {
                 >
                   Taxonomy <span className={styles.drawerArrow}></span>
                 </button>
-
                 <div className={styles.drawerContent}>
-                  {taxonomyList && taxonomyList.length > 0 ? (
-                    <MultiSelectFilter
-                      options={taxonomyList}
-                      type="taxonomyCheckedBoxes"
-                    />
-                  ) : (
-                    <p className={styles.unAwailableFilter}>
-                      No available filters.
-                    </p>
+                  {genusList && genusList.length > 0 && (
+                    <>
+                      <h5 style={{ margin: "20px 0px 10px 0px" }}>Genus:</h5>
+                      <MultiSelectFilter
+                        options={genusList}
+                        type="genusCheckedBoxes"
+                      />
+                    </>
                   )}
+
+                  {genusSpeciesList && genusSpeciesList.length > 0 && (
+                    <>
+                      <h5 style={{ margin: "30px 0px 10px 0px" }}>
+                        Genus Species:
+                      </h5>
+                      <MultiSelectFilter
+                        options={genusSpeciesList}
+                        type="genusSpeciesCheckedBoxes"
+                      />
+                    </>
+                  )}
+
+                  {speciesList && speciesList.length > 0 && (
+                    <>
+                      <h5 style={{ margin: "30px 0px 10px 0px" }}>Species:</h5>
+                      <MultiSelectFilter
+                        options={speciesList}
+                        type="speciesCheckedBoxes"
+                      />
+                    </>
+                  )}
+
+                  {genusList.length === 0 &&
+                    genusSpeciesList.length === 0 &&
+                    speciesList.length === 0 && (
+                      <p className={styles.unAvailableFilter}>
+                        No available filters.
+                      </p>
+                    )}
                 </div>
               </div>
               <div className={styles.drawer}>
