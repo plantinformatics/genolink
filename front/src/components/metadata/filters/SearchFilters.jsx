@@ -772,48 +772,66 @@ const SearchFilters = ({ tokenReady }) => {
                     e.currentTarget.parentElement.classList.toggle(styles.open);
                   }}
                 >
-                  Taxonomy <span className={styles.drawerArrow}></span>
+                  Taxonomy: Genus <span className={styles.drawerArrow}></span>
                 </button>
                 <div className={styles.drawerContent}>
-                  {genusList && genusList.length > 0 && (
-                    <>
-                      <h5 style={{ margin: "20px 0px 10px 0px" }}>Genus:</h5>
-                      <MultiSelectFilter
-                        options={genusList}
-                        type="genusCheckedBoxes"
-                      />
-                    </>
+                  {genusList && genusList.length > 0 ? (
+                    <MultiSelectFilter
+                      options={genusList}
+                      type="genusCheckedBoxes"
+                    />
+                  ) : (
+                    <p className={styles.unAwailableFilter}>
+                      No available filters.
+                    </p>
                   )}
-
-                  {genusSpeciesList && genusSpeciesList.length > 0 && (
-                    <>
-                      <h5 style={{ margin: "30px 0px 10px 0px" }}>
-                        Genus Species:
-                      </h5>
-                      <MultiSelectFilter
-                        options={genusSpeciesList}
-                        type="genusSpeciesCheckedBoxes"
-                      />
-                    </>
+                </div>
+              </div>
+              <div className={styles.drawer}>
+                <button
+                  className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
+                  onClick={(e) => {
+                    e.currentTarget.parentElement.classList.toggle(styles.open);
+                  }}
+                >
+                  Taxonomy: Genus Species{" "}
+                  <span className={styles.drawerArrow}></span>
+                </button>
+                <div className={styles.drawerContent}>
+                  {genusSpeciesList && genusSpeciesList.length > 0 ? (
+                    <MultiSelectFilter
+                      options={genusSpeciesList}
+                      type="genusSpeciesCheckedBoxes"
+                    />
+                  ) : (
+                    <p className={styles.unAwailableFilter}>
+                      No available filters.
+                    </p>
                   )}
-
-                  {speciesList && speciesList.length > 0 && (
+                </div>
+              </div>
+              <div className={styles.drawer}>
+                <button
+                  className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
+                  onClick={(e) => {
+                    e.currentTarget.parentElement.classList.toggle(styles.open);
+                  }}
+                >
+                  Taxonomy: Species <span className={styles.drawerArrow}></span>
+                </button>
+                <div className={styles.drawerContent}>
+                  {speciesList && speciesList.length > 0 ? (
                     <>
-                      <h5 style={{ margin: "30px 0px 10px 0px" }}>Species:</h5>
                       <MultiSelectFilter
                         options={speciesList}
                         type="speciesCheckedBoxes"
                       />
                     </>
+                  ) : (
+                    <p className={styles.unAwailableFilter}>
+                      No available filters.
+                    </p>
                   )}
-
-                  {genusList.length === 0 &&
-                    genusSpeciesList.length === 0 &&
-                    speciesList.length === 0 && (
-                      <p className={styles.unAvailableFilter}>
-                        No available filters.
-                      </p>
-                    )}
                 </div>
               </div>
               <div className={styles.drawer}>
