@@ -101,7 +101,7 @@ const ResultRow = React.memo(function ResultRow({
           whiteSpace: isExpanded ? "normal" : "nowrap",
         }}
       >
-        {item.aliases && item.aliases.length > 0
+        {item.aliases && item.aliases.length > 1
           ? item.aliases
               .filter((alias) => alias.aliasType !== "ACCENAME")
               .map(
