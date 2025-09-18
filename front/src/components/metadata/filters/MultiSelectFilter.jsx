@@ -289,7 +289,9 @@ const MultiSelectFilter = ({ options, type }) => {
                     type="checkbox"
                     value={option[0]}
                     checked={
-                      type === "genusCheckedBoxes"
+                      type === "institueCheckedBoxes"
+                        ? instituteCheckedBoxes.includes(option[0])
+                        : type === "genusCheckedBoxes"
                         ? genusCheckedBoxes.includes(option[0])
                         : type === "genusSpeciesCheckedBoxes"
                         ? genusSpeciesCheckedBoxes.includes(option[0])
