@@ -53,7 +53,7 @@ class GenolinkGigwaApi extends BaseApi {
       if (!this.token)
         throw new Error("Token not available. Please authenticate first.");
       body.gigwaToken = this.token;
-      return await this.post("/api/gigwa/ga4gh/variants/search", body);
+      return await this.post("/api/gigwa/brapi/v2/search/variants", body);
     } catch (error) {
       console.error("Error fetching variants:", error);
       throw error;

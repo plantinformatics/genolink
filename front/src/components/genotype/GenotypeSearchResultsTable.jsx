@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { setGenotypeCurrentPage } from "../../redux/genotype/genotypeActions";
 import { useDispatch, useSelector } from "react-redux";
 import styles from "./GenotypeSearchResultsTable.module.css";
@@ -16,7 +16,7 @@ const GenotypeSearchResultsTable = () => {
   const itemsPerPage = 1000;
   const unionSamples = useMemo(() => {
     const serverSamples = samples.filter(
-      (s, idx) => data[idx] && data[idx].data.variants.length > 0
+      (s, idx) => data[idx] && data[idx].result.data.length > 0
     );
     return Array.from(new Set(serverSamples.flat()));
   }, [samples, data]);
@@ -24,8 +24,8 @@ const GenotypeSearchResultsTable = () => {
     if (platform === "Gigwa" && data && data.length > 0) {
       const flat = [];
       data.forEach((server, serverIndex) => {
-        if (server.data && server.data.variants) {
-          server.data.variants.forEach((variant, localIndex) => {
+        if (server.result && server.result.data) {
+          server.result.data.forEach((variant, localIndex) => {
             flat.push({ serverIndex, variant, localIndex });
           });
         }
@@ -55,7 +55,9 @@ const GenotypeSearchResultsTable = () => {
   let totalPages = 1;
   if (platform === "Gigwa" && alleles.length > 0 && data.length > 0) {
     totalPages = Math.max(
-      ...data.map((server) => Math.ceil(server.data.count / 1000))
+      ...alleles.map((server) =>
+        Math.ceil(server.result.pagination[0].totalCount / 1000)
+      )
     );
   } else if (platform === "Germinate" && data && data.length > 0) {
     totalPages = Math.ceil(data[0].result.data.length / 1000);
@@ -230,8 +232,8 @@ const GenotypeSearchResultsTable = () => {
                     <td>{rowOffset + index + 1}</td>
                     <td>{variant.referenceName}</td>
                     <td>{variant.start}</td>
-                    <td title={variant.id.split("§")[2]}>
-                      {variant.id.split("§")[2]}
+                    <td title={variant.variantDbId.split("§")[1]}>
+                      {variant.variantDbId.split("§")[1]}
                     </td>
                     <td>{variant.referenceBases}</td>
                     <td>{variant.alternateBases[0]}</td>

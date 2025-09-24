@@ -46,7 +46,6 @@ const GenotypeExplorer = () => {
   const [selectedGigwaServers, setSelectedGigwaServers] = useState([]);
   const [searchSamplesInDatasetsResult, setSearchSamplesInDatasetsResult] =
     useState([]);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [exportServer, setExportServer] = useState("");
 
   const selectedOption = useSelector((state) => state.genotype.selectedOption);
@@ -68,7 +67,6 @@ const GenotypeExplorer = () => {
   );
   const sampleDbIds = useSelector((state) => state.genotype.sampleDbIds);
   const sampleNames = useSelector((state) => state.genotype.sampleNames);
-  const sampleVcfNames = useSelector((state) => state.genotype.sampleVcfNames);
   const selectedSamplesDetails = useSelector(
     (state) => state.genotype.selectedSamplesDetails
   );
@@ -452,7 +450,6 @@ const GenotypeExplorer = () => {
             responseData: [],
             variantSetDbIds: [],
             datasetNames: [],
-            vcfSamples: [],
             numberOfGenesysAccessions: [],
             numberOfPresentAccessions: [],
             numberOfMappedAccessions: [],
@@ -464,7 +461,6 @@ const GenotypeExplorer = () => {
               response,
               variantSetDbIds,
               datasetNames,
-              vcfSamples,
               numberOfGenesysAccessions,
               numberOfPresentAccessions,
               numberOfMappedAccessions,
@@ -473,7 +469,6 @@ const GenotypeExplorer = () => {
               combinedResults.responseData.push(response.result.data);
               combinedResults.variantSetDbIds.push(variantSetDbIds);
               combinedResults.datasetNames.push(datasetNames);
-              combinedResults.vcfSamples.push(vcfSamples);
               combinedResults.numberOfGenesysAccessions.push(
                 numberOfGenesysAccessions
               );
@@ -541,9 +536,6 @@ const GenotypeExplorer = () => {
           dispatch(
             genotypeActions.setVariantSetDbIds(combinedResults.variantSetDbIds)
           );
-          dispatch(
-            genotypeActions.setSampleVcfNames(combinedResults.vcfSamples)
-          );
           dispatch(genotypeActions.setDatasets(filteredDatasetNames));
           dispatch(
             genotypeActions.setSampleDetails(combinedResults.responseData)
@@ -591,10 +583,6 @@ const GenotypeExplorer = () => {
     }
   };
 
-  const toggleDrawer = () => {
-    setIsDrawerOpen((prevState) => !prevState);
-  };
-
   const fetchData = async (page) => {
     try {
       if (checkedAccessions.length === 0) {
@@ -605,140 +593,120 @@ const GenotypeExplorer = () => {
         alert("No valid Gigwa servers available.");
         return;
       }
+
       setIsGenomDataLoading(true);
 
       if (selectedOption === "Gigwa") {
-        const fetchVariantRequests = Object.values(
-          genolinkGigwaApisRef.current
-        ).map((api, index) => {
-          if (
-            pagesPerServer.length > 0 &&
-            page > pagesPerServer[index].length
-          ) {
-            return Promise.resolve({ data: { count: 0, variants: [] } });
-          }
-          return api.fetchVariants({
-            selectedGigwaServer: selectedGigwaServers[index],
-            sampleVcfNames: sampleVcfNames[index],
-            selectedSamplesDetails: selectedSamplesDetails[index],
-            variantList,
-            variantPage: page - 1,
-            linkagegroups: selectedGroups ? selectedGroups : "",
-            posStart: posStart || -1,
-            posEnd: posEnd || -1,
-          });
-        });
+        // Helper: filter out servers that don’t have this page, then build paired requests
+        const buildAlleleReqs = (buildBody) => {
+          return Object.entries(genolinkGigwaApisRef.current)
+            .filter(([_, __], idx) => {
+              const pages = pagesPerServer?.[idx];
+              return !(Array.isArray(pages) && page > pages.length);
+            })
+            .map(([_, api], idx) => ({
+              api,
+              idx, // original index for aligned arrays like selectedGigwaServers, sampleDbIds, etc.
+              promise: api.fetchAlleles(buildBody(idx)),
+            }));
+        };
 
-        let fetchAlleleRequests = [];
+        let alleleReqs = [];
+
         if (posStart && posEnd) {
-          fetchAlleleRequests = Object.values(genolinkGigwaApisRef.current).map(
-            (api, index) => {
-              if (
-                pagesPerServer.length > 0 &&
-                page > pagesPerServer[index].length
-              ) {
-                return Promise.resolve({
-                  result: { dataMatrices: [{ dataMatrix: [] }] },
-                });
-              }
-              return api.fetchAlleles({
-                selectedGigwaServer: selectedGigwaServers[index],
-                callSetDbIds: sampleDbIds[index],
-                variantSetDbIds: selectedVariantSetDbId[index],
-                positionRanges: selectedGroups
-                  ? [`${selectedGroups}:${posStart}-${posEnd}`]
-                  : [],
-                dataMatrixAbbreviations: ["GT"],
-                pagination: [
-                  { dimension: "variants", page: page - 1, pageSize: 1000 },
-                  { dimension: "callsets", page: 0, pageSize: 10000 },
-                ],
-              });
-            }
-          );
+          alleleReqs = buildAlleleReqs((index) => ({
+            selectedGigwaServer: selectedGigwaServers[index],
+            callSetDbIds: sampleDbIds[index],
+            variantSetDbIds: selectedVariantSetDbId[index],
+            positionRanges: selectedGroups
+              ? [`${selectedGroups}:${posStart}-${posEnd}`]
+              : [],
+            dataMatrixAbbreviations: ["GT"],
+            pagination: [
+              { dimension: "variants", page: page - 1, pageSize: 1000 },
+              { dimension: "callsets", page: 0, pageSize: 1000 },
+            ],
+          }));
+        } else if (!posStart && !posEnd && selectedGroups) {
+          alleleReqs = buildAlleleReqs((index) => ({
+            selectedGigwaServer: selectedGigwaServers[index],
+            callSetDbIds: sampleDbIds[index],
+            variantSetDbIds: selectedVariantSetDbId[index],
+            positionRanges: [selectedGroups],
+            dataMatrixAbbreviations: ["GT"],
+            pagination: [
+              { dimension: "variants", page: page - 1, pageSize: 1000 },
+              { dimension: "callsets", page: 0, pageSize: 1000 },
+            ],
+          }));
         } else if (variantList.length > 0) {
-          fetchAlleleRequests = Object.values(genolinkGigwaApisRef.current).map(
-            (api, index) => {
-              if (
-                pagesPerServer.length > 0 &&
-                page > pagesPerServer[index].length
-              ) {
-                return Promise.resolve({
-                  result: { dataMatrices: [{ dataMatrix: [] }] },
-                });
-              }
-              return api.fetchAlleles({
-                selectedGigwaServer: selectedGigwaServers[index],
-                callSetDbIds: sampleDbIds[index],
-                variantSetDbIds: selectedVariantSetDbId[index],
-                variantDbIds: variantList.map(
-                  (variant) =>
-                    `${
-                      selectedVariantSetDbId[index][0].split("§")[0]
-                    }§${variant}`
-                ),
-                dataMatrixAbbreviations: ["GT"],
-                pagination: [
-                  { dimension: "variants", page: page - 1, pageSize: 1000 },
-                  { dimension: "callsets", page: 0, pageSize: 10000 },
-                ],
-              });
-            }
-          );
+          alleleReqs = buildAlleleReqs((index) => ({
+            selectedGigwaServer: selectedGigwaServers[index],
+            callSetDbIds: sampleDbIds[index],
+            variantSetDbIds: selectedVariantSetDbId[index],
+            variantDbIds: variantList.map(
+              (variant) =>
+                `${selectedVariantSetDbId[index][0].split("§")[0]}§${variant}`
+            ),
+            dataMatrixAbbreviations: ["GT"],
+            pagination: [
+              { dimension: "variants", page: page - 1, pageSize: 1000 },
+              { dimension: "callsets", page: 0, pageSize: 1000 },
+            ],
+          }));
         } else {
-          fetchAlleleRequests = Object.values(genolinkGigwaApisRef.current).map(
-            (api, index) => {
-              if (
-                pagesPerServer.length > 0 &&
-                page > pagesPerServer[index].length
-              ) {
-                return Promise.resolve({
-                  result: { dataMatrices: [{ dataMatrix: [] }] },
-                });
-              }
-              return api.fetchAlleles({
-                selectedGigwaServer: selectedGigwaServers[index],
-                callSetDbIds: sampleDbIds[index],
-                variantSetDbIds: selectedVariantSetDbId[index],
-                dataMatrixAbbreviations: ["GT"],
-                pagination: [
-                  { dimension: "variants", page: page - 1, pageSize: 1000 },
-                  { dimension: "callsets", page: 0, pageSize: 10000 },
-                ],
-              });
-            }
-          );
+          alleleReqs = buildAlleleReqs((index) => ({
+            selectedGigwaServer: selectedGigwaServers[index],
+            callSetDbIds: sampleDbIds[index],
+            variantSetDbIds: selectedVariantSetDbId[index],
+            dataMatrixAbbreviations: ["GT"],
+            pagination: [
+              { dimension: "variants", page: page - 1, pageSize: 1000 },
+              { dimension: "callsets", page: 0, pageSize: 1000 },
+            ],
+          }));
         }
 
-        const allRequests = await Promise.all([
-          ...fetchVariantRequests,
-          ...fetchAlleleRequests,
-        ]);
-
-        const variantResponses = allRequests.slice(
-          0,
-          fetchVariantRequests.length
+        // Run allele requests
+        const alleleResponses = await Promise.all(
+          alleleReqs.map((r) => r.promise)
         );
-        const alleleResponses = allRequests.slice(fetchVariantRequests.length);
 
+        // Build fetchVariants from the paired (api, idx) metadata; skip empties
+        const fetchVariantRequests = alleleResponses.flatMap((resp, i) => {
+          const variantDbIds = resp?.result?.variantDbIds;
+          if (!Array.isArray(variantDbIds) || variantDbIds.length === 0)
+            return [];
+          const { api, idx } = alleleReqs[i];
+          return [
+            api.fetchVariants({
+              selectedGigwaServer: selectedGigwaServers?.[idx],
+              variantDbIds,
+            }),
+          ];
+        });
+
+        const variantResponses = await Promise.all(fetchVariantRequests);
+
+        // Initialize pagesPerServer once (typically on first call)
         if (pagesPerServer.length === 0) {
-          const newPagesPerServer = variantResponses.map((server) => {
-            const count = server.data.count;
+          const newPagesPerServer = alleleResponses.map((server) => {
+            const varPag = server?.result?.pagination?.find(
+              (p) => (p.dimension || "").toUpperCase() === "VARIANTS"
+            );
+            const count = varPag?.totalCount ?? 0;
             const fullPages = Math.floor(count / 1000);
             const remainder = count % 1000;
-            const pagesArr = [];
-            for (let j = 0; j < fullPages; j++) {
-              pagesArr.push(1000);
-            }
+            const pagesArr = Array(fullPages).fill(1000);
             if (remainder > 0) pagesArr.push(remainder);
             return pagesArr;
           });
           dispatch(genotypeActions.setPagesPerServer(newPagesPerServer));
 
           const globalPageCount = Math.max(
-            ...newPagesPerServer.map((arr) => arr.length)
+            ...newPagesPerServer.map((arr) => arr.length),
+            0
           );
-
           const newGlobalPageLengths = Array.from(
             { length: globalPageCount },
             (_, i) =>
@@ -752,15 +720,14 @@ const GenotypeExplorer = () => {
           dispatch(genotypeActions.setPageLengths(newGlobalPageLengths));
         }
 
+        // Update pageLengths for this page from real variant responses
         dispatch((dispatch, getState) => {
           const state = getState();
           const prevPageLengths = state.genotype.pageLengths || [];
-
-          let totalVariantsOnThisPage = 0;
-          for (const variantResp of variantResponses) {
-            totalVariantsOnThisPage += variantResp.data.variants.length;
-          }
-
+          const totalVariantsOnThisPage = variantResponses.reduce(
+            (sum, r) => sum + (r?.result?.data?.length ?? 0),
+            0
+          );
           const updated = [...prevPageLengths];
           updated[page - 1] = totalVariantsOnThisPage;
           dispatch(genotypeActions.setPageLengths(updated));
