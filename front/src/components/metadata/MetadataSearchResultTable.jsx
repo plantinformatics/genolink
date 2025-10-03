@@ -244,7 +244,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
 
   return (
     <>
-      <div style={{ maxHeight: "600px", overflowY: "auto" }}>
+      <div style={{ maxHeight: "70vh", overflowY: "auto" }}>
         <table
           style={{ width: "100%", borderCollapse: "collapse" }}
           className="table table-bordered table-hover"
