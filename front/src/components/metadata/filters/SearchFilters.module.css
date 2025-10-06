@@ -337,7 +337,7 @@
 .filterBar {
   display: flex;
   align-items: center;
-  margin: 20px;
+  margin: 10px;
   position: sticky;
   top: 0;
   z-index: 1;
@@ -345,7 +345,10 @@
 
 .searchResultsContainer {
   flex: 1 1 auto;
-  margin: 20px;
+}
+
+:global(.react-tabs__tab-list) {
+  margin: 0;
 }
 
 .alertBox {
