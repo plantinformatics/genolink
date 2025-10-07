@@ -70,10 +70,6 @@
   margin-left: 10px;
 }
 
-.genoData {
-  margin-left: 50px;
-}
-
 .searchContainer {
   display: flex;
   align-items: center;
@@ -202,6 +198,31 @@
   outline-offset: 2px;
 }
 
+.buttonSecondary {
+  display: inline-block;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  background-color: #6c757d;
+  border: 1px solid #6c757d;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.buttonSecondary:hover {
+  background-color: #5c636a;
+  border-color: #5c636a;
+}
+
+.buttonSecondary:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(108, 117, 125, 0.5);
+}
+
 .formCheck {
   margin-bottom: 8px;
   display: flex;
@@ -215,4 +236,45 @@
 .formCheckLabel {
   font-weight: 500;
   font-size: 0.95rem;
+}
+
+.genoSplit {
+  display: grid;
+  grid-template-columns: 1fr 4fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.filtersPane {
+  background: #eff2f3;
+  padding: 12px;
+  position: sticky;
+  top: 12px;
+  max-height: calc(100vh - 24px);
+  overflow: auto;
+}
+
+.resultsPane {
+  background: #eff2f3;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.resultsArea {
+  border-left: 3px solid gray;
+  padding: 8px;
+  min-height: 240px;
+}
+
+.tableScroll {
+  overflow: auto;
+  max-height: calc(100vh - 240px);
+}
+
+.exportBar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }

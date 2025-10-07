@@ -39,7 +39,6 @@ const GenotypeExplorer = () => {
   const [usernames, setUsernames] = useState([]);
   const [passwords, setPasswords] = useState([]);
   const [accessMode, setAccessMode] = useState([]);
-  const [showSearchTypeSelector, setShowSearchTypeSelector] = useState(false);
   const [showDatasetSelector, setShowDatasetSelector] = useState(false);
   const [searchType, setSearchType] = useState("");
   const [gigwaServers, setGigwaServers] = useState({});
@@ -542,7 +541,6 @@ const GenotypeExplorer = () => {
           );
           dispatch(genotypeActions.setSampleNames(uniqueSampleNames));
           dispatch(genotypeActions.setIsGenomeSearchSubmit(true));
-          setShowSearchTypeSelector(true);
           setShowDatasetSelector(true);
         }
 
@@ -735,8 +733,6 @@ const GenotypeExplorer = () => {
 
         dispatch(genotypeActions.setGenomData(variantResponses));
         dispatch(genotypeActions.setAlleleData(alleleResponses));
-        setShowSearchTypeSelector(false);
-        setShowDatasetSelector(false);
       } else if (selectedOption === "Germinate") {
         const Accessions = checkedResults?.map((item) => item.accessionNumber);
         const responses = await Promise.all(
@@ -765,12 +761,12 @@ const GenotypeExplorer = () => {
   };
 
   const handleReset = () => {
-    setShowSearchTypeSelector(false);
     setShowDatasetSelector(false);
     setPosStart("");
     setPosEnd("");
     dispatch(genotypeActions.resetGenotype());
     dispatch(setWildSearchValue(""));
+    setSearchType("");
     // dispatch(genotypeActions.setSelectedStudyDbId([]));
     // dispatch(genotypeActions.setIsGenomeSearchSubmit(false));
     // dispatch(genotypeActions.setGenomData([]));
@@ -779,7 +775,6 @@ const GenotypeExplorer = () => {
     // dispatch(genotypeActions.setSelectedGroups([]));
     // dispatch(genotypeActions.setSelectedSamplesDetails([]));
     // dispatch(genotypeActions.setSelectedDataset(""));
-    // setShowSearchTypeSelector(false);
     // setShowDatasetSelector(false);
     // setPosStart("");
     // setPosEnd("");
@@ -801,6 +796,7 @@ const GenotypeExplorer = () => {
       } else if (newType === "VariantIDs") {
         setPosStart("");
         setPosEnd("");
+        dispatch(genotypeActions.setSelectedGroups(""));
       }
     }
     setSearchType(newType);
@@ -849,12 +845,13 @@ const GenotypeExplorer = () => {
   return (
     Array.isArray(searchResults) && (
       <div>
-        <div className={styles.genoData}>
-          <h2>Genotype Data</h2>
-          <br />
-          {isGenomDataLoading && <LoadingComponent />}
-          {!isGenomDataLoading && (
-            <div>
+        <h3>Genotype Data</h3>
+        <br />
+        {isGenomDataLoading && <LoadingComponent />}
+        {!isGenomDataLoading && (
+          <div className={styles.genoSplit}>
+            {/* LEFT: FILTERS */}
+            <aside className={styles.filtersPane}>
               <div className={styles.searchContainer}>
                 {platforms.length > 1 && (
                   <select
@@ -869,22 +866,33 @@ const GenotypeExplorer = () => {
                     ))}
                   </select>
                 )}
-                {genomData.length === 0 ? (
+
+                {!isGenomeSearchSubmit ? (
                   <button
                     type="button"
                     className={styles.buttonPrimary}
                     onClick={handleSearch}
                   >
-                    {isGenomeSearchSubmit ? "Search Genotype" : "Lookup Data"}
+                    Lookup Data
                   </button>
                 ) : (
-                  <button
-                    type="button"
-                    className={styles.buttonPrimary}
-                    onClick={handleReset}
-                  >
-                    Reset
-                  </button>
+                  //  {isGenomeSearchSubmit ? "Search Genotype" :
+                  <div style={{ display: "flex", gap: "10px" }}>
+                    <button
+                      type="button"
+                      className={styles.buttonPrimary}
+                      onClick={handleSearch}
+                    >
+                      Search Genotype
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.buttonSecondary}
+                      onClick={handleReset}
+                    >
+                      Reset
+                    </button>
+                  </div>
                 )}
               </div>
 
@@ -960,42 +968,39 @@ const GenotypeExplorer = () => {
                 </div>
               )}
 
-              {/* Show Search Summary */}
               {selectedOption === "Gigwa" && showDatasetSelector && (
-                <div className="dataset-selector">
-                  <div>
-                    <h3>Search Summary</h3>
-                    {selectedGigwaServers.map((server, index) => (
-                      <div key={server} className={styles.serverSummaryBox}>
-                        <h4>Server: {server?.replace(/^https?:\/\//, "")}</h4>
-                        <h5>
-                          {numberOfMappedAccessions[index]} of{" "}
-                          {numberOfGenesysAccessions} accessions have sample
-                          name mappings.
-                        </h5>
-                        <h5>
-                          {numberOfPresentAccessions[index]} of{" "}
-                          {numberOfGenesysAccessions} accessions have genotypes
-                          in Gigwa.
-                        </h5>
-                      </div>
-                    ))}
-                    {!copied ? (
-                      <button
-                        type="button"
-                        className={styles.copySampleButton}
-                        onClick={handleCopySampleNames}
-                      >
-                        <FontAwesomeIcon
-                          icon={faCopy}
-                          className={styles.copyIcon}
-                        />
-                        Copy Sample-Names
-                      </button>
-                    ) : (
-                      <span className={styles.copySuccessText}>Copied!</span>
-                    )}
-                  </div>
+                <div>
+                  <h3>Search Summary</h3>
+                  {selectedGigwaServers.map((server, index) => (
+                    <div key={server} className={styles.serverSummaryBox}>
+                      <h4>Server: {server?.replace(/^https?:\/\//, "")}</h4>
+                      <h5>
+                        {numberOfMappedAccessions[index]} of{" "}
+                        {numberOfGenesysAccessions} accessions have sample name
+                        mappings.
+                      </h5>
+                      <h5>
+                        {numberOfPresentAccessions[index]} of{" "}
+                        {numberOfGenesysAccessions} accessions have genotypes in
+                        Gigwa.
+                      </h5>
+                    </div>
+                  ))}
+                  {!copied ? (
+                    <button
+                      type="button"
+                      className={styles.copySampleButton}
+                      onClick={handleCopySampleNames}
+                    >
+                      <FontAwesomeIcon
+                        icon={faCopy}
+                        className={styles.copyIcon}
+                      />{" "}
+                      Copy Sample-Names
+                    </button>
+                  ) : (
+                    <span className={styles.copySuccessText}>Copied!</span>
+                  )}
 
                   <br />
                   <div className={styles.datasetSelectorContainer}>
@@ -1035,53 +1040,59 @@ const GenotypeExplorer = () => {
                 </div>
               )}
 
-              {selectedOption === "Gigwa" && selectedDataset && (
-                <>
-                  {showSearchTypeSelector && (
-                    <select
-                      value={searchType || ""}
-                      onChange={(e) => handleSearchTypeChange(e.target.value)}
-                      className={styles.filterTypeSelect}
-                    >
-                      <option value="" disabled>
-                        Filter Type
-                      </option>
-                      <option value="PositionRange">PositionRange</option>
-                      <option value="VariantIDs">VariantIDs</option>
-                    </select>
+              {/* Filters that depend on searchType */}
+              {showDatasetSelector && (
+                <select
+                  value={searchType || ""}
+                  onChange={(e) => handleSearchTypeChange(e.target.value)}
+                  className={styles.filterTypeSelect}
+                  disabled={selectedGigwaServers.some(
+                    (_, index) =>
+                      !datasets?.[index] ||
+                      datasets[index].length === 0 ||
+                      !selectedDataset?.[index] ||
+                      selectedDataset[index].length === 0
                   )}
-                  {showSearchTypeSelector &&
-                    (searchType === "PositionRange" ? (
-                      <>
-                        <PositionRangeFilter
-                          posStart={posStart}
-                          setPosStart={setPosStart}
-                          posEnd={posEnd}
-                          setPosEnd={setPosEnd}
-                        />
-                        <div>
-                          <select
-                            value={selectedGroups || ""}
-                            onChange={(e) => handleInputChange(e.target.value)}
-                          >
-                            <option value="" disabled>
-                              Select a chromosome
-                            </option>
-                            {linkageGroups.map((group) => (
-                              <option key={group} value={group}>
-                                {selectedOption === "Germinate"
-                                  ? CHROMConverter(group)
-                                  : group}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </>
-                    ) : searchType === "VariantIDs" ? (
-                      <VariantListFilter />
-                    ) : null)}
-                </>
+                >
+                  <option value="" disabled>
+                    Filter Type
+                  </option>
+                  <option value="PositionRange">PositionRange</option>
+                  <option value="VariantIDs">VariantIDs</option>
+                </select>
               )}
+
+              {showDatasetSelector &&
+                (searchType === "PositionRange" ? (
+                  <>
+                    <PositionRangeFilter
+                      posStart={posStart}
+                      setPosStart={setPosStart}
+                      posEnd={posEnd}
+                      setPosEnd={setPosEnd}
+                    />
+                    <div>
+                      <select
+                        value={selectedGroups || ""}
+                        onChange={(e) => handleInputChange(e.target.value)}
+                      >
+                        <option value="" disabled>
+                          Select a chromosome
+                        </option>
+                        {linkageGroups.map((group) => (
+                          <option key={group} value={group}>
+                            {selectedOption === "Germinate"
+                              ? CHROMConverter(group)
+                              : group}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </>
+                ) : searchType === "VariantIDs" ? (
+                  <VariantListFilter />
+                ) : null)}
+
               {selectedOption === "Germinate" && !showPrivacyRadio && (
                 <>
                   <PositionRangeFilter
@@ -1100,7 +1111,6 @@ const GenotypeExplorer = () => {
                       <option value="" disabled>
                         Select a chromosome
                       </option>
-
                       {linkageGroups.map((group) => (
                         <option key={group} value={group}>
                           {selectedOption === "Germinate"
@@ -1112,26 +1122,26 @@ const GenotypeExplorer = () => {
                   </div>
                 </>
               )}
+            </aside>
 
+            {/* RIGHT: RESULTS */}
+            <main className={styles.resultsPane}>
               {isGenomDataLoading && <LoadingComponent />}
+
               {genomData.length > 0 &&
               alleleData &&
               !isGenomDataLoading &&
               selectedOption === "Gigwa" ? (
                 <>
-                  <GenotypeSearchResultsTable
-                  // data={genomData}
-                  // alleles={alleleData}
-                  // currentPage={currentPage}
-                  // setCurrentPage={setCurrentPage}
-                  // samples={completeNames}
-                  // platform={selectedOption}
-                  // pageLengths={pageLengths}
-                  />
+                  <div className={styles.resultsArea}>
+                    <div className={styles.tableScroll}>
+                      <GenotypeSearchResultsTable />
+                    </div>
+                  </div>
 
                   {isExportGenomDataLoading && <LoadingComponent />}
                   {!isExportGenomDataLoading && (
-                    <>
+                    <div className={styles.exportBar}>
                       <select
                         id="exportServerSelect"
                         value={exportServer}
@@ -1148,11 +1158,12 @@ const GenotypeExplorer = () => {
                       </select>
                       <button
                         onClick={handleExportVCF}
-                        className={styles.vcfExportButton}
+                        style={{ marginLeft: "10px", padding: "3px 10px" }}
+                        className={styles.buttonPrimary}
                       >
                         Export VCF
                       </button>
-                    </>
+                    </div>
                   )}
                 </>
               ) : selectedOption === "Germinate" &&
@@ -1160,9 +1171,9 @@ const GenotypeExplorer = () => {
                 !isGenomDataLoading ? (
                 <GenotypeSearchResultsTable />
               ) : null}
-            </div>
-          )}
-        </div>
+            </main>
+          </div>
+        )}
       </div>
     )
   );
