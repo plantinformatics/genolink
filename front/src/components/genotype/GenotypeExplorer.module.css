@@ -7,6 +7,7 @@
   margin: 8px 0;
   padding: 8px;
   border-radius: 4px;
+  white-space: nowrap;
 }
 
 .copySampleButton {
@@ -241,7 +242,6 @@
 .genoSplit {
   display: grid;
   grid-template-columns: 1fr 4fr;
-  gap: 1rem;
   align-items: start;
 }
 
@@ -251,7 +251,6 @@
   position: sticky;
   top: 12px;
   max-height: calc(100vh - 24px);
-  overflow: auto;
 }
 
 .resultsPane {
@@ -269,7 +268,8 @@
 }
 
 .tableScroll {
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
   max-height: calc(100vh - 240px);
 }
 
