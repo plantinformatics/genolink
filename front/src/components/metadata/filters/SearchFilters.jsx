@@ -519,7 +519,6 @@ const SearchFilters = ({ tokenReady }) => {
       const filterCode = await genesysApi.resetFilter(dispatch);
       setFilterCode(filterCode);
       setIsResetLoading(false);
-      setLayoutHeight(window.innerHeight * 0.66);
       dispatch(setActiveFilters([]));
       dispatch(setResetTrigger(true));
       dispatch(setWildSearchValue(""));
@@ -527,27 +526,6 @@ const SearchFilters = ({ tokenReady }) => {
       setIsResetLoading(false);
       console.error("Error handling reset filter:", error);
     }
-  };
-
-  const handleHorizontalDrag = (e) => {
-    e.preventDefault();
-    const startY = e.clientY;
-    const topDiv = e.target.previousElementSibling;
-    const startTopHeight = topDiv.offsetHeight;
-
-    const onMouseMove = (moveEvent) => {
-      const delta = moveEvent.clientY - startY;
-      const newTopHeight = Math.max(100, startTopHeight + delta);
-      setLayoutHeight(newTopHeight);
-    };
-
-    const onMouseUp = () => {
-      document.removeEventListener("mousemove", onMouseMove);
-      document.removeEventListener("mouseup", onMouseUp);
-    };
-
-    document.addEventListener("mousemove", onMouseMove);
-    document.addEventListener("mouseup", onMouseUp);
   };
 
   return (
