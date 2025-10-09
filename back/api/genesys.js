@@ -257,10 +257,6 @@ router.post("/accession/query", async (req, res) => {
         ...body,
         accessionNumbers: [...(body.accessionNumbers || [])],
       };
-    } else {
-      throw new Error(
-        "Either genotypeIds or accessionNumbers must be provided."
-      );
     }
 
     const accToGid = new Map();
