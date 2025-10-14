@@ -620,101 +620,288 @@ router.post("/brapi/v2/search/allelematrix", async (req, res) => {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 router.post("/exportData", async (req, res) => {
+  // Function to extract JSESSIONID from cookies
+  const extractJSessionId = (setCookie) => {
+    if (!Array.isArray(setCookie)) return "";
+    for (const c of setCookie) {
+      const m = /(?:^|;\s*)JSESSIONID=([^;]+)/i.exec(c);
+      if (m && m[1]) return `JSESSIONID=${m[1]}`;
+    }
+    return "";
+  };
+
+  // Function to wait for the ZIP file to be complete
+  const waitForZipComplete = async (
+    url,
+    headers,
+    { timeoutMs = 600000, intervalMs = 2000 }
+  ) => {
+    const deadline = Date.now() + timeoutMs;
+    let lastLen = -1,
+      stableCount = 0;
+
+    const headOnce = async () => {
+      const resp = await axios.head(url, {
+        headers,
+        validateStatus: () => true,
+      });
+      return {
+        status: resp.status,
+        len: Number(resp.headers["content-length"] || -1),
+      };
+    };
+
+    while (Date.now() < deadline) {
+      const { status, len } = await headOnce();
+      if (status !== 200 || len <= 0) {
+        await new Promise((r) => setTimeout(r, intervalMs));
+        continue;
+      }
+
+      // First 2 bytes must be 'PK'
+      const first = await axios.get(url, {
+        headers: {
+          ...headers,
+          Range: "bytes=0-1",
+          "Accept-Encoding": "identity",
+        },
+        responseType: "arraybuffer",
+        decompress: false,
+        validateStatus: () => true,
+      });
+      const fbuf = Buffer.from(first.data || []);
+      const startOK =
+        first.status === 206 &&
+        fbuf.length >= 2 &&
+        fbuf[0] === 0x50 &&
+        fbuf[1] === 0x4b;
+      if (!startOK) {
+        await new Promise((r) => setTimeout(r, intervalMs));
+        continue;
+      }
+
+      // EOCD must be in the last <= 66KB
+      const tailSize = Math.min(65536, len);
+      const startByte = len - tailSize;
+      const last = await axios.get(url, {
+        headers: {
+          ...headers,
+          Range: `bytes=${startByte}-${len - 1}`,
+          "Accept-Encoding": "identity",
+        },
+        responseType: "arraybuffer",
+        decompress: false,
+        validateStatus: () => true,
+      });
+      const lbuf = Buffer.from(last.data || []);
+      const tailOK =
+        last.status === 206 &&
+        lbuf.includes(Buffer.from([0x50, 0x4b, 0x05, 0x06]));
+      if (!tailOK) {
+        await new Promise((r) => setTimeout(r, intervalMs));
+        continue;
+      }
+
+      if (len === lastLen) stableCount++;
+      else {
+        stableCount = 0;
+        lastLen = len;
+      }
+      if (stableCount >= 1) return;
+      await new Promise((r) => setTimeout(r, intervalMs));
+    }
+    throw new Error("Timed out waiting for ZIP");
+  };
+
   try {
-    let token = "";
     const {
-      variantList,
-      selectedSamplesDetails,
-      linkagegroups,
-      start,
-      end,
+      variantList = [],
+      selectedSamplesDetails = [],
+      linkagegroups = "",
+      start = -1,
+      end = -1,
       selectedGigwaServer,
+      gigwaToken,
+      username,
+      password,
     } = req.body;
+
     if (!selectedGigwaServer) {
       return res
         .status(400)
         .json({ error: "Please specify Gigwa server in your payload" });
     }
-    if (req.body.gigwaToken) {
-      token = req.body.gigwaToken;
-    } else {
-      token = await axios.post(
-        `${selectedGigwaServer}/gigwa/rest/gigwa/generateToken`,
-        req.body.username && req.body.password
-          ? { username: req.body.username, password: req.body.password }
-          : undefined,
+
+    const baseUrl = selectedGigwaServer.replace(/\/$/, "");
+    const assemblyHeader = "0";
+
+    let token = gigwaToken || "";
+    let cookieHeader = "";
+
+    if (!token) {
+      const gen = await axios.post(
+        `${baseUrl}/gigwa/rest/gigwa/generateToken`,
+        username && password ? { username, password } : undefined,
         {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
           },
+          validateStatus: () => true,
         }
       );
+      if (gen.status < 200 || gen.status >= 300) {
+        const msg =
+          typeof gen.data === "string" ? gen.data : JSON.stringify(gen.data);
+        return res.status(gen.status).send(msg || "Failed to generate token");
+      }
+      token = typeof gen.data === "string" ? gen.data : gen.data?.token || "";
+      const setCookie = gen.headers?.["set-cookie"] || [];
+      cookieHeader = extractJSessionId(setCookie) || "";
+    } else {
+      const probe = await axios.post(
+        `${baseUrl}/gigwa/rest/gigwa/generateToken`,
+        undefined,
+        { headers: { Accept: "application/json" }, validateStatus: () => true }
+      );
+      const setCookie = probe.headers?.["set-cookie"] || [];
+      cookieHeader = extractJSessionId(setCookie) || "";
     }
-    const sampleList = selectedSamplesDetails.map(
-      (sample) => sample.germplasmDbId.split("§")[1]
-    );
 
-    const joinedVariantList = variantList.join(";");
+    const sampleList = selectedSamplesDetails
+      .map((s) => (s.germplasmDbId || "").split("§")[1])
+      .filter(Boolean);
+
+    const joinedVariantList = Array.isArray(variantList)
+      ? variantList.join(";")
+      : String(variantList || "").trim();
+    const variantSetId = selectedSamplesDetails[0]?.studyDbId || "AGG_BARLEY§1";
 
     const body = {
+      variantSetId,
+      searchMode: 3,
+      getGT: true,
+      referenceName: linkagegroups || "",
+      selectedVariantTypes: "",
       alleleCount: "",
-      annotationFieldThresholds: {},
-      annotationFieldThresholds2: {},
-      callSetIds: [],
-      callSetIds2: [],
-      discriminate: false,
-      end: end || -1,
-      exportedIndividuals: sampleList,
-      exportFormat: "VCF",
+      start: start ? start : -1,
+      end: end ? end : -1,
+      variantEffect: "",
       geneName: "",
-      getGT: false,
-      gtPattern: "Any",
-      gtPattern2: "Any",
-      keepExportOnServer: false,
-      maxHeZ: 100,
-      maxHeZ2: 100,
-      maxMaf: 50,
-      maxMaf2: 50,
-      maxMissingData: 100,
-      maxMissingData2: 100,
-      metadataFields: [],
-      minHeZ: 0,
-      minHeZ2: 0,
-      minMaf: 0,
-      minMaf2: 0,
-      minMissingData: 0,
-      minMissingData2: 0,
-      mostSameRatio: "100",
-      mostSameRatio2: "100",
+      callSetIds: [],
+      discriminate: [],
+      groupName: [],
       pageSize: 100,
       pageToken: "0",
-      referenceName: linkagegroups || "",
-      searchMode: 3,
-      selectedVariantIds: joinedVariantList,
-      selectedVariantTypes: "",
       sortBy: "",
       sortDir: "asc",
-      start: start || -1,
-      variantEffect: "",
-      variantSetId: `${selectedSamplesDetails[0]?.studyDbId}`,
+      selectedVariantIds: joinedVariantList,
+      gtPattern: [],
+      mostSameRatio: [],
+      minMaf: [],
+      maxMaf: [],
+      minMissingData: [],
+      maxMissingData: [],
+      minHeZ: [],
+      maxHeZ: [],
+      annotationFieldThresholds: [],
+      additionalCallSetIds: [],
+      keepExportOnServer: false,
+      exportFormat: "VCF",
+      exportedIndividuals: sampleList,
+      metadataFields: [],
     };
-    const response = await axios.post(
-      `${selectedGigwaServer}/gigwa/rest/gigwa/exportData`,
+    const postResp = await axios.post(
+      `${baseUrl}/gigwa/rest/gigwa/exportData`,
       body,
       {
         headers: {
-          assembly: "0",
+          "Content-Type": "application/json;charset=UTF-8",
           Authorization: `Bearer ${token}`,
+          "X-Requested-With": "XMLHttpRequest",
+          Accept: "text/plain,*/*",
+          assembly: assemblyHeader,
+          ...(cookieHeader ? { Cookie: cookieHeader } : {}),
         },
-        responseType: "arraybuffer",
+        responseType: "text",
+        validateStatus: () => true,
       }
     );
 
-    res.send(response.data);
+    if (postResp.status < 200 || postResp.status >= 300) {
+      const txt =
+        typeof postResp.data === "string"
+          ? postResp.data
+          : JSON.stringify(postResp.data);
+      return res.status(postResp.status).send(txt || "Upstream error");
+    }
+
+    const pathText = String(postResp.data || "").trim();
+    if (!pathText.startsWith("/gigwa/") || !pathText.endsWith(".zip")) {
+      return res
+        .status(502)
+        .send(pathText || "Unexpected payload from /exportData");
+    }
+
+    // Poll until complete
+    const origin = new URL(baseUrl).origin;
+    const downloadUrl = `${origin}${pathText}`;
+    const dlHeaders = {
+      Authorization: `Bearer ${token}`,
+      assembly: assemblyHeader,
+      Accept: "application/zip,application/octet-stream,*/*",
+      "Accept-Encoding": "identity",
+      ...(cookieHeader ? { Cookie: cookieHeader } : {}),
+    };
+    await waitForZipComplete(downloadUrl, dlHeaders, {
+      timeoutMs: 600000,
+      intervalMs: 2000,
+    });
+
+    // Full download
+    const zipResp = await axios.get(downloadUrl, {
+      headers: dlHeaders,
+      responseType: "arraybuffer",
+      decompress: false,
+      validateStatus: () => true,
+    });
+
+    const buf = Buffer.from(zipResp.data || []);
+    const isZip =
+      zipResp.status === 200 &&
+      buf.length >= 4 &&
+      buf[0] === 0x50 &&
+      buf[1] === 0x4b &&
+      buf[2] === 0x03 &&
+      buf[3] === 0x04;
+    if (!isZip) {
+      const t = Buffer.from(zipResp.data || []).toString("utf8");
+      return res.status(zipResp.status).send(t || "Failed to fetch ZIP");
+    }
+
+    res.setHeader("Content-Encoding", "identity");
+    res.setHeader(
+      "Content-Type",
+      zipResp.headers["content-type"] || "application/zip"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      zipResp.headers["content-disposition"] ||
+        'attachment; filename="export.zip"'
+    );
+    if (zipResp.headers["content-length"])
+      res.setHeader("Content-Length", zipResp.headers["content-length"]);
+    return res.status(200).end(buf);
   } catch (error) {
-    logger.error(`API Error in /exportData: ${error.message}`);
-    res.status(500).send("API request failed: " + error.message);
+    if (error?.response) {
+      const txt = Buffer.from(error.response.data || []).toString("utf8");
+      return res
+        .status(error.response.status)
+        .send(txt || error.response.statusText);
+    }
+    return res
+      .status(500)
+      .send("API request failed: " + (error?.message || "Unknown error"));
   }
 });
 //////////////////////////////////////////////////////////////////////////
