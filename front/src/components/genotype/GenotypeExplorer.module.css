@@ -270,7 +270,6 @@
 .tableScroll {
   overflow-x: auto;
   overflow-y: hidden;
-  max-height: calc(100vh - 240px);
 }
 
 .exportBar {
