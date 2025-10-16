@@ -496,6 +496,27 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
     );
     const response = searchResponse.data;
 
+    const genotypeIdsForSorting = [];
+    const seen = new Set();
+
+    response.result.data.forEach((item) => {
+      const genotypeId = item.germplasmDbId.split("§")[1];
+      if (!seen.has(genotypeId)) {
+        seen.add(genotypeId);
+        genotypeIdsForSorting.push(genotypeId);
+      }
+    });
+
+    accessionPlusAccessionName.sort((a, b) => {
+      const genotypeIdA = a.split("§")[2];
+      const genotypeIdB = b.split("§")[2];
+
+      const indexA = genotypeIdsForSorting.indexOf(genotypeIdA);
+      const indexB = genotypeIdsForSorting.indexOf(genotypeIdB);
+
+      return indexA - indexB;
+    });
+
     const uniqueSamplePresence = new Set(
       response.result.data.map(
         (individual) => individual.germplasmDbId.split("§")[1]
