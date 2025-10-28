@@ -83,34 +83,6 @@ const GenotypeSearchResultsTable = () => {
     return [];
   }, [alleles, samples]);
 
-  const isPhasedArray = useMemo(() => {
-    if (platform === "Gigwa" && alleles.length > 0 && genotypeMaps.length > 0) {
-      return alleles.map((allele, serverIndex) => {
-        if (
-          allele.result.variantSetDbIds &&
-          allele.result.variantSetDbIds.length > 0 &&
-          allele.result.variantSetDbIds[0]
-            .split("§")[2]
-            ?.toLowerCase()
-            .includes("filledin")
-        ) {
-          return true;
-        }
-        const map = genotypeMaps[serverIndex] || {};
-        for (const sampleGenotypes of Object.values(map)) {
-          if (
-            Array.isArray(sampleGenotypes) &&
-            sampleGenotypes.some((geno) => geno && geno.includes("|"))
-          ) {
-            return true;
-          }
-        }
-        return false;
-      });
-    }
-    return [];
-  }, [alleles, genotypeMaps]);
-
   const handleSort = (columnKey) => {
     let direction = "asc";
     if (sortConfig.key === columnKey && sortConfig.direction === "asc") {
@@ -235,8 +207,17 @@ const GenotypeSearchResultsTable = () => {
                     <td title={variant.variantDbId.split("§")[1]}>
                       {variant.variantDbId.split("§")[1]}
                     </td>
-                    <td>{variant.referenceBases}</td>
-                    <td>{variant.alternateBases[0]}</td>
+                    <td style={{ background: "#b4c0e7" }}>
+                      {variant.referenceBases}
+                    </td>
+                    <td
+                      style={{
+                        background: "#fac9b0",
+                        borderRight: "5px solid white",
+                      }}
+                    >
+                      {variant.alternateBases[0]}
+                    </td>
                     {unionSamples.map((sample) => {
                       const serverSamples = samples[serverIndex] || [];
                       let genotypeValue = null;
@@ -249,20 +230,36 @@ const GenotypeSearchResultsTable = () => {
                           genotypeMaps[serverIndex][sample][localIndex];
                       }
                       return (
-                        <td key={sample}>
+                        <td
+                          key={sample}
+                          style={{
+                            background:
+                              genotypeValue === "."
+                                ? "#fff"
+                                : (genotypeValue === "0/1") |
+                                  (genotypeValue === "1/0") |
+                                  (genotypeValue === "0|1") |
+                                  (genotypeValue === "1|0")
+                                ? "#dbedf7"
+                                : genotypeValue === "1"
+                                ? "#fac9b0"
+                                : genotypeValue === "0"
+                                ? "#b4c0e7"
+                                : "#fff",
+                          }}
+                        >
                           {genotypeValue === "."
                             ? "."
-                            : genotypeValue === "0"
-                            ? isPhasedArray[serverIndex]
-                              ? "0|0"
-                              : "0/0"
+                            : (genotypeValue === "0/1") |
+                              (genotypeValue === "1/0") |
+                              (genotypeValue === "0|1") |
+                              (genotypeValue === "1|0")
+                            ? "1"
                             : genotypeValue === "1"
-                            ? isPhasedArray[serverIndex]
-                              ? "1|1"
-                              : "1/1"
+                            ? "2"
                             : genotypeValue !== null
                             ? genotypeValue
-                            : ""}
+                            : "."}
                         </td>
                       );
                     })}
