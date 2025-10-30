@@ -1,5 +1,5 @@
 # Stage 1: Build the frontend
-FROM node:14-alpine AS frontend-build
+FROM node:20-alpine AS frontend-build
 
 # Set the working directory
 WORKDIR /app
@@ -32,7 +32,7 @@ ENV VITE_GENESYS_SERVER=$VITE_GENESYS_SERVER
 RUN npm run build
 
 # Stage 2: Set up the backend and serve the frontend
-FROM node:14-alpine
+FROM node:20-alpine
 
 # Set the working directory
 WORKDIR /app
