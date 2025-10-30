@@ -275,7 +275,7 @@ router.post("/accession/query", async (req, res) => {
     if (req.query.l) queryParams.push(`l=${req.query.l}`);
     if (req.query.s) queryParams.push(`s=${req.query.s}`);
     if (req.query.d) queryParams.push(`d=${req.query.d}`);
-    if (req.query.f) queryParams.push(`d=${req.query.f}`);
+    if (req.query.f) queryParams.push(`f=${req.query.f}`);
     if (req.query.select)
       queryParams.push(
         `select=accessionNumber, countryOfOrigin.codeNum, ${req.query.select}`
