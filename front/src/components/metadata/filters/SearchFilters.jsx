@@ -1,13 +1,11 @@
-import { useState, useEffect, useRef } from "react";
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
+import { useState, useEffect, useRef } from "react";
 import LoadingComponent from "../../LoadingComponent";
 import { useDispatch, useSelector } from "react-redux";
 import { FaCircleXmark } from "react-icons/fa6";
-import { AiOutlineQuestionCircle } from "react-icons/ai";
 import styles from "./SearchFilters.module.css";
 import store from "../../../redux/store";
-
 import {
   setInstituteCheckedBoxes,
   setResetTrigger,
@@ -27,8 +25,8 @@ import {
   setActiveFilters,
   setWildSearchValue,
   setSelectedFig,
+  setSubsets,
 } from "../../../redux/passport/passportActions";
-
 import WildSearchFilter from "./WildSearchFilter";
 import MultiSelectFilter from "./MultiSelectFilter";
 import AccessionFilter from "./AccessionFilter";
@@ -38,8 +36,10 @@ import MetadataSearchResultTable from "../MetadataSearchResultTable";
 import DateRangeFilter from "./DateRangeFilter";
 import GenotypeExplorer from "../../genotype/GenotypeExplorer";
 import { genesysApi, genolinkInternalApi } from "../../../pages/Home";
+import { Autocomplete, TextField, Chip, Box } from "@mui/material";
 const SearchFilters = ({ tokenReady }) => {
   const [isLoading, setIsLoading] = useState(false);
+
   const [isResetLoading, setIsResetLoading] = useState(false);
   const [filterCode, setFilterCode] = useState(null);
   const [filterMode, setFilterMode] = useState("Passport Filter");
@@ -47,17 +47,17 @@ const SearchFilters = ({ tokenReady }) => {
   const [initialRequestStatus, setInitialRequestStatus] = useState("pending");
   const [filterBody, setFilterBody] = useState({});
   const [searchButtonName, setSearchButtonName] = useState("Search");
-  const [hasGenotype, setHasGenotype] = useState(false);
+  const [selectedSubsets, setSelectedSubsets] = useState([]);
+  const genotypedYesRef = useRef(null);
+  const genotypedNoRef = useRef(null);
   const [mappingFailed, setMappingFailed] = useState(false);
   const totalAccessions = useSelector(
     (state) => state.passport.totalAccessions
   );
   const searchResults = useSelector((state) => state.passport.searchResults);
-
   const isLoadingGenotypedAccessions = useSelector(
     (state) => state.genotype.isLoadingGenotypedAccessions
   );
-
   const activeFilters = useSelector((state) => state.passport.activeFilters);
 
   const wildSearchValue = useSelector(
@@ -65,13 +65,14 @@ const SearchFilters = ({ tokenReady }) => {
   );
 
   const instituteCode = useSelector((state) => state.passport.instituteCode);
-
+  const subsets = useSelector((state) => state.passport.subsets);
   const resetTrigger = useSelector((state) => state.passport.resetTrigger);
   const accessionNumbers = useSelector(
     (state) => state.passport.accessionNumbers
   );
   const genotypeIds = useSelector((state) => state.passport.genotypeIds);
   const figs = useSelector((state) => state.passport.figs);
+  const selectedFig = useSelector((state) => state.passport.selectedFig);
   const creationStartDate = useSelector(
     (state) => state.passport.creationStartDate
   );
@@ -92,8 +93,8 @@ const SearchFilters = ({ tokenReady }) => {
     (state) => state.passport.germplasmStorageList
   );
   const dispatch = useDispatch();
-
   const wheatImage = "/Wheat.PNG";
+  const selectedUUIDs = selectedSubsets.map((item) => item.uuid);
 
   const withRetryOn401 = async (fn, delay = 500) => {
     try {
@@ -115,7 +116,6 @@ const SearchFilters = ({ tokenReady }) => {
       setSearchButtonName("Search");
     }
   }, [activeFilters]);
-
   useEffect(() => {
     const fetchFigs = async () => {
       try {
@@ -125,10 +125,19 @@ const SearchFilters = ({ tokenReady }) => {
         console.error("Failed to fetch figs:", error);
       }
     };
-
     fetchFigs();
   }, []);
-
+  useEffect(() => {
+    const fetchSubsets = async () => {
+      try {
+        const response = await genesysApi.getAllGenesysSubsets();
+        dispatch(setSubsets(response));
+      } catch (err) {
+        console.error("Failed to load subsets:", err);
+      }
+    };
+    withRetryOn401(fetchSubsets);
+  }, []);
   useEffect(() => {
     if (!tokenReady) return;
     const fetchData = async () => {
@@ -137,9 +146,7 @@ const SearchFilters = ({ tokenReady }) => {
         const urlParams = new URLSearchParams(window.location.search);
         const filterMode = urlParams.get("filterMode");
         const genotypeIdsParam = urlParams.get("genotypeIds");
-
         let accessionNums = [];
-
         if (filterMode === "GenotypeId Filter" && genotypeIdsParam) {
           const genotypeIdList = genotypeIdsParam
             .split(",")
@@ -155,7 +162,6 @@ const SearchFilters = ({ tokenReady }) => {
             setMappingFailed(true);
           }
         }
-
         const [_, { filterCode, body }] = await Promise.all([
           withRetryOn401(() =>
             genesysApi.fetchInitialFilterData(
@@ -174,7 +180,6 @@ const SearchFilters = ({ tokenReady }) => {
             )
           ),
         ]);
-
         setFilterCode(filterCode);
         setFilterBody(body);
         setInitialRequestSent(true);
@@ -186,7 +191,6 @@ const SearchFilters = ({ tokenReady }) => {
         setIsLoading(false);
       }
     };
-
     fetchData();
   }, [dispatch, tokenReady]);
   const removeFilter = (filterToRemove) => {
@@ -215,6 +219,7 @@ const SearchFilters = ({ tokenReady }) => {
       case "Crop":
         dispatch(setCropCheckedBoxes([]));
         break;
+
       case "Genus":
         dispatch(setGenusCheckedBoxes([]));
         break;
@@ -232,17 +237,17 @@ const SearchFilters = ({ tokenReady }) => {
         break;
       case "Germplasm Storage":
         dispatch(setGermplasmStorageCheckedBoxes([]));
+      case "Subsets":
+        setSelectedSubsets([]);
         break;
       default:
         break;
     }
-
     dispatch(
       setActiveFilters(
         activeFilters.filter((filter) => filter !== filterToRemove)
       )
     );
-
     let updatedBody = {};
     activeFilters
       .filter((filter) => filter !== filterToRemove)
@@ -302,16 +307,14 @@ const SearchFilters = ({ tokenReady }) => {
           case "Germplasm Storage":
             updatedBody.storage = filter.value;
             break;
+          case "Subsets":
+            updatedBody.subsets = filter.value;
+            break;
           default:
             break;
         }
       });
-
     setFilterBody(updatedBody);
-  };
-
-  const handleChange = () => {
-    setHasGenotype(!hasGenotype);
   };
   const handleSearch = async (userInput = "") => {
     const state = store.getState();
@@ -324,19 +327,15 @@ const SearchFilters = ({ tokenReady }) => {
       originOfMaterialCheckedBoxes,
       sampStatCheckedBoxes,
       germplasmStorageCheckedBoxes,
-      selectedFig,
     } = state.passport;
-
     let accessionNums1;
     let accessionNums2;
-
     if (genotypeIds && genotypeIds.length > 0) {
       accessionNums1 = await genolinkInternalApi.genotypeIdMapping(genotypeIds);
       accessionNums1 = accessionNums1.map((acc) =>
         acc.replace(/"/g, "").trim().toUpperCase()
       );
     }
-
     if (selectedFig) {
       const convertedFig = await genolinkInternalApi.figMapping(selectedFig);
       accessionNums2 = [...convertedFig];
@@ -344,7 +343,6 @@ const SearchFilters = ({ tokenReady }) => {
         acc.replace(/"/g, "").trim().toUpperCase()
       );
     }
-
     let sets = [];
     if (accessionNumbers.length > 0)
       sets.push(
@@ -358,41 +356,31 @@ const SearchFilters = ({ tokenReady }) => {
       sets.push(new Set(accessionNums1));
     if (accessionNums2 && accessionNums2.length > 0)
       sets.push(new Set(accessionNums2));
-
     let commonAccessions = [];
-
     if (sets.length > 0) {
       commonAccessions = [
         ...sets.reduce((a, b) => new Set([...a].filter((x) => b.has(x)))),
       ];
     }
-
     if (sets.length === 0) {
       commonAccessions = [];
     } else if (commonAccessions.length === 0) {
       commonAccessions = ["Empty"];
     }
-
     dispatch(setResetTrigger(false));
     dispatch(setCheckedAccessions({}));
     setIsLoading(true);
     const body = {
       ...filterBody,
-
       _text: userInput || (wildSearchValue && wildSearchValue.trim()),
-
       accessionNumbers: [...commonAccessions],
-
       institute:
         instituteCheckedBoxes.length > 0 ? { code: instituteCheckedBoxes } : [],
-
       createdDate: {
         ...(creationStartDate !== null ? { ge: creationStartDate } : {}),
         ...(creationEndDate !== null ? { le: creationEndDate } : {}),
       },
-
       crop: cropCheckedBoxes.length > 0 ? cropCheckedBoxes : [],
-
       taxonomy: {
         ...(genusCheckedBoxes.length > 0 && { genus: genusCheckedBoxes }),
         ...(genusSpeciesCheckedBoxes.length > 0 && {
@@ -400,20 +388,33 @@ const SearchFilters = ({ tokenReady }) => {
         }),
         ...(speciesCheckedBoxes.length > 0 && { species: speciesCheckedBoxes }),
       },
-
       countryOfOrigin:
         originOfMaterialCheckedBoxes.length > 0
           ? { code3: originOfMaterialCheckedBoxes }
           : {},
-
       sampStat: sampStatCheckedBoxes.length > 0 ? sampStatCheckedBoxes : [],
-
       storage:
         germplasmStorageCheckedBoxes.length > 0
           ? germplasmStorageCheckedBoxes
           : [],
     };
+    if (typeof genotypedYesRef.current === "boolean") {
+      if (genotypedYesRef.current !== genotypedNoRef.current) {
+        body.genotyped = genotypedYesRef.current;
+      } else {
+        if (body.hasOwnProperty("genotyped")) {
+          delete body.genotyped;
+        }
+      }
+    } else if (typeof genotypedNoRef.current === "boolean") {
+      if (genotypedYesRef.current !== genotypedNoRef.current) {
+        body.genotyped = !genotypedNoRef.current;
+      }
+    }
 
+    if (selectedUUIDs.length > 0) {
+      body.subsets = selectedUUIDs;
+    }
     Object.keys(body).forEach((key) => {
       if (
         body[key] === undefined ||
@@ -422,18 +423,10 @@ const SearchFilters = ({ tokenReady }) => {
         delete body[key];
       }
     });
-
     try {
-      const filterCode = await genesysApi.applyFilter(
-        body,
-        dispatch,
-        hasGenotype
-      );
-
+      const filterCode = await genesysApi.applyFilter(body, dispatch);
       setFilterCode(filterCode);
       setIsLoading(false);
-      // setIsFilterApplied(true);
-
       const newFilters = [];
       if (userInput) newFilters.push({ type: "Text", value: userInput });
       if (accessionNumbers.length > 0)
@@ -479,9 +472,13 @@ const SearchFilters = ({ tokenReady }) => {
           type: "Germplasm Storage",
           value: germplasmStorageCheckedBoxes,
         });
-
+      if (selectedUUIDs.length > 0) {
+        newFilters.push({
+          type: "Subsets",
+          value: selectedSubsets.map((item) => item.title),
+        });
+      }
       dispatch(setActiveFilters(newFilters));
-
       setFilterBody(body);
     } catch (error) {
       console.error("Error applying filter:", error);
@@ -508,13 +505,8 @@ const SearchFilters = ({ tokenReady }) => {
     }
   }, [resetTrigger]);
 
-  // useEffect(() => {
-  //   setIsFilterApplied(activeFilters.length > 0);
-  // }, [activeFilters]);
-
   const handleResetFilter = async () => {
     setIsResetLoading(true);
-
     try {
       const filterCode = await genesysApi.resetFilter(dispatch);
       setFilterCode(filterCode);
@@ -522,6 +514,8 @@ const SearchFilters = ({ tokenReady }) => {
       dispatch(setActiveFilters([]));
       dispatch(setResetTrigger(true));
       dispatch(setWildSearchValue(""));
+      if (genotypedYesRef.current) genotypedYesRef.current.checked = false;
+      if (genotypedNoRef.current) genotypedNoRef.current.checked = false;
     } catch (error) {
       setIsResetLoading(false);
       console.error("Error handling reset filter:", error);
@@ -539,31 +533,17 @@ const SearchFilters = ({ tokenReady }) => {
           />
           <h2 className={styles.genolinkHeader}>Genolink</h2>
         </div>
-
-        <div className={styles.poweredRow}>
-          <div className={styles.leftSpacer}></div>
-          <p className={styles.dataSourceNote}>
-            Powered by{" "}
-            <a
-              href="https://www.genesys-pgr.org/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.sourceLink}
-              onMouseOver={(e) => (e.target.style.textDecoration = "underline")}
-              onMouseOut={(e) => (e.target.style.textDecoration = "none")}
-            >
-              Genesys-PGR
-            </a>
-          </p>
+        <p className={styles.dataSourceNote}>
+          Powered by{" "}
           <a
-            href="https://docs.plantinformatics.io/Genolink/user-guide/"
+            href="https://www.genesys-pgr.org/"
             target="_blank"
             rel="noopener noreferrer"
-            className={styles.helpButton}
+            className={styles.sourceLink}
           >
-            <AiOutlineQuestionCircle size={30} /> Help
+            Genesys-PGR
           </a>
-        </div>
+        </p>
         <p className={styles.dataSourceNote}>
           Passport data sourced from Genesys-PGR. Use of this service means you
           agree to their{" "}
@@ -572,8 +552,6 @@ const SearchFilters = ({ tokenReady }) => {
             target="_blank"
             rel="noopener noreferrer"
             className={styles.sourceLink}
-            onMouseOver={(e) => (e.target.style.textDecoration = "underline")}
-            onMouseOut={(e) => (e.target.style.textDecoration = "none")}
           >
             Terms and Conditions{" "}
           </a>
@@ -600,12 +578,10 @@ const SearchFilters = ({ tokenReady }) => {
                   <button
                     type="button"
                     className={styles.buttonSecondary}
-                    id="reset-filter-button"
                     onClick={handleResetFilter}
                   >
                     Reset Filter
                   </button>
-                  {/* {!isFilterApplied ? ( */}
                   <select
                     value={filterMode}
                     onChange={(e) => setFilterMode(e.target.value)}
@@ -615,7 +591,6 @@ const SearchFilters = ({ tokenReady }) => {
                     <option value="Accession Filter">Accession Filter</option>
                     <option value="GenotypeId Filter">GenotypeId Filter</option>
                   </select>
-                  {/* ) : null} */}
                 </div>
                 <div>
                   <h5
@@ -655,7 +630,6 @@ const SearchFilters = ({ tokenReady }) => {
                     </ul>
                   ) : null}
                 </div>
-
                 {filterMode === "Passport Filter" && (
                   <>
                     <div className={styles.drawer}>
@@ -670,7 +644,6 @@ const SearchFilters = ({ tokenReady }) => {
                       >
                         Date <span className={styles.drawerArrow}></span>
                       </button>
-
                       <div className={styles.drawerContent}>
                         <DateRangeFilter type="start" />
                         <DateRangeFilter type="end" />
@@ -688,7 +661,6 @@ const SearchFilters = ({ tokenReady }) => {
                         Holding Institute{" "}
                         <span className={styles.drawerArrow}></span>
                       </button>
-
                       <div className={styles.drawerContent}>
                         {instituteCode && instituteCode.length > 0 ? (
                           <MultiSelectFilter
@@ -713,7 +685,6 @@ const SearchFilters = ({ tokenReady }) => {
                       >
                         Crops <span className={styles.drawerArrow}></span>
                       </button>
-
                       <div className={styles.drawerContent}>
                         {cropList && cropList.length > 0 ? (
                           <MultiSelectFilter
@@ -816,7 +787,6 @@ const SearchFilters = ({ tokenReady }) => {
                         Origin Of Material{" "}
                         <span className={styles.drawerArrow}></span>
                       </button>
-
                       <div className={styles.drawerContent}>
                         {originOfMaterialList &&
                         originOfMaterialList.length > 0 ? (
@@ -843,7 +813,6 @@ const SearchFilters = ({ tokenReady }) => {
                         Biological Status Of Accession{" "}
                         <span className={styles.drawerArrow}></span>
                       </button>
-
                       <div className={styles.drawerContent}>
                         {sampStatList && sampStatList.length > 0 ? (
                           <MultiSelectFilter
@@ -869,7 +838,6 @@ const SearchFilters = ({ tokenReady }) => {
                         Type Of Germplasm Storage{" "}
                         <span className={styles.drawerArrow}></span>
                       </button>
-
                       <div className={styles.drawerContent}>
                         {germplasmStorageList &&
                         germplasmStorageList.length > 0 ? (
@@ -895,7 +863,6 @@ const SearchFilters = ({ tokenReady }) => {
                       >
                         FIGS set <span className={styles.drawerArrow}></span>
                       </button>
-
                       <div className={styles.drawerContent}>
                         {figs && figs.length > 0 ? (
                           <FigFilter />
@@ -906,24 +873,89 @@ const SearchFilters = ({ tokenReady }) => {
                         )}
                       </div>
                     </div>
+
+                    <div className={styles.drawer}>
+                      <button
+                        className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
+                        onClick={(e) => {
+                          e.currentTarget.parentElement.classList.toggle(
+                            styles.open
+                          );
+                        }}
+                      >
+                        Subsets <span className={styles.drawerArrow}></span>
+                      </button>
+
+                      <div className={styles.drawerContent}>
+                        {subsets && subsets.length > 0 ? (
+                          <Autocomplete
+                            multiple
+                            options={subsets}
+                            getOptionLabel={(option) => option.title}
+                            value={selectedSubsets}
+                            onChange={(event, newValue) => {
+                              // newValue is an array of the selected subset objects
+                              setSelectedSubsets(newValue);
+                            }}
+                            renderValue={(selected) => (
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  flexWrap: "wrap",
+                                  gap: 0.5,
+                                }}
+                              >
+                                {selected.map((option) => (
+                                  <Chip
+                                    key={option.uuid}
+                                    label={option.title}
+                                  />
+                                ))}
+                              </Box>
+                            )}
+                            renderInput={(params) => (
+                              <TextField
+                                {...params}
+                                label="Select Subsets"
+                                placeholder="Type to search..."
+                                variant="outlined"
+                              />
+                            )}
+                          />
+                        ) : (
+                          <p className={styles.unAwailableFilter}>
+                            No available filters.
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   </>
                 )}
                 <div>
-                  <label
-                    style={{
-                      fontWeight: 500,
-                      color: wildSearchValue ? "#888" : "inherit",
-                      cursor: wildSearchValue ? "not-allowed" : "pointer",
-                    }}
-                  >
+                  <h5>Genotyped</h5>
+                  <label style={{ fontWeight: 500, paddingRight: "5px" }}>
                     <input
                       type="checkbox"
-                      checked={hasGenotype}
-                      onChange={handleChange}
-                      className={styles.mR8}
-                      disabled={wildSearchValue}
+                      ref={genotypedYesRef}
+                      defaultChecked={false}
+                      onChange={(e) => {
+                        genotypedYesRef.current = e.target.checked;
+                      }}
+                      className="mR8"
                     />
-                    Check for genotype
+                    Yes
+                  </label>
+                  <label style={{ fontWeight: 500 }}>
+                    <input
+                      type="checkbox"
+                      ref={genotypedNoRef}
+                      defaultChecked={false}
+                      onChange={(e) => {
+                        genotypedNoRef.current = e.target.checked;
+                      }}
+                      className="mR8"
+                    />
+                    No
                   </label>
                 </div>
               </div>
@@ -954,12 +986,10 @@ const SearchFilters = ({ tokenReady }) => {
                         {searchButtonName}
                       </button>
                     </div>
-
                     <div className={styles.searchResultsContainer}>
                       {initialRequestStatus === "pending" && (
                         <LoadingComponent />
                       )}
-
                       {initialRequestStatus === "error" && !mappingFailed && (
                         <div className={styles.alertBox}>
                           <div role="alert" className={styles.alertMessage}>
@@ -978,7 +1008,6 @@ const SearchFilters = ({ tokenReady }) => {
                           </div>
                         </div>
                       )}
-
                       {(initialRequestStatus === "success" &&
                         searchResults?.length === 0) ||
                       (mappingFailed && searchResults?.length === 0) ? (
@@ -991,13 +1020,11 @@ const SearchFilters = ({ tokenReady }) => {
                           </div>
                         </div>
                       ) : null}
-
                       {initialRequestStatus === "success" &&
                         searchResults?.length > 0 && (
                           <MetadataSearchResultTable
                             filterCode={filterCode}
                             filterBody={filterBody}
-                            hasGenotype={hasGenotype}
                           />
                         )}
                     </div>
@@ -1013,7 +1040,6 @@ const SearchFilters = ({ tokenReady }) => {
           </TabPanel>
         </Tabs>
       </div>
-
       <div className={styles.footerSection}>
         <p className={styles.footerDescription}>
           The Australian Grains Genebank (AGG) Strategic Partnership is a $30M
@@ -1022,7 +1048,7 @@ const SearchFilters = ({ tokenReady }) => {
           genetic potential of plant genetic resources for the benefit of
           Australian grain growers.{" "}
           <a
-            href="https://agriculture.vic.gov.au/crops-and-horticulture/the-australian-grains-genebank"
+            href="https://agriculture.vic.gov.au/crops-and-horticulture/the-australian-grainsgenebank"
             className={styles.footerLink}
             target="_blank"
             rel="noopener noreferrer"
@@ -1057,5 +1083,4 @@ const SearchFilters = ({ tokenReady }) => {
     </>
   );
 };
-
 export default SearchFilters;
