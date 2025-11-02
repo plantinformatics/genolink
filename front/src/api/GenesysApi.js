@@ -16,11 +16,9 @@ import {
   setSampStatList,
   setGermplasmStorageList,
   setTotalAccessions,
-  setTotalPreGenotypedAccessions,
   setPassportCurrentPage,
   setResetTrigger,
 } from "../redux/passport/passportActions";
-import { setLoadingGenotypedAccessions } from "../redux/genotype/genotypeActions";
 class GenesysApi extends BaseApi {
   constructor() {
     super(genesysServer);
@@ -101,6 +99,28 @@ class GenesysApi extends BaseApi {
       console.error("Error fetching token:", error);
       throw new Error("Failed to fetch access token");
     }
+  }
+
+  async getAllGenesysSubsets() {
+    const endpoint = "/api/v2/subset/filter";
+    const response = await this.post(endpoint, {});
+    const subsets = response.content.map((subset) => ({
+      title: subset.title,
+      uuid: subset.uuid,
+    }));
+    return subsets;
+  }
+
+  async genotypeInfo(accessions) {
+    let endpoint = "/api/v2/acn/genotype-ids?l=500";
+    if (!accessions) {
+      return;
+    }
+    const body = {
+      accessionNumbers: accessions,
+    };
+    const genotypeInfo = await this.post(endpoint, body);
+    return genotypeInfo.content;
   }
 
   async fetchInitialFilterData(
@@ -230,218 +250,63 @@ class GenesysApi extends BaseApi {
     }
   }
 
-  async applyFilter(filterData, dispatch, hasGenotype) {
+  async applyFilter(filterData, dispatch) {
     try {
-      // const pageSize = hasGenotype ? 10000 : 500;
       const pageSize = 500;
       const select =
         "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases,donorName, donorCode, sampStat, remarks.remark, countryOfOrigin.codeNum, taxonomy.genus, taxonomy.species";
       const endpointQuery = `/api/v1/acn/query?p=0&l=${pageSize}&select=${select}`;
       const endpointFilter = "/api/v1/acn/filter";
-      if (hasGenotype) {
-        if (filterData.hasOwnProperty("accessionNumbers")) {
-          filterData.accessionNumbers = Array.from(
-            new Set([
-              ...filterData.accessionNumbers,
-              ...this.genotypedAccessions,
-            ])
-          );
-        } else {
-          filterData.accessionNumbers = this.genotypedAccessions;
-        }
+      const [queryData, filterDataResponse] = await Promise.all([
+        this.post(endpointQuery, filterData),
+        this.post(endpointFilter, filterData),
+      ]);
+      dispatch(setSearchResults(queryData.content));
+      dispatch(setTotalAccessions(queryData.totalElements));
+      dispatch(
+        setInstituteCode(
+          this.extractSuggestions(filterDataResponse, "institute.code")
+        )
+      );
+      dispatch(
+        setCropList(
+          this.extractSuggestions(filterDataResponse, "crop.shortName")
+        )
+      );
 
-        const [queryData, filterDataResponse] = await Promise.all([
-          this.post(endpointQuery, filterData),
-          this.post(endpointFilter, filterData),
-        ]);
-
-        const genesysAccessions = queryData.content.map(
-          (item) => item.accessionNumber
-        );
-        let genotypedResult = [];
-
-        const matchedAccessions = this.genotypedAccessions.filter((accession) =>
-          genesysAccessions.includes(accession)
-        );
-
-        genotypedResult = genotypedResult.concat(
-          queryData.content.filter((item) =>
-            matchedAccessions.includes(item.accessionNumber)
-          )
-        );
-        // Fetch total genotyped accessions asynchronously
-        this.fetchTotalGenotypedAccessionsInBackground(filterData, dispatch);
-
-        dispatch(setSearchResults(genotypedResult));
-        dispatch(setTotalPreGenotypedAccessions(queryData.totalElements));
-        dispatch(
-          setInstituteCode(
-            this.extractSuggestions(filterDataResponse, "institute.code")
-          )
-        );
-        dispatch(
-          setCropList(
-            this.extractSuggestions(filterDataResponse, "crop.shortName")
-          )
-        );
-        dispatch(
-          setGenusList(
-            this.extractSuggestions(filterDataResponse, "taxonomy.genus")
-          )
-        );
-        dispatch(
-          setGenusSpeciesList(
-            this.extractSuggestions(filterDataResponse, "taxonomy.genusSpecies")
-          )
-        );
-        dispatch(
-          setSpeciesList(
-            this.extractSuggestions(filterDataResponse, "taxonomy.species")
-          )
-        );
-        dispatch(
-          setOriginOfMaterialList(
-            this.extractSuggestions(filterDataResponse, "countryOfOrigin.code3")
-          )
-        );
-        dispatch(
-          setSampStatList(
-            this.extractSuggestions(filterDataResponse, "sampStat")
-          )
-        );
-        dispatch(
-          setGermplasmStorageList(
-            this.extractSuggestions(filterDataResponse, "storage")
-          )
-        );
-        dispatch(setPassportCurrentPage(0));
-        return queryData.filterCode;
-      } else {
-        const [queryData, filterDataResponse] = await Promise.all([
-          this.post(endpointQuery, filterData),
-          this.post(endpointFilter, filterData),
-        ]);
-        dispatch(setSearchResults(queryData.content));
-        dispatch(setTotalAccessions(queryData.totalElements));
-        dispatch(
-          setInstituteCode(
-            this.extractSuggestions(filterDataResponse, "institute.code")
-          )
-        );
-        dispatch(
-          setCropList(
-            this.extractSuggestions(filterDataResponse, "crop.shortName")
-          )
-        );
-        dispatch(
-          setGenusList(
-            this.extractSuggestions(filterDataResponse, "taxonomy.genus")
-          )
-        );
-        dispatch(
-          setGenusSpeciesList(
-            this.extractSuggestions(filterDataResponse, "taxonomy.genusSpecies")
-          )
-        );
-        dispatch(
-          setSpeciesList(
-            this.extractSuggestions(filterDataResponse, "taxonomy.species")
-          )
-        );
-        dispatch(
-          setOriginOfMaterialList(
-            this.extractSuggestions(filterDataResponse, "countryOfOrigin.code3")
-          )
-        );
-        dispatch(
-          setSampStatList(
-            this.extractSuggestions(filterDataResponse, "sampStat")
-          )
-        );
-        dispatch(
-          setGermplasmStorageList(
-            this.extractSuggestions(filterDataResponse, "storage")
-          )
-        );
-        dispatch(setPassportCurrentPage(0));
-        return queryData.filterCode;
-      }
+      dispatch(
+        setGenusList(
+          this.extractSuggestions(filterDataResponse, "taxonomy.genus")
+        )
+      );
+      dispatch(
+        setGenusSpeciesList(
+          this.extractSuggestions(filterDataResponse, "taxonomy.genusSpecies")
+        )
+      );
+      dispatch(
+        setSpeciesList(
+          this.extractSuggestions(filterDataResponse, "taxonomy.species")
+        )
+      );
+      dispatch(
+        setOriginOfMaterialList(
+          this.extractSuggestions(filterDataResponse, "countryOfOrigin.code3")
+        )
+      );
+      dispatch(
+        setSampStatList(this.extractSuggestions(filterDataResponse, "sampStat"))
+      );
+      dispatch(
+        setGermplasmStorageList(
+          this.extractSuggestions(filterDataResponse, "storage")
+        )
+      );
+      dispatch(setPassportCurrentPage(0));
+      return queryData.filterCode;
     } catch (error) {
       console.error("Error applying filter:", error);
       throw error;
-    }
-  }
-
-  async getTotalGenotypedAccessions(filterData) {
-    try {
-      const pageSize = 10000;
-      const batchSize = 50;
-      let genotypedCount = 0;
-
-      const firstGenesysEndpoint = `/api/v1/acn/query?p=0&l=${pageSize}&select=accessionNumber`;
-      const firstGenesysResult = await this.post(
-        firstGenesysEndpoint,
-        filterData
-      );
-
-      if (!firstGenesysResult || !firstGenesysResult.filterCode) {
-        throw new Error("No filterCode returned from Genesys.");
-      }
-
-      const filterCode = firstGenesysResult.filterCode;
-      const totalGenesysPages = Math.ceil(
-        firstGenesysResult.totalElements / pageSize
-      );
-
-      const genesysRequests = [];
-      for (
-        let genesysPage = 0;
-        genesysPage < totalGenesysPages;
-        genesysPage++
-      ) {
-        const endpoint = `/api/v1/acn/query?f=${filterCode}&p=${genesysPage}&l=${pageSize}&select=accessionNumber`;
-        genesysRequests.push(async () => {
-          const response = await this.post(endpoint, null);
-          return response;
-        });
-      }
-
-      for (let i = 0; i < genesysRequests.length; i += batchSize) {
-        const batch = genesysRequests.slice(i, i + batchSize);
-        const batchResults = await Promise.all(batch.map((req) => req()));
-
-        batchResults.forEach((genesysResult) => {
-          if (genesysResult && genesysResult.content) {
-            const genesysAccessions = genesysResult.content.map(
-              (item) => item.accessionNumber
-            );
-
-            const matchedAccessions = genesysAccessions.filter((accession) =>
-              this.genotypedAccessions.includes(accession)
-            );
-            genotypedCount += matchedAccessions.length;
-          }
-        });
-      }
-
-      return genotypedCount;
-    } catch (error) {
-      console.error("Error calculating total genotyped accessions:", error);
-      throw error;
-    }
-  }
-
-  async fetchTotalGenotypedAccessionsInBackground(filterData, dispatch) {
-    try {
-      dispatch(setLoadingGenotypedAccessions(true));
-      const totalGenotypedAccession = await this.getTotalGenotypedAccessions(
-        filterData
-      );
-      dispatch(setTotalAccessions(totalGenotypedAccession));
-    } catch (error) {
-      console.error("Error fetching total genotyped accessions:", error);
-    } finally {
-      dispatch(setLoadingGenotypedAccessions(false));
     }
   }
 
@@ -473,7 +338,6 @@ class GenesysApi extends BaseApi {
     pageSize,
     dispatch,
     searchResults,
-    hasGenotype,
   }) {
     try {
       const select =
@@ -488,35 +352,7 @@ class GenesysApi extends BaseApi {
           }&l=${pageSize}&select=${select}`;
 
       const response = await this.post(endpoint, null);
-
-      if (hasGenotype) {
-        const genesysAccessions = response.content.map(
-          (item) => item.accessionNumber
-        );
-        let genotypedResult = [];
-
-        const matchedAccessions = this.genotypedAccessions.filter((accession) =>
-          genesysAccessions.includes(accession)
-        );
-
-        genotypedResult = genotypedResult.concat(
-          response.content.filter((item) =>
-            matchedAccessions.includes(item.accessionNumber)
-          )
-        );
-        dispatch(setSearchResults([...searchResults, ...genotypedResult]));
-      } else {
-        const endpoint = filterCode
-          ? `/api/v1/acn/query?f=${filterCode}&p=${
-              passportCurrentPage + 1
-            }&l=${pageSize}&select=${select}`
-          : `/api/v1/acn/query?p=${
-              passportCurrentPage + 1
-            }&l=${pageSize}&select=${select}`;
-
-        const response = await this.post(endpoint, null);
-        dispatch(setSearchResults([...searchResults, ...response.content]));
-      }
+      dispatch(setSearchResults([...searchResults, ...response.content]));
       dispatch(setPassportCurrentPage(passportCurrentPage + 1));
     } catch (error) {
       console.error("Error fetching more data:", error);
@@ -524,7 +360,7 @@ class GenesysApi extends BaseApi {
     }
   }
 
-  async downloadFilteredData(filterData, hasGenotype) {
+  async downloadFilteredData(filterData) {
     try {
       const pageSize = 10000;
       const batchSize = 50;
@@ -567,12 +403,6 @@ class GenesysApi extends BaseApi {
       }
 
       if (allResults.length > 0) {
-        if (hasGenotype) {
-          allResults = allResults.filter((result) =>
-            this.genotypedAccessions.includes(result.accessionNumber)
-          );
-        }
-
         const accessionIds = allResults.map((item) => item.accessionNumber);
         const figMapping = await genolinkInternalApi.getFigsByAccessions(
           accessionIds
@@ -600,6 +430,8 @@ class GenesysApi extends BaseApi {
           "AGG-SP Status": "status",
           GenotypeID: "GenotypeID",
           "FIGs Set": "figsSet",
+          Genus: "taxonomy.genus",
+          Species: "taxonomy.species",
         };
 
         const tsvContent = this.generateTSV(
