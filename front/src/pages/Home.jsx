@@ -56,12 +56,16 @@ const Home = () => {
         const { rows } = await genolinkInternalApi.getAllGenotypeStatus();
         if (cancelled) return;
 
-        genesysApi.setGenotypeStatus(rows);
+        const safeRows = Array.isArray(rows) ? rows : [];
+
+        genesysApi.setGenotypeStatus(safeRows);
         genesysApi.setGenotypedAccessions(
-          rows.filter((r) => r.Status === "Completed").map((r) => r.Accession)
+          safeRows
+            .filter((r) => r.Status === "Completed")
+            .map((r) => r.Accession)
         );
         genesysApi.setGenotypedSamples(
-          rows.filter((r) => r.Status === "Completed").map((r) => r.Sample)
+          safeRows.filter((r) => r.Status === "Completed").map((r) => r.Sample)
         );
 
         setTokenReady(true);
