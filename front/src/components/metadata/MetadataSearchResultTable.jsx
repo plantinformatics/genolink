@@ -62,9 +62,7 @@ const MetadataSearchResultTable = ({ filterCode, filterBody }) => {
   const totalAccessions = useSelector(
     (state) => state.passport.totalAccessions
   );
-  // const totalPreGenotypedAccessions = useSelector(
-  //   (state) => state.passport.totalPreGenotypedAccessions
-  // );
+
   const passportCurrentPage = useSelector(
     (state) => state.passport.passportCurrentPage
   );
@@ -99,15 +97,6 @@ const MetadataSearchResultTable = ({ filterCode, filterBody }) => {
     return m;
   }, [genesysApi.genotypeStatus]);
 
-  // const genotypedIndexByAcc = useMemo(() => {
-  //   const accs = Array.isArray(genesysApi.genotypedAccessions)
-  //     ? genesysApi.genotypedAccessions
-  //     : [];
-  //   const m = new Map();
-  //   accs.forEach((acc, i) => m.set(acc, i));
-  //   return m;
-  // }, [genesysApi.genotypedAccessions]);
-
   const countryByCode = useMemo(() => {
     const m = new Map();
     for (const c of country2Region) {
@@ -118,8 +107,6 @@ const MetadataSearchResultTable = ({ filterCode, filterBody }) => {
     }
     return m;
   }, []);
-
-  // const genotypedSamples = genesysApi.genotypedSamples || [];
 
   useEffect(() => {
     if (!searchResults || searchResults.length === 0) {
@@ -327,11 +314,7 @@ const MetadataSearchResultTable = ({ filterCode, filterBody }) => {
               const status =
                 statusByAcc.get(acc) ??
                 (acc?.startsWith("AGG") ? "TBC" : "N/A");
-              // const gIdx = genotypedIndexByAcc.get(acc) ?? -1;
-              // const genotypeID =
-              //   gIdx !== -1 && Array.isArray(genotypedSamples)
-              //     ? genotypedSamples[gIdx]
-              //     : "N/A";
+
               const genotypeID = genotypeIdMapping[acc] || "N/A";
 
               const isExpanded = expandedRow === index;
