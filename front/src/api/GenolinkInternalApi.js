@@ -1,5 +1,6 @@
 import BaseApi from "./BaseApi";
 import { genolinkServer } from "../config/apiConfig";
+import { BASE_PATH } from "../config/basePath";
 
 class GenolinkInternalApi extends BaseApi {
   constructor() {
@@ -18,7 +19,9 @@ class GenolinkInternalApi extends BaseApi {
 
   async getAllGenotypeStatus() {
     try {
-      const response = await this.get("/api/internalApi/getGenotypeStatus");
+      const response = await this.get(
+        `${BASE_PATH}/api/internalApi/getGenotypeStatus`
+      );
       return response;
     } catch (error) {
       console.error("Error fetching all accessions:", error);
@@ -28,7 +31,9 @@ class GenolinkInternalApi extends BaseApi {
 
   async getAllFigs() {
     try {
-      const response = await this.get("/api/internalApi/getAllFigs");
+      const response = await this.get(
+        `${BASE_PATH}/api/internalApi/getAllFigs`
+      );
       return response;
     } catch (error) {
       console.error("Error fetching all figs:", error);
@@ -39,7 +44,7 @@ class GenolinkInternalApi extends BaseApi {
   async genotypeIdMapping(genotypeIds) {
     try {
       const response = await this.post(
-        "/api/internalApi/mapGenotypIdToAccession",
+        `${BASE_PATH}/api/internalApi/mapGenotypIdToAccession`,
         {
           genotypeIds,
         }
@@ -62,9 +67,12 @@ class GenolinkInternalApi extends BaseApi {
 
   async figMapping(figs) {
     try {
-      const response = await this.post("/api/internalApi/mapFigToAccession", {
-        figs,
-      });
+      const response = await this.post(
+        `${BASE_PATH}/api/internalApi/mapFigToAccession`,
+        {
+          figs,
+        }
+      );
       return response;
     } catch (error) {
       if (
@@ -89,7 +97,7 @@ class GenolinkInternalApi extends BaseApi {
       for (let i = 0; i < accessionIds.length; i += batchSize) {
         const chunk = accessionIds.slice(i, i + batchSize);
         const response = await this.post(
-          "/api/internalApi/getFigsByAccessions",
+          `${BASE_PATH}/api/internalApi/getFigsByAccessions`,
           {
             accessionIds: chunk,
           }
