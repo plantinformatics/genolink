@@ -16,6 +16,7 @@ export const setCropCheckedBoxes = (boxes) => ({
   type: "SET_CROP_CHECKED_BOXES",
   payload: boxes,
 });
+
 export const setGenusCheckedBoxes = (boxes) => ({
   type: "SET_GENUS_CHECKED_BOXES",
   payload: boxes,
@@ -64,7 +65,6 @@ export const setSpeciesList = (species) => ({
   type: "SET_SPECIES_LIST",
   payload: species,
 });
-
 export const setOriginOfMaterialList = (origin) => ({
   type: "SET_ORIGIN_OF_MATERIAL_LIST",
   payload: origin,
@@ -141,4 +141,8 @@ export const setActiveFilters = (activeFilters) => ({
 export const setWildSearchValue = (wildSearchValue) => ({
   type: "SET_WILD_SEARCH_VALUE",
   payload: wildSearchValue,
+});
+export const setSubsets = (subsets) => ({
+  type: "SET_SUBSETS",
+  payload: subsets,
 });
