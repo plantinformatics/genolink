@@ -14,8 +14,7 @@ import {
   setCheckedAccessions,
   setCheckedAccessionNames,
 } from "../../redux/passport/passportActions";
-import { genesysApi } from "../../pages/Home";
-import { genolinkInternalApi } from "../../pages/Home";
+import { genesysApi, genolinkInternalApi } from "../../pages/Home";
 import country2Region from "../../../shared-data/Country2Region.json";
 import { batch } from "react-redux";
 
@@ -58,14 +57,14 @@ function formatDate(dateStr) {
   return dateStr || "";
 }
 
-const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
+const MetadataSearchResultTable = ({ filterCode, filterBody }) => {
   const searchResults = useSelector((state) => state.passport.searchResults);
   const totalAccessions = useSelector(
     (state) => state.passport.totalAccessions
   );
-  const totalPreGenotypedAccessions = useSelector(
-    (state) => state.passport.totalPreGenotypedAccessions
-  );
+  // const totalPreGenotypedAccessions = useSelector(
+  //   (state) => state.passport.totalPreGenotypedAccessions
+  // );
   const passportCurrentPage = useSelector(
     (state) => state.passport.passportCurrentPage
   );
@@ -75,11 +74,10 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
   const [selectAll, setSelectAll] = useState(false);
   const [expandedRow, setExpandedRow] = useState(null);
   const [remainingPages, setRemainingPages] = useState(
-    Math.floor(
-      (hasGenotype ? totalPreGenotypedAccessions : totalAccessions) / 500
-    )
+    Math.floor(totalAccessions / 500)
   );
   const [figMapping, setFigMapping] = useState({});
+  const [genotypeIdMapping, setGenotypeIdMapping] = useState([]);
   const [isPending, startTransition] = useTransition();
   const dispatch = useDispatch();
   const checkedAccessions = useSelector(
@@ -101,14 +99,14 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
     return m;
   }, [genesysApi.genotypeStatus]);
 
-  const genotypedIndexByAcc = useMemo(() => {
-    const accs = Array.isArray(genesysApi.genotypedAccessions)
-      ? genesysApi.genotypedAccessions
-      : [];
-    const m = new Map();
-    accs.forEach((acc, i) => m.set(acc, i));
-    return m;
-  }, [genesysApi.genotypedAccessions]);
+  // const genotypedIndexByAcc = useMemo(() => {
+  //   const accs = Array.isArray(genesysApi.genotypedAccessions)
+  //     ? genesysApi.genotypedAccessions
+  //     : [];
+  //   const m = new Map();
+  //   accs.forEach((acc, i) => m.set(acc, i));
+  //   return m;
+  // }, [genesysApi.genotypedAccessions]);
 
   const countryByCode = useMemo(() => {
     const m = new Map();
@@ -121,7 +119,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
     return m;
   }, []);
 
-  const genotypedSamples = genesysApi.genotypedSamples || [];
+  // const genotypedSamples = genesysApi.genotypedSamples || [];
 
   useEffect(() => {
     if (!searchResults || searchResults.length === 0) {
@@ -149,7 +147,38 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
       }
     };
 
+    const fetchGenotypeIds = async () => {
+      try {
+        const pageSize = 500;
+        const start = passportCurrentPage * pageSize;
+        const end = start + pageSize;
+        const appendedAccessions = searchResults
+          .map((item) => item.accessionNumber)
+          .slice(start, end);
+        const info = await genesysApi.genotypeInfo(appendedAccessions);
+        const accessionGenotypeMap = appendedAccessions.reduce(
+          (accMap, accessionId) => {
+            const foundItem = info.find(
+              (item) => item.acceNumb === accessionId
+            );
+
+            // If genotypeId is found, return an object with accessionId and genotypeId, else null
+            accMap[accessionId] = foundItem ? foundItem.genotypeId : null;
+            return accMap;
+          },
+          {}
+        );
+        setGenotypeIdMapping({
+          ...genotypeIdMapping,
+          ...accessionGenotypeMap,
+        });
+      } catch (error) {
+        console.error("Failed to fetch genotypeIds:", error);
+      }
+    };
+
     fetchFigs();
+    fetchGenotypeIds();
   }, [searchResults]);
 
   const handleCheckboxToggle = useCallback(
@@ -208,11 +237,9 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
       await genesysApi.fetchMoreResults({
         filterCode,
         passportCurrentPage,
-        // pageSize: hasGenotype ? 10000 : 500,
         pageSize: 500,
         dispatch,
         searchResults,
-        hasGenotype,
       });
       setRemainingPages((prev) => Math.max(prev - 1, 0));
     } catch (error) {
@@ -233,7 +260,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
         alert("Please apply filters before exporting data.");
         return;
       }
-      await genesysApi.downloadFilteredData(filterBody, hasGenotype);
+      await genesysApi.downloadFilteredData(filterBody);
       setIsDownloading(false);
     } catch (error) {
       setIsDownloading(false);
@@ -244,7 +271,12 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
 
   return (
     <>
-      <div style={{ maxHeight: "70vh", overflowY: "auto" }}>
+      <div
+        style={{
+          maxHeight: "70vh",
+          overflowY: "auto",
+        }}
+      >
         <table
           style={{ width: "100%", borderCollapse: "collapse" }}
           className="table table-bordered table-hover"
@@ -295,11 +327,13 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
               const status =
                 statusByAcc.get(acc) ??
                 (acc?.startsWith("AGG") ? "TBC" : "N/A");
-              const gIdx = genotypedIndexByAcc.get(acc) ?? -1;
-              const genotypeID =
-                gIdx !== -1 && Array.isArray(genotypedSamples)
-                  ? genotypedSamples[gIdx]
-                  : "N/A";
+              // const gIdx = genotypedIndexByAcc.get(acc) ?? -1;
+              // const genotypeID =
+              //   gIdx !== -1 && Array.isArray(genotypedSamples)
+              //     ? genotypedSamples[gIdx]
+              //     : "N/A";
+              const genotypeID = genotypeIdMapping[acc] || "N/A";
+
               const isExpanded = expandedRow === index;
 
               return (
