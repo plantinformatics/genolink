@@ -159,6 +159,6 @@ docker-compose up -d
 ```
 
 #### 4. Access the Application
-Open your browser and navigate to http://127.0.0.1:3000 to use your application.
+Open your browser and navigate to your_genolink_domain to use your application.
 
 
