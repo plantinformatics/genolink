@@ -24,7 +24,7 @@ router.post("/generateGigwaToken", async (req, res) => {
       username && password ? { username, password } : undefined;
 
     const tokenResponse = await axios.post(
-      `${selectedGigwaServer}/gigwa/rest/gigwa/generateToken`,
+      `${selectedGigwaServer.replace(/\/$/, "")}/rest/gigwa/generateToken`,
       requestBody,
       {
         headers: {
@@ -64,7 +64,7 @@ router.post("/brapi/v2/programs", async (req, res) => {
       token = req.body.gigwaToken;
     } else {
       token = await axios.post(
-        `${selectedGigwaServer}/gigwa/rest/gigwa/generateToken`,
+        `${selectedGigwaServer.replace(/\/$/, "")}/rest/gigwa/generateToken`,
         req.body.username && req.body.password
           ? { username: req.body.username, password: req.body.password }
           : undefined,
@@ -80,7 +80,7 @@ router.post("/brapi/v2/programs", async (req, res) => {
     const params = req.body;
 
     const response = await axios.get(
-      `${selectedGigwaServer}/gigwa/rest/brapi/v2/programs`,
+      `${selectedGigwaServer.replace(/\/$/, "")}/rest/brapi/v2/programs`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -111,7 +111,7 @@ router.post("/brapi/v2/search/variantsets", async (req, res) => {
       token = req.body.gigwaToken;
     } else {
       token = await axios.post(
-        `${selectedGigwaServer}/gigwa/rest/gigwa/generateToken`,
+        `${selectedGigwaServer.replace(/\/$/, "")}/rest/gigwa/generateToken`,
         req.body.username && req.body.password
           ? { username: req.body.username, password: req.body.password }
           : undefined,
@@ -125,7 +125,10 @@ router.post("/brapi/v2/search/variantsets", async (req, res) => {
     }
 
     const response = await axios.post(
-      `${selectedGigwaServer}/gigwa/rest/brapi/v2/search/variantsets`,
+      `${selectedGigwaServer.replace(
+        /\/$/,
+        ""
+      )}/rest/brapi/v2/search/variantsets`,
       req.body,
       {
         headers: {
@@ -156,7 +159,7 @@ router.post("/brapi/v2/search/variants", async (req, res) => {
       token = req.body.gigwaToken;
     } else {
       token = await axios.post(
-        `${selectedGigwaServer}/gigwa/rest/gigwa/generateToken`,
+        `${selectedGigwaServer.replace(/\/$/, "")}/rest/gigwa/generateToken`,
         req.body.username && req.body.password
           ? { username: req.body.username, password: req.body.password }
           : undefined,
@@ -169,7 +172,7 @@ router.post("/brapi/v2/search/variants", async (req, res) => {
       );
     }
     const response = await axios.post(
-      `${selectedGigwaServer}/gigwa/rest/brapi/v2/search/variants`,
+      `${selectedGigwaServer.replace(/\/$/, "")}/rest/brapi/v2/search/variants`,
       req.body,
       {
         headers: {
@@ -223,7 +226,7 @@ router.post("/brapi/v2/search/samples", async (req, res) => {
       token = req.body.gigwaToken;
     } else {
       token = await axios.post(
-        `${selectedGigwaServer}/gigwa/rest/gigwa/generateToken`,
+        `${selectedGigwaServer.replace(/\/$/, "")}/rest/gigwa/generateToken`,
         req.body.username && req.body.password
           ? { username: req.body.username, password: req.body.password }
           : undefined,
@@ -236,7 +239,7 @@ router.post("/brapi/v2/search/samples", async (req, res) => {
       );
     }
     const response = await axios.post(
-      `${selectedGigwaServer}/gigwa/rest/brapi/v2/search/samples`,
+      `${selectedGigwaServer.replace(/\/$/, "")}/rest/brapi/v2/search/samples`,
       req.body,
       {
         headers: {
@@ -292,7 +295,7 @@ router.get("/brapi/v2/references", async (req, res) => {
       token = params.gigwaToken;
     } else {
       token = await axios.post(
-        `${selectedGigwaServer}/gigwa/rest/gigwa/generateToken`,
+        `${selectedGigwaServer.replace(/\/$/, "")}/rest/gigwa/generateToken`,
         params.username && params.password
           ? { username: params.username, password: params.password }
           : undefined,
@@ -306,7 +309,7 @@ router.get("/brapi/v2/references", async (req, res) => {
     }
 
     const response = await axios.get(
-      `${selectedGigwaServer}/gigwa/rest/brapi/v2/references`,
+      `${selectedGigwaServer.replace(/\/$/, "")}/rest/brapi/v2/references`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -359,7 +362,7 @@ router.get("/brapi/v2/referencesets", async (req, res) => {
       token = params.gigwaToken;
     } else {
       token = await axios.post(
-        `${selectedGigwaServer}/gigwa/rest/gigwa/generateToken`,
+        `${selectedGigwaServer.replace(/\/$/, "")}/rest/gigwa/generateToken`,
         params.username && params.password
           ? { username: params.username, password: params.password }
           : undefined,
@@ -372,7 +375,7 @@ router.get("/brapi/v2/referencesets", async (req, res) => {
       );
     }
     const response = await axios.get(
-      `${selectedGigwaServer}/gigwa/rest/brapi/v2/referencesets`,
+      `${selectedGigwaServer.replace(/\/$/, "")}/rest/brapi/v2/referencesets`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -429,7 +432,7 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
       token = req.body.gigwaToken;
     } else {
       token = await axios.post(
-        `${selectedGigwaServer}/gigwa/rest/gigwa/generateToken`,
+        `${selectedGigwaServer.replace(/\/$/, "")}/rest/gigwa/generateToken`,
         req.body.username && req.body.password
           ? { username: req.body.username, password: req.body.password }
           : undefined,
@@ -467,7 +470,7 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
     const numberOfGenesysAccessions = accessions.length;
 
     const variantSetsResponse = await axios.get(
-      `${selectedGigwaServer}/gigwa/rest/brapi/v2/variantsets`,
+      `${selectedGigwaServer.replace(/\/$/, "")}/rest/brapi/v2/variantsets`,
       {
         headers: { Authorization: `Bearer ${token}` },
       }
@@ -485,7 +488,7 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
       }
     }
     const searchResponse = await axios.post(
-      `${selectedGigwaServer}/gigwa/rest/brapi/v2/search/samples`,
+      `${selectedGigwaServer.replace(/\/$/, "")}/rest/brapi/v2/search/samples`,
       {
         sampleNames,
         studyDbIds,
@@ -569,7 +572,7 @@ router.post("/brapi/v2/search/allelematrix", async (req, res) => {
       token = req.body.gigwaToken;
     } else {
       token = await axios.post(
-        `${selectedGigwaServer}/gigwa/rest/gigwa/generateToken`,
+        `${selectedGigwaServer.replace(/\/$/, "")}/rest/gigwa/generateToken`,
         req.body.username && req.body.password
           ? { username: req.body.username, password: req.body.password }
           : undefined,
@@ -599,7 +602,10 @@ router.post("/brapi/v2/search/allelematrix", async (req, res) => {
       }
     }
     const response = await axios.post(
-      `${selectedGigwaServer}/gigwa/rest/brapi/v2/search/allelematrix`,
+      `${selectedGigwaServer.replace(
+        /\/$/,
+        ""
+      )}/rest/brapi/v2/search/allelematrix`,
       req.body,
       {
         headers: {
@@ -941,7 +947,7 @@ router.post("/samplesDatasetInfo", async (req, res) => {
       token = req.body.gigwaToken;
     } else {
       token = await axios.post(
-        `${selectedGigwaServer}/gigwa/rest/gigwa/generateToken`,
+        `${selectedGigwaServer.replace(/\/$/, "")}/rest/gigwa/generateToken`,
         req.body.username && req.body.password
           ? { username: req.body.username, password: req.body.password }
           : undefined,
@@ -989,7 +995,7 @@ router.post("/samplesDatasetInfo", async (req, res) => {
     }
 
     const variantSetsResponse = await axios.get(
-      `${selectedGigwaServer}/gigwa/rest/brapi/v2/variantsets`,
+      `${selectedGigwaServer.replace(/\/$/, "")}/rest/brapi/v2/variantsets`,
       {
         headers: { Authorization: `Bearer ${token}` },
       }
@@ -1006,7 +1012,7 @@ router.post("/samplesDatasetInfo", async (req, res) => {
       }
     }
     const searchResponse = await axios.post(
-      `${selectedGigwaServer}/gigwa/rest/brapi/v2/search/samples`,
+      `${selectedGigwaServer.replace(/\/$/, "")}/rest/brapi/v2/search/samples`,
       {
         sampleNames,
         studyDbIds,
