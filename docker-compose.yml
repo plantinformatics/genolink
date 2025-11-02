@@ -5,12 +5,13 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
+        BASE_PATH: ${BASE_PATH}
         VITE_Genesys_OIDC_CLIENT_ID: ${VITE_Genesys_OIDC_CLIENT_ID}
         VITE_Genesys_OIDC_CLIENT_SECRET: ${VITE_Genesys_OIDC_CLIENT_SECRET}
         VITE_GENOLINK_SERVER: ${VITE_GENOLINK_SERVER}
         VITE_GENESYS_SERVER: ${VITE_GENESYS_SERVER}
     ports:
-      - "3000:3000"
+      - "3004:5006"
     env_file:
       - .env
     environment:
@@ -22,6 +23,7 @@ services:
       VITE_FRONTEND_DEV_HOST: ${VITE_FRONTEND_DEV_HOST}
       VITE_FRONTEND_DEV_PORT: ${VITE_FRONTEND_DEV_PORT}
       VITE_PLATFORM: ${VITE_PLATFORM}
+      BASE_PATH: ${BASE_PATH}
 
       # Backend-Variables
       DB_USERNAME: ${DB_USERNAME}
@@ -49,7 +51,7 @@ services:
       MYSQL_USER: ${DB_USERNAME}
       MYSQL_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "3307:3306"
+      - "3309:3306"
     volumes:
       - mysql_data:/var/lib/mysql
 
