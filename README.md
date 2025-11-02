@@ -137,16 +137,16 @@ DB_PASSWORD=<your_db_password>
 DB_NAME=<your_db_name>
 DB_HOST=db
 DB_DIALECT=mysql
-GIGWA_SERVERS={"AUS165": "https://gigwa.plantinformatics.io", "MEX002": "https://gigwatest.plantinformatics.io"}
-GERMINATE_SERVER=https://germinate.plantinformatics.io
-GENOLINK_SERVER=http://127.0.0.1:3000
-GENESYS_SERVER=https://api.genesys-pgr.org
-GENOLINK_SERVER_PORT=3000
-VITE_Genesys_OIDC_CLIENT_ID=<your_client_id>
-VITE_Genesys_OIDC_CLIENT_SECRET=<your_client_secret>
-VITE_GENOLINK_SERVER=http://127.0.0.1:3000
-VITE_GENESYS_SERVER=https://api.genesys-pgr.org
+GENOLINK_SERVER=<your_genolink_domain> # e.g. https://genolink.plantinformatics.io
+GENESYS_SERVER=https://api.sandbox.genesys-pgr.org
+GENOLINK_SERVER_PORT=5006
+VITE_Genesys_OIDC_CLIENT_ID=<your_Genesys_client_id>
+VITE_Genesys_OIDC_CLIENT_SECRET=<your_Genesys_client_secret>
+VITE_GENOLINK_SERVER=<your_genolink_domain> # e.g. https://genolink.plantinformatics.io
+VITE_GENESYS_SERVER=https://api.sandbox.genesys-pgr.org
 VITE_PLATFORM=Gigwa
+VITE_REQUIRE_GIGWA_CREDENTIALS=true
+BASE_PATH=<optional_base_path> # e.g. /test OR leave empty for root
 ```
 > **Note:** To obtain your Genesys OIDC Client ID and Secret, please contact the [Genesys support team](https://www.genesys-pgr.org/content/about/contact).
 
