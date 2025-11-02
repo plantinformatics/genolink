@@ -54,7 +54,8 @@ VITE_Genesys_OIDC_CLIENT_SECRET=<your_client_secret>
 VITE_GENOLINK_SERVER=http://127.0.0.1:3000
 VITE_GENESYS_SERVER=https://api.sandbox.genesys-pgr.org
 ```
-> **Note:** To obtain your Genesys OIDC Client ID and Secret, please contact the [Genesys support team](https://www.genesys-pgr.org/content/about/contact).
+> **Note:** To obtain your Genesys OIDC Client ID and Secret, please contact the [Genesys support team](https://www.genesys-pgr.org/content/about/contact).  
+> Also keep in mind that Genesys **Sandbox** environment and **Production/Main** environment each have their own separate Client ID and Client Secret. They are **not interchangeable**, so make sure you use the correct pair depending on which server you are connecting to.
 
 
 #### 4. Build Frontend
