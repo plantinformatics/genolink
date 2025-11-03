@@ -28,7 +28,7 @@ https://agriculture.vic.gov.au/crops-and-horticulture/the-australian-grains-gene
 ### Prerequisites
 
 Make sure you have installed:
-- Node.js (v14+)
+- Node.js (v20+)
 - npm (v6+)
 - MySQL (server & client)
 
@@ -51,10 +51,11 @@ Create a .env file in the '*front*' directory with the following content:
 ```bash
 VITE_Genesys_OIDC_CLIENT_ID=<your_client_id>
 VITE_Genesys_OIDC_CLIENT_SECRET=<your_client_secret>
-VITE_GENOLINK_SERVER=http://127.0.0.1:3000
-VITE_GENESYS_SERVER=https://api.genesys-pgr.org
+VITE_GENOLINK_SERVER=<your_Genolink_server_address>   # e.g. https://genolink.plantinformatics.io OR http://127.0.0.1:3000
+VITE_GENESYS_SERVER=https://api.sandbox.genesys-pgr.org
 ```
-> **Note:** To obtain your Genesys OIDC Client ID and Secret, please contact the [Genesys support team](https://www.genesys-pgr.org/content/about/contact).
+> **Note:** To obtain the correct Genesys OIDC Client ID and Secret for your Genolink server address (e.g. your domain or local 127.0.0.1:3000), please contact the [Genesys support team](https://www.genesys-pgr.org/content/about/contact).  
+> Also keep in mind that Genesys **Sandbox** environment and **Production/Main** environment each have their own separate Client ID and Client Secret. They are **not interchangeable**, so make sure you use the correct pair depending on which server you are connecting to.
 
 
 #### 4. Build Frontend
@@ -94,11 +95,10 @@ DB_PASSWORD=<your_db_password>
 DB_NAME=<your_db_name>
 DB_HOST=localhost
 DB_DIALECT=mysql
-GIGWA_SERVER=<your_gigwa_server_url>
-GERMINATE_SERVER=<your_germinate_server_url>
-GENOLINK_SERVER=http://127.0.0.1:3000
-GENESYS_SERVER=https://api.genesys-pgr.org
-GENOLINK_SERVER_PORT=3000
+GIGWA_SERVER=<your_Gigwa_server_url>
+GENOLINK_SERVER=<your_Genolink_server_address>   # e.g. https://genolink.plantinformatics.io OR http://127.0.0.1:3000
+GENESYS_SERVER=https://api.sandbox.genesys-pgr.org
+GENOLINK_SERVER_PORT=<PORT> # e.g. 3000
 ```
 
 #### 11. Run the Application
@@ -137,18 +137,19 @@ DB_PASSWORD=<your_db_password>
 DB_NAME=<your_db_name>
 DB_HOST=db
 DB_DIALECT=mysql
-GIGWA_SERVERS={"AUS165": "https://gigwa.plantinformatics.io", "MEX002": "https://gigwatest.plantinformatics.io"}
-GERMINATE_SERVER=https://germinate.plantinformatics.io
-GENOLINK_SERVER=http://127.0.0.1:3000
-GENESYS_SERVER=https://api.genesys-pgr.org
-GENOLINK_SERVER_PORT=3000
-VITE_Genesys_OIDC_CLIENT_ID=<your_client_id>
-VITE_Genesys_OIDC_CLIENT_SECRET=<your_client_secret>
-VITE_GENOLINK_SERVER=http://127.0.0.1:3000
-VITE_GENESYS_SERVER=https://api.genesys-pgr.org
+GENOLINK_SERVER=<your_Genolink_server_address>   # e.g. https://genolink.plantinformatics.io OR http://127.0.0.1:3000
+GENESYS_SERVER=https://api.sandbox.genesys-pgr.org
+GENOLINK_SERVER_PORT=<PORT> # e.g. 3000
+VITE_Genesys_OIDC_CLIENT_ID=<your_Genesys_client_id>
+VITE_Genesys_OIDC_CLIENT_SECRET=<your_Genesys_client_secret>
+VITE_GENOLINK_SERVER=<your_Genolink_server_address>   # e.g. https://genolink.plantinformatics.io OR http://127.0.0.1:3000
+VITE_GENESYS_SERVER=https://api.sandbox.genesys-pgr.org
 VITE_PLATFORM=Gigwa
+VITE_REQUIRE_GIGWA_CREDENTIALS=true
+BASE_PATH=<optional_base_path> # e.g. /test OR leave empty for root
 ```
-> **Note:** To obtain your Genesys OIDC Client ID and Secret, please contact the [Genesys support team](https://www.genesys-pgr.org/content/about/contact).
+> **Note:** To obtain the correct Genesys OIDC Client ID and Secret for your Genolink server address (e.g. your domain or local 127.0.0.1:3000), please contact the [Genesys support team](https://www.genesys-pgr.org/content/about/contact).  
+> Also keep in mind that Genesys **Sandbox** environment and **Production/Main** environment each have their own separate Client ID and Client Secret. They are **not interchangeable**, so make sure you use the correct pair depending on which server you are connecting to.
 
 
 #### 3. Start Docker Containers
@@ -159,6 +160,6 @@ docker-compose up -d
 ```
 
 #### 4. Access the Application
-Open your browser and navigate to http://127.0.0.1:3000 to use your application.
+Open your browser and navigate to your_genolink_domain to use your application.
 
 
