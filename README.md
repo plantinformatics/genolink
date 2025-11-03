@@ -51,10 +51,10 @@ Create a .env file in the '*front*' directory with the following content:
 ```bash
 VITE_Genesys_OIDC_CLIENT_ID=<your_client_id>
 VITE_Genesys_OIDC_CLIENT_SECRET=<your_client_secret>
-VITE_GENOLINK_SERVER=http://127.0.0.1:3000
+VITE_GENOLINK_SERVER=<your_Genolink_server_address>   # e.g. https://genolink.plantinformatics.io OR http://127.0.0.1:3000
 VITE_GENESYS_SERVER=https://api.sandbox.genesys-pgr.org
 ```
-> **Note:** To obtain your Genesys OIDC Client ID and Secret, please contact the [Genesys support team](https://www.genesys-pgr.org/content/about/contact).  
+> **Note:** To obtain the correct Genesys OIDC Client ID and Secret for your Genolink server address (e.g. your domain or local 127.0.0.1:3000), please contact the [Genesys support team](https://www.genesys-pgr.org/content/about/contact).  
 > Also keep in mind that Genesys **Sandbox** environment and **Production/Main** environment each have their own separate Client ID and Client Secret. They are **not interchangeable**, so make sure you use the correct pair depending on which server you are connecting to.
 
 
@@ -96,9 +96,9 @@ DB_NAME=<your_db_name>
 DB_HOST=localhost
 DB_DIALECT=mysql
 GIGWA_SERVER=<your_Gigwa_server_url>
-GENOLINK_SERVER=http://127.0.0.1:3000
+GENOLINK_SERVER=<your_Genolink_server_address>   # e.g. https://genolink.plantinformatics.io OR http://127.0.0.1:3000
 GENESYS_SERVER=https://api.sandbox.genesys-pgr.org
-GENOLINK_SERVER_PORT=3000
+GENOLINK_SERVER_PORT=<PORT> # e.g. 3000
 ```
 
 #### 11. Run the Application
@@ -137,18 +137,18 @@ DB_PASSWORD=<your_db_password>
 DB_NAME=<your_db_name>
 DB_HOST=db
 DB_DIALECT=mysql
-GENOLINK_SERVER=<your_Genolink_domain> # e.g. https://genolink.plantinformatics.io
+GENOLINK_SERVER=<your_Genolink_server_address>   # e.g. https://genolink.plantinformatics.io OR http://127.0.0.1:3000
 GENESYS_SERVER=https://api.sandbox.genesys-pgr.org
-GENOLINK_SERVER_PORT=<PORT> # e.g. 5000
+GENOLINK_SERVER_PORT=<PORT> # e.g. 3000
 VITE_Genesys_OIDC_CLIENT_ID=<your_Genesys_client_id>
 VITE_Genesys_OIDC_CLIENT_SECRET=<your_Genesys_client_secret>
-VITE_GENOLINK_SERVER=<your_Genolink_domain> # e.g. https://genolink.plantinformatics.io
+VITE_GENOLINK_SERVER=<your_Genolink_server_address>   # e.g. https://genolink.plantinformatics.io OR http://127.0.0.1:3000
 VITE_GENESYS_SERVER=https://api.sandbox.genesys-pgr.org
 VITE_PLATFORM=Gigwa
 VITE_REQUIRE_GIGWA_CREDENTIALS=true
 BASE_PATH=<optional_base_path> # e.g. /test OR leave empty for root
 ```
-> **Note:** To obtain your Genesys OIDC Client ID and Secret, please contact the [Genesys support team](https://www.genesys-pgr.org/content/about/contact).  
+> **Note:** To obtain the correct Genesys OIDC Client ID and Secret for your Genolink server address (e.g. your domain or local 127.0.0.1:3000), please contact the [Genesys support team](https://www.genesys-pgr.org/content/about/contact).  
 > Also keep in mind that Genesys **Sandbox** environment and **Production/Main** environment each have their own separate Client ID and Client Secret. They are **not interchangeable**, so make sure you use the correct pair depending on which server you are connecting to.
 
 
