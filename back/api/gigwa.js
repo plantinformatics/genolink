@@ -767,7 +767,7 @@ router.post("/exportData", async (req, res) => {
 
     if (!token) {
       const gen = await axios.post(
-        `${baseUrl}/gigwa/rest/gigwa/generateToken`,
+        `${baseUrl}/rest/gigwa/generateToken`,
         username && password ? { username, password } : undefined,
         {
           headers: {
@@ -787,7 +787,7 @@ router.post("/exportData", async (req, res) => {
       cookieHeader = extractJSessionId(setCookie) || "";
     } else {
       const probe = await axios.post(
-        `${baseUrl}/gigwa/rest/gigwa/generateToken`,
+        `${baseUrl}/rest/gigwa/generateToken`,
         undefined,
         { headers: { Accept: "application/json" }, validateStatus: () => true }
       );
@@ -839,7 +839,7 @@ router.post("/exportData", async (req, res) => {
       metadataFields: [],
     };
     const postResp = await axios.post(
-      `${baseUrl}/gigwa/rest/gigwa/exportData`,
+      `${baseUrl}/rest/gigwa/exportData`,
       body,
       {
         headers: {
