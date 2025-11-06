@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import LoadingComponent from "../../LoadingComponent";
 import { useDispatch, useSelector } from "react-redux";
 import { FaCircleXmark } from "react-icons/fa6";
+import { AiOutlineQuestionCircle } from "react-icons/ai";
 import styles from "./SearchFilters.module.css";
 import store from "../../../redux/store";
 import {
@@ -533,17 +534,30 @@ const SearchFilters = ({ tokenReady }) => {
           />
           <h2 className={styles.genolinkHeader}>Genolink</h2>
         </div>
-        <p className={styles.dataSourceNote}>
-          Powered by{" "}
+        <div className={styles.poweredRow}>
+          <div className={styles.leftSpacer}></div>
+          <p className={styles.dataSourceNote}>
+            Powered by{" "}
+            <a
+              href="https://www.genesys-pgr.org/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.sourceLink}
+              onMouseOver={(e) => (e.target.style.textDecoration = "underline")}
+              onMouseOut={(e) => (e.target.style.textDecoration = "none")}
+            >
+              Genesys-PGR
+            </a>
+          </p>
           <a
-            href="https://www.genesys-pgr.org/"
+            href="https://docs.plantinformatics.io/Genolink/user-guide/"
             target="_blank"
             rel="noopener noreferrer"
-            className={styles.sourceLink}
+            className={styles.helpButton}
           >
-            Genesys-PGR
+            <AiOutlineQuestionCircle size={30} /> Help
           </a>
-        </p>
+        </div>
         <p className={styles.dataSourceNote}>
           Passport data sourced from Genesys-PGR. Use of this service means you
           agree to their{" "}
