@@ -415,7 +415,12 @@ router.get("/brapi/v2/referencesets", async (req, res) => {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 router.post("/searchSamplesInDatasets", async (req, res) => {
-  const { accessions, accessionNames, selectedGigwaServer } = req.body;
+  const {
+    accessions,
+    accessionNames,
+    selectedGigwaServer,
+    genotypeIdsPlusAccessionsInGenesys,
+  } = req.body;
   let token = "";
   if (!selectedGigwaServer) {
     return res
@@ -444,29 +449,26 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
         }
       );
     }
-    const samplesObj = await axios
-      .post(
-        `${config.genolinkServer}/api/internalApi/mapAccessionToGenotypeId`,
-        {
-          Accessions: accessions,
-        }
-      )
-      .then((response) => response.data);
-
-    const samples = samplesObj.Samples.map((obj) => obj.Sample || []);
-    const Accessions = samplesObj.Samples.map((obj) => obj.Accession || []);
-
+    const genotpeIds = genotypeIdsPlusAccessionsInGenesys.map(
+      (item) => item.genotypeId
+    );
     const accessionPlusAccessionName =
       accessionNames && Object.keys(accessionNames).length > 0
         ? Object.entries(accessionNames)
-            .filter(([key]) => Accessions.includes(key))
+            .filter(([key]) =>
+              genotypeIdsPlusAccessionsInGenesys.some(
+                (item) => item.accessionNumber === key
+              )
+            )
             .flatMap(([key, value]) => {
-              return samplesObj.Samples.filter(
-                (obj) => obj.Accession === key
-              ).map((obj) => `${value}§${key}§${obj.Sample}`);
+              return genotypeIdsPlusAccessionsInGenesys
+                .filter((item) => item.accessionNumber === key)
+                .map((item) => `${value}§${key}§${item.genotypeId}`);
             })
         : [];
-    const numberOfMappedAccessions = Array.from(new Set(Accessions)).length;
+    const numberOfMappedAccessions = Array.from(
+      new Set(genotypeIdsPlusAccessionsInGenesys)
+    ).length;
     const numberOfGenesysAccessions = accessions.length;
 
     const variantSetsResponse = await axios.get(
@@ -483,7 +485,7 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
     const sampleNames = [];
     for (const vs of variantSets) {
       const parts = vs.variantSetDbId.split("§").slice(1);
-      for (const sample of samples) {
+      for (const sample of genotpeIds) {
         sampleNames.push(`${sample}-${parts.join("-")}`);
       }
     }
@@ -498,7 +500,6 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
       }
     );
     const response = searchResponse.data;
-
     const genotypeIdsForSorting = [];
     const seen = new Set();
 
@@ -519,7 +520,6 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
 
       return indexA - indexB;
     });
-
     const uniqueSamplePresence = new Set(
       response.result.data.map(
         (individual) => individual.germplasmDbId.split("§")[1]
