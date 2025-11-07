@@ -25,8 +25,6 @@ ARG BASE_PATH
 ENV BASE_PATH=$BASE_PATH
 ENV VITE_Genesys_OIDC_CLIENT_ID=$VITE_Genesys_OIDC_CLIENT_ID
 ENV VITE_Genesys_OIDC_CLIENT_SECRET=$VITE_Genesys_OIDC_CLIENT_SECRET
-ENV VITE_FRONTEND_DEV_HOST=$VITE_FRONTEND_DEV_HOST
-ENV VITE_FRONTEND_DEV_PORT=$VITE_FRONTEND_DEV_PORT
 ENV VITE_GENOLINK_SERVER=$VITE_GENOLINK_SERVER
 ENV VITE_GENESYS_SERVER=$VITE_GENESYS_SERVER
 
@@ -52,9 +50,6 @@ COPY shared-data ./shared-data
 
 # Copy the frontend build files from the previous stage
 COPY --from=frontend-build /app/dist ./dist
-
-# Expose the port the app runs on
-EXPOSE 3000
 
 # Command to run the app
 CMD ["node", "index.js"]
