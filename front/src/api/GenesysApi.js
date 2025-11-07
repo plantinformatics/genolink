@@ -2,7 +2,7 @@ import BaseApi from "./BaseApi";
 import { genesysServer } from "../config/apiConfig";
 import oidcConfig from "../config/oidcConfig";
 import { genolinkInternalApi } from "../pages/Home";
-import country2Region from "../../shared-data/Country2Region.json";
+import country2Region from "shared-data/Country2Region.json";
 import {
   setInstituteCheckedBoxes,
   setActiveFilters,
