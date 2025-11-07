@@ -10,7 +10,10 @@ const App = () => {
         element: <Home />,
       },
     ],
-    { basename: BASE_PATH || "/" }
+    {
+      basename:
+        import.meta.env.MODE === "development" ? "/dev" : BASE_PATH || "/",
+    }
   );
 
   return <RouterProvider router={router} />;
