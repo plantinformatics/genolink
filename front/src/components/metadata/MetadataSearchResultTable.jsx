@@ -15,7 +15,7 @@ import {
   setCheckedAccessionNames,
 } from "../../redux/passport/passportActions";
 import { genesysApi, genolinkInternalApi } from "../../pages/Home";
-import country2Region from "../../../shared-data/Country2Region.json";
+import country2Region from "shared-data/Country2Region.json";
 import { batch } from "react-redux";
 
 const sampStatMapping = {
