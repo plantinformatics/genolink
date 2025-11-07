@@ -1,6 +1,7 @@
 import BaseApi from "./BaseApi";
 import { genolinkServer } from "../config/apiConfig";
 import { BASE_PATH } from "../config/basePath";
+import { genesysApi } from "../pages/Home";
 
 class GenolinkGigwaApi extends BaseApi {
   constructor() {
@@ -37,8 +38,14 @@ class GenolinkGigwaApi extends BaseApi {
     try {
       if (!this.token)
         throw new Error("Token not available. Please authenticate first.");
+      const info = await genesysApi.genotypeInfo(accessions);
+      const genotypeIdsPlusAccessionsInGenesys = info.map((item) => ({
+        genotypeId: item.genotypeId,
+        accessionNumber: item.acceNumb,
+      }));
       const body = {
         selectedGigwaServer,
+        genotypeIdsPlusAccessionsInGenesys,
         gigwaToken: this.token,
         accessions: accessions,
         accessionNames: accessionNames,
