@@ -49,9 +49,13 @@ const SearchFilters = ({ tokenReady }) => {
   const [filterBody, setFilterBody] = useState({});
   const [searchButtonName, setSearchButtonName] = useState("Search");
   const [selectedSubsets, setSelectedSubsets] = useState([]);
+  const [subsetsTick, setSubsetsTick] = useState(0);
   const genotypedYesRef = useRef(null);
   const genotypedNoRef = useRef(null);
+  const instituteCheckedBoxesRef = useRef([]);
+  const cropCheckedBoxesRef = useRef([]);
   const [mappingFailed, setMappingFailed] = useState(false);
+  const [isInitialMount, setIsInitialMount] = useState(true);
   const totalAccessions = useSelector(
     (state) => state.passport.totalAccessions
   );
@@ -131,14 +135,30 @@ const SearchFilters = ({ tokenReady }) => {
   useEffect(() => {
     const fetchSubsets = async () => {
       try {
-        const response = await genesysApi.getAllGenesysSubsets();
+        const body = {
+          _text: wildSearchValue && wildSearchValue.trim(),
+          institute:
+            !isInitialMount || instituteCheckedBoxesRef.current.length > 0
+              ? { code: instituteCheckedBoxesRef.current }
+              : { code: ["AUS165"] },
+          crops:
+            cropCheckedBoxesRef.current.length > 0
+              ? cropCheckedBoxesRef.current
+              : [],
+        };
+
+        const response = await genesysApi.getGenesysSubsets(body);
         dispatch(setSubsets(response));
       } catch (err) {
         console.error("Failed to load subsets:", err);
       }
     };
-    withRetryOn401(fetchSubsets);
-  }, []);
+
+    fetchSubsets();
+
+    if (isInitialMount) setIsInitialMount(false);
+  }, [wildSearchValue, subsetsTick]);
+
   useEffect(() => {
     if (!tokenReady) return;
     const fetchData = async () => {
@@ -318,6 +338,7 @@ const SearchFilters = ({ tokenReady }) => {
     setFilterBody(updatedBody);
   };
   const handleSearch = async (userInput = "") => {
+    setSubsetsTick((t) => t + 1);
     const state = store.getState();
     const {
       instituteCheckedBoxes,
@@ -329,6 +350,8 @@ const SearchFilters = ({ tokenReady }) => {
       sampStatCheckedBoxes,
       germplasmStorageCheckedBoxes,
     } = state.passport;
+    instituteCheckedBoxesRef.current = instituteCheckedBoxes;
+    cropCheckedBoxesRef.current = cropCheckedBoxes;
     let accessionNums1;
     let accessionNums2;
     if (genotypeIds && genotypeIds.length > 0) {
@@ -515,8 +538,15 @@ const SearchFilters = ({ tokenReady }) => {
       dispatch(setActiveFilters([]));
       dispatch(setResetTrigger(true));
       dispatch(setWildSearchValue(""));
+
+      if (instituteCheckedBoxesRef.current.length > 0)
+        instituteCheckedBoxesRef.current = [];
+      if (cropCheckedBoxesRef.current.length > 0)
+        cropCheckedBoxesRef.current = [];
+
       if (genotypedYesRef.current) genotypedYesRef.current.checked = false;
       if (genotypedNoRef.current) genotypedNoRef.current.checked = false;
+      setSubsetsTick((t) => t + 1);
     } catch (error) {
       setIsResetLoading(false);
       console.error("Error handling reset filter:", error);

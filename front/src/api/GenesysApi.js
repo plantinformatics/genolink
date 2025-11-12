@@ -101,14 +101,43 @@ class GenesysApi extends BaseApi {
     }
   }
 
-  async getAllGenesysSubsets() {
+  async getGenesysSubsets(body) {
     const endpoint = "/api/v2/subset/filter";
-    const response = await this.post(endpoint, {});
-    const subsets = response.content.map((subset) => ({
-      title: subset.title,
-      uuid: subset.uuid,
-    }));
-    return subsets;
+    const limit = 200;
+    const allSubsets = [];
+
+    const fetchPage = async (page) => {
+      const query = `${endpoint}?l=${limit}&p=${page}`;
+
+      const response = await this.post(query, body);
+
+      const subsets = response.content.map((subset) => ({
+        title: subset.title,
+        uuid: subset.uuid,
+      }));
+
+      return {
+        subsets,
+        totalPages: response.totalPages,
+      };
+    };
+
+    const firstResponse = await fetchPage(0);
+    allSubsets.push(...firstResponse.subsets);
+    const totalPages = firstResponse.totalPages;
+
+    const pagesToFetch = [];
+    for (let page = 1; page < totalPages; page++) {
+      pagesToFetch.push(fetchPage(page));
+    }
+
+    const allPageResults = await Promise.all(pagesToFetch);
+
+    allPageResults.forEach((pageResult) =>
+      allSubsets.push(...pageResult.subsets)
+    );
+
+    return allSubsets;
   }
 
   async genotypeInfo(accessions) {
