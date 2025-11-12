@@ -33,6 +33,8 @@ const GenotypeExplorer = () => {
   const [isGenomDataLoading, setIsGenomDataLoading] = useState(false);
   const [isExportGenomDataLoading, setIsExportGenomDataLoading] =
     useState(false);
+  const [isLookupLoading, setIsLookupLoading] = useState(false);
+  const [isVerifyLoading, setIsVerifyLoading] = useState(false);
   const [usernames, setUsernames] = useState([]);
   const [passwords, setPasswords] = useState([]);
   const [accessMode, setAccessMode] = useState([]);
@@ -334,6 +336,8 @@ const GenotypeExplorer = () => {
       // STEP 0 -> 1 : Lookup Servers
       // ----------------------------
       if (uiStep === 0) {
+        setIsLookupLoading(true);
+
         await fetchGigwaServers(checkedAccessions);
 
         const hasServers =
@@ -342,10 +346,13 @@ const GenotypeExplorer = () => {
 
         if (!hasServers) {
           alert("No valid Gigwa servers available.");
+          setIsLookupLoading(false);
+
           return;
         }
 
         setUiStep(1);
+        setIsLookupLoading(false);
         return;
       }
 
@@ -353,10 +360,13 @@ const GenotypeExplorer = () => {
       // STEP 1 -> 2 : Authenticate + Summary
       // -------------------------------------------------
       if (uiStep === 1) {
+        setIsVerifyLoading(true);
+
         if (selectedOption !== "Gigwa") {
           dispatch(genotypeActions.setIsGenomeSearchSubmit(true));
           await fetchData(1);
           dispatch(genotypeActions.setGenotypeCurrentPage(1));
+          setIsVerifyLoading(false);
           return;
         }
 
@@ -370,6 +380,7 @@ const GenotypeExplorer = () => {
           Object.keys(genolinkGigwaApisRef.current).length === 0
         ) {
           alert("No valid Gigwa servers available.");
+          setIsVerifyLoading(false);
           return;
         }
 
@@ -381,6 +392,7 @@ const GenotypeExplorer = () => {
           });
           if (missingCreds) {
             alert("Please enter both username and password for all servers.");
+            setIsVerifyLoading(false);
             return;
           }
         } else {
@@ -394,6 +406,7 @@ const GenotypeExplorer = () => {
             alert(
               "Please enter both username and password for all private servers."
             );
+            setIsVerifyLoading(false);
             return;
           }
         }
@@ -441,6 +454,7 @@ const GenotypeExplorer = () => {
               )
               .join("\n")
           );
+          setIsVerifyLoading(false);
           return;
         }
 
@@ -519,6 +533,7 @@ const GenotypeExplorer = () => {
 
         if (combinedResults.responseData.length === 0) {
           alert("No genotype data found across all Gigwa servers.");
+          setIsVerifyLoading(false);
           return;
         }
 
@@ -551,6 +566,7 @@ const GenotypeExplorer = () => {
         setShowDatasetSelector(true);
 
         setUiStep(2);
+        setIsVerifyLoading(false);
         return;
       }
 
@@ -586,6 +602,9 @@ const GenotypeExplorer = () => {
         return;
       }
     } catch (error) {
+      setIsLookupLoading(false);
+      setIsVerifyLoading(false);
+
       let message = "An unexpected error occurred.";
       if (axios.isAxiosError(error)) {
         const status = error.response ? error.response.status : null;
@@ -901,31 +920,44 @@ const GenotypeExplorer = () => {
                   )}
 
                   {uiStep === 0 && (
-                    <button
-                      type="button"
-                      className={styles.buttonPrimary}
-                      onClick={handleSearch}
-                    >
-                      Lookup Servers
-                    </button>
-                  )}
-
-                  {uiStep === 1 && (
-                    <div style={{ display: "flex", gap: "10px" }}>
+                    <>
                       <button
                         type="button"
                         className={styles.buttonPrimary}
                         onClick={handleSearch}
+                        disabled={isLookupLoading}
                       >
-                        Verify Access
+                        {isLookupLoading ? "Looking up..." : "Lookup Servers"}
+                      </button>
+                      {isLookupLoading && <LoadingComponent />}
+                    </>
+                  )}
+
+                  {uiStep === 1 && (
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "10px",
+                        alignItems: "center",
+                      }}
+                    >
+                      <button
+                        type="button"
+                        className={styles.buttonPrimary}
+                        onClick={handleSearch}
+                        disabled={isVerifyLoading}
+                      >
+                        {isVerifyLoading ? "Verifying..." : "Verify Access"}
                       </button>
                       <button
                         type="button"
                         className={styles.buttonSecondary}
                         onClick={handleReset}
+                        disabled={isVerifyLoading || isLookupLoading}
                       >
                         Reset
                       </button>
+                      {isVerifyLoading && <LoadingComponent />}
                     </div>
                   )}
 
