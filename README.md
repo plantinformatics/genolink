@@ -95,7 +95,6 @@ DB_PASSWORD=<your_db_password>
 DB_NAME=<your_db_name>
 DB_HOST=localhost
 DB_DIALECT=mysql
-GIGWA_SERVER=<your_Gigwa_server_url>
 GENOLINK_SERVER=<your_Genolink_server_address>   # e.g. https://genolink.plantinformatics.io OR http://127.0.0.1:3000
 GENESYS_SERVER=https://api.sandbox.genesys-pgr.org
 GENOLINK_SERVER_PORT=<PORT> # e.g. 3000
