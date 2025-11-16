@@ -27,6 +27,7 @@ import {
   setActiveFilters,
   setWildSearchValue,
   setSelectedFig,
+  setSubsets,
 } from "../../../redux/passport/passportActions";
 
 import WildSearchFilter from "./WildSearchFilter";
@@ -38,6 +39,8 @@ import MetadataSearchResultTable from "../MetadataSearchResultTable";
 import DateRangeFilter from "./DateRangeFilter";
 import GenotypeExplorer from "../../genotype/GenotypeExplorer";
 import { genesysApi, genolinkInternalApi } from "../../../pages/Home";
+import { Autocomplete, TextField, Chip, Box } from "@mui/material";
+
 const SearchFilters = ({ tokenReady }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isResetLoading, setIsResetLoading] = useState(false);
@@ -47,7 +50,12 @@ const SearchFilters = ({ tokenReady }) => {
   const [initialRequestStatus, setInitialRequestStatus] = useState("pending");
   const [filterBody, setFilterBody] = useState({});
   const [searchButtonName, setSearchButtonName] = useState("Search");
+  const [selectedSubsets, setSelectedSubsets] = useState([]);
+  const [subsetsTick, setSubsetsTick] = useState(0);
   const [hasGenotype, setHasGenotype] = useState(false);
+  const instituteCheckedBoxesRef = useRef([]);
+  const cropCheckedBoxesRef = useRef([]);
+  const [isInitialMount, setIsInitialMount] = useState(true);
   const [mappingFailed, setMappingFailed] = useState(false);
   const totalAccessions = useSelector(
     (state) => state.passport.totalAccessions
@@ -65,6 +73,7 @@ const SearchFilters = ({ tokenReady }) => {
   );
 
   const instituteCode = useSelector((state) => state.passport.instituteCode);
+  const subsets = useSelector((state) => state.passport.subsets);
 
   const resetTrigger = useSelector((state) => state.passport.resetTrigger);
   const accessionNumbers = useSelector(
@@ -94,6 +103,7 @@ const SearchFilters = ({ tokenReady }) => {
   const dispatch = useDispatch();
 
   const wheatImage = "/Wheat.PNG";
+  const selectedUUIDs = selectedSubsets.map((item) => item.uuid);
 
   const withRetryOn401 = async (fn, delay = 500) => {
     try {
@@ -128,6 +138,33 @@ const SearchFilters = ({ tokenReady }) => {
 
     fetchFigs();
   }, []);
+
+  useEffect(() => {
+    const fetchSubsets = async () => {
+      try {
+        const body = {
+          _text: wildSearchValue && wildSearchValue.trim(),
+          institute:
+            !isInitialMount || instituteCheckedBoxesRef.current.length > 0
+              ? { code: instituteCheckedBoxesRef.current }
+              : { code: ["AUS165"] },
+          crops:
+            cropCheckedBoxesRef.current.length > 0
+              ? cropCheckedBoxesRef.current
+              : [],
+        };
+
+        const response = await genesysApi.getGenesysSubsets(body);
+        dispatch(setSubsets(response));
+      } catch (err) {
+        console.error("Failed to load subsets:", err);
+      }
+    };
+
+    fetchSubsets();
+
+    if (isInitialMount) setIsInitialMount(false);
+  }, [wildSearchValue, subsetsTick]);
 
   useEffect(() => {
     if (!tokenReady) return;
@@ -233,6 +270,9 @@ const SearchFilters = ({ tokenReady }) => {
       case "Germplasm Storage":
         dispatch(setGermplasmStorageCheckedBoxes([]));
         break;
+      case "Subsets":
+        setSelectedSubsets([]);
+        break;
       default:
         break;
     }
@@ -302,6 +342,9 @@ const SearchFilters = ({ tokenReady }) => {
           case "Germplasm Storage":
             updatedBody.storage = filter.value;
             break;
+          case "Subsets":
+            updatedBody.subsets = filter.value;
+            break;
           default:
             break;
         }
@@ -314,6 +357,7 @@ const SearchFilters = ({ tokenReady }) => {
     setHasGenotype(!hasGenotype);
   };
   const handleSearch = async (userInput = "") => {
+    setSubsetsTick((t) => t + 1);
     const state = store.getState();
     const {
       instituteCheckedBoxes,
@@ -326,6 +370,9 @@ const SearchFilters = ({ tokenReady }) => {
       germplasmStorageCheckedBoxes,
       selectedFig,
     } = state.passport;
+
+    instituteCheckedBoxesRef.current = instituteCheckedBoxes;
+    cropCheckedBoxesRef.current = cropCheckedBoxes;
 
     let accessionNums1;
     let accessionNums2;
@@ -414,6 +461,10 @@ const SearchFilters = ({ tokenReady }) => {
           : [],
     };
 
+    if (selectedUUIDs.length > 0) {
+      body.subsets = selectedUUIDs;
+    }
+
     Object.keys(body).forEach((key) => {
       if (
         body[key] === undefined ||
@@ -479,6 +530,12 @@ const SearchFilters = ({ tokenReady }) => {
           type: "Germplasm Storage",
           value: germplasmStorageCheckedBoxes,
         });
+      if (selectedUUIDs.length > 0) {
+        newFilters.push({
+          type: "Subsets",
+          value: selectedSubsets.map((item) => item.title),
+        });
+      }
 
       dispatch(setActiveFilters(newFilters));
 
@@ -522,6 +579,11 @@ const SearchFilters = ({ tokenReady }) => {
       dispatch(setActiveFilters([]));
       dispatch(setResetTrigger(true));
       dispatch(setWildSearchValue(""));
+      if (instituteCheckedBoxesRef.current.length > 0)
+        instituteCheckedBoxesRef.current = [];
+      if (cropCheckedBoxesRef.current.length > 0)
+        cropCheckedBoxesRef.current = [];
+      setSubsetsTick((t) => t + 1);
     } catch (error) {
       setIsResetLoading(false);
       console.error("Error handling reset filter:", error);
@@ -899,6 +961,61 @@ const SearchFilters = ({ tokenReady }) => {
                       <div className={styles.drawerContent}>
                         {figs && figs.length > 0 ? (
                           <FigFilter />
+                        ) : (
+                          <p className={styles.unAwailableFilter}>
+                            No available filters.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className={styles.drawer}>
+                      <button
+                        className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
+                        onClick={(e) => {
+                          e.currentTarget.parentElement.classList.toggle(
+                            styles.open
+                          );
+                        }}
+                      >
+                        Subsets <span className={styles.drawerArrow}></span>
+                      </button>
+
+                      <div className={styles.drawerContent}>
+                        {subsets && subsets.length > 0 ? (
+                          <Autocomplete
+                            multiple
+                            options={subsets}
+                            getOptionLabel={(option) => option.title}
+                            value={selectedSubsets}
+                            onChange={(event, newValue) => {
+                              // newValue is an array of the selected subset objects
+                              setSelectedSubsets(newValue);
+                            }}
+                            renderValue={(selected) => (
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  flexWrap: "wrap",
+                                  gap: 0.5,
+                                }}
+                              >
+                                {selected.map((option) => (
+                                  <Chip
+                                    key={option.uuid}
+                                    label={option.title}
+                                  />
+                                ))}
+                              </Box>
+                            )}
+                            renderInput={(params) => (
+                              <TextField
+                                {...params}
+                                label="Select Subsets"
+                                placeholder="Type to search..."
+                                variant="outlined"
+                              />
+                            )}
+                          />
                         ) : (
                           <p className={styles.unAwailableFilter}>
                             No available filters.

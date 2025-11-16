@@ -32,6 +32,7 @@ const initialState = {
   platform: "Gigwa",
   activeFilters: [],
   wildSearchValue: "",
+  subsets: [],
 };
 
 const rootReducer = (state = initialState, action) => {
@@ -203,6 +204,11 @@ const rootReducer = (state = initialState, action) => {
       return {
         ...state,
         wildSearchValue: action.payload,
+      };
+    case "SET_SUBSETS":
+      return {
+        ...state,
+        subsets: action.payload,
       };
     default:
       return state;

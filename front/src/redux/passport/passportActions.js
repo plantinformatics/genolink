@@ -142,3 +142,7 @@ export const setWildSearchValue = (wildSearchValue) => ({
   type: "SET_WILD_SEARCH_VALUE",
   payload: wildSearchValue,
 });
+export const setSubsets = (subsets) => ({
+  type: "SET_SUBSETS",
+  payload: subsets,
+});
