@@ -20,6 +20,7 @@ import {
   setGenusSpeciesCheckedBoxes,
   setSpeciesCheckedBoxes,
   setOriginOfMaterialCheckedBoxes,
+  setDonorCodeCheckedBoxes,
   setSampStatCheckedBoxes,
   setGermplasmStorageCheckedBoxes,
   setCheckedAccessions,
@@ -93,6 +94,7 @@ const SearchFilters = ({ tokenReady }) => {
   const originOfMaterialList = useSelector(
     (state) => state.passport.originOfMaterialList
   );
+  const donorCodeList = useSelector((state) => state.passport.donorCodeList);
   const sampStatList = useSelector((state) => state.passport.sampStatList);
   const germplasmStorageList = useSelector(
     (state) => state.passport.germplasmStorageList
@@ -253,6 +255,9 @@ const SearchFilters = ({ tokenReady }) => {
       case "Origin of Material":
         dispatch(setOriginOfMaterialCheckedBoxes([]));
         break;
+      case "Donor Code":
+        dispatch(setDonorCodeCheckedBoxes([]));
+        break;
       case "Biological Status":
         dispatch(setSampStatCheckedBoxes([]));
         break;
@@ -347,6 +352,7 @@ const SearchFilters = ({ tokenReady }) => {
       genusSpeciesCheckedBoxes,
       speciesCheckedBoxes,
       originOfMaterialCheckedBoxes,
+      donorCodeCheckedBoxes,
       sampStatCheckedBoxes,
       germplasmStorageCheckedBoxes,
     } = state.passport;
@@ -416,6 +422,7 @@ const SearchFilters = ({ tokenReady }) => {
         originOfMaterialCheckedBoxes.length > 0
           ? { code3: originOfMaterialCheckedBoxes }
           : {},
+      donorCode: donorCodeCheckedBoxes.length > 0 ? donorCodeCheckedBoxes : [],
       sampStat: sampStatCheckedBoxes.length > 0 ? sampStatCheckedBoxes : [],
       storage:
         germplasmStorageCheckedBoxes.length > 0
@@ -486,6 +493,11 @@ const SearchFilters = ({ tokenReady }) => {
           type: "Origin of Material",
           value: originOfMaterialCheckedBoxes,
         });
+      if (donorCodeCheckedBoxes.length > 0)
+        newFilters.push({
+          type: "Donor Code",
+          value: donorCodeCheckedBoxes,
+        });
       if (sampStatCheckedBoxes.length > 0)
         newFilters.push({
           type: "Biological Status",
@@ -523,6 +535,7 @@ const SearchFilters = ({ tokenReady }) => {
       dispatch(setGenusSpeciesCheckedBoxes([]));
       dispatch(setSpeciesCheckedBoxes([]));
       dispatch(setOriginOfMaterialCheckedBoxes([]));
+      dispatch(setDonorCodeCheckedBoxes([]));
       dispatch(setSampStatCheckedBoxes([]));
       dispatch(setGermplasmStorageCheckedBoxes([]));
       dispatch(setCheckedAccessions({}));
@@ -837,6 +850,30 @@ const SearchFilters = ({ tokenReady }) => {
                           <MultiSelectFilter
                             options={originOfMaterialList}
                             type="originOfMaterialCheckedBoxes"
+                          />
+                        ) : (
+                          <p className={styles.unAwailableFilter}>
+                            No available filters.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className={styles.drawer}>
+                      <button
+                        className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
+                        onClick={(e) => {
+                          e.currentTarget.parentElement.classList.toggle(
+                            styles.open
+                          );
+                        }}
+                      >
+                        Donor Code <span className={styles.drawerArrow}></span>
+                      </button>
+                      <div className={styles.drawerContent}>
+                        {donorCodeList && donorCodeList.length > 0 ? (
+                          <MultiSelectFilter
+                            options={donorCodeList}
+                            type="donorCodeCheckedBoxes"
                           />
                         ) : (
                           <p className={styles.unAwailableFilter}>

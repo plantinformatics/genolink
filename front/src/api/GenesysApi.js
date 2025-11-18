@@ -13,6 +13,7 @@ import {
   setGenusSpeciesList,
   setSpeciesList,
   setOriginOfMaterialList,
+  setDonorCodeList,
   setSampStatList,
   setGermplasmStorageList,
   setTotalAccessions,
@@ -191,7 +192,8 @@ class GenesysApi extends BaseApi {
           _text: userInput,
         };
       }
-      const endpoint = "/api/v1/acn/filter?l=1";
+      const limit = 100;
+      const endpoint = `/api/v1/acn/overview?limit=${limit}`;
       const searchData = await this.post(endpoint, body);
 
       const codes = this.extractSuggestions(searchData, "institute.code");
@@ -208,6 +210,7 @@ class GenesysApi extends BaseApi {
       );
       const sampStat = this.extractSuggestions(searchData, "sampStat");
       const germplasmStorage = this.extractSuggestions(searchData, "storage");
+      const donorCode = this.extractSuggestions(searchData, "donorCode");
 
       dispatch(setInstituteCode(codes));
       dispatch(setCropList(crops));
@@ -215,6 +218,7 @@ class GenesysApi extends BaseApi {
       dispatch(setGenusSpeciesList(genusSpecies));
       dispatch(setSpeciesList(species));
       dispatch(setOriginOfMaterialList(origins));
+      dispatch(setDonorCodeList(donorCode));
       dispatch(setSampStatList(sampStat));
       dispatch(setGermplasmStorageList(germplasmStorage));
       dispatch(setPassportCurrentPage(0));
@@ -285,10 +289,11 @@ class GenesysApi extends BaseApi {
       const select =
         "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases,donorName, donorCode, sampStat, remarks.remark, countryOfOrigin.codeNum, taxonomy.genus, taxonomy.species";
       const endpointQuery = `/api/v1/acn/query?p=0&l=${pageSize}&select=${select}`;
-      const endpointFilter = "/api/v1/acn/filter";
+      const limit = 100;
+      const endpointOverview = `/api/v1/acn/overview?limit=${limit}`;
       const [queryData, filterDataResponse] = await Promise.all([
         this.post(endpointQuery, filterData),
-        this.post(endpointFilter, filterData),
+        this.post(endpointOverview, filterData),
       ]);
       dispatch(setSearchResults(queryData.content));
       dispatch(setTotalAccessions(queryData.totalElements));
@@ -324,6 +329,11 @@ class GenesysApi extends BaseApi {
         )
       );
       dispatch(
+        setDonorCodeList(
+          this.extractSuggestions(filterDataResponse, "donorCode")
+        )
+      );
+      dispatch(
         setSampStatList(this.extractSuggestions(filterDataResponse, "sampStat"))
       );
       dispatch(
@@ -354,11 +364,16 @@ class GenesysApi extends BaseApi {
   }
 
   extractSuggestions(data, field) {
-    return (
-      data.suggestions[field]?.terms
-        .map((item) => [item.term, item.count])
-        .filter((code, index, arr) => arr.indexOf(code) === index) || []
-    );
+    const container = field === "donorCode" ? data.overview : data.suggestions;
+
+    const terms = container?.[field]?.terms || [];
+
+    return terms
+      .map((item) => [item.term, item.count])
+      .filter((entry, index, arr) => {
+        const [term] = entry;
+        return arr.findIndex(([t]) => t === term) === index;
+      });
   }
 
   async fetchMoreResults({

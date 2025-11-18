@@ -7,6 +7,7 @@ const initialState = {
   genusSpeciesCheckedBoxes: [],
   speciesCheckedBoxes: [],
   originOfMaterialCheckedBoxes: [],
+  donorCodeCheckedBoxes: [],
   sampStatCheckedBoxes: [],
   germplasmStorageCheckedBoxes: [],
   instituteCode: [],
@@ -15,6 +16,7 @@ const initialState = {
   genusSpeciesList: [],
   speciesList: [],
   originOfMaterialList: [],
+  donorCodeList: [],
   sampStatList: [],
   germplasmStorageList: [],
   resetTrigger: false,
@@ -89,6 +91,11 @@ const rootReducer = (state = initialState, action) => {
         ...state,
         originOfMaterialCheckedBoxes: action.payload,
       };
+    case "SET_DONOR_CODE_CHECKED_BOXES":
+      return {
+        ...state,
+        donorCodeCheckedBoxes: action.payload,
+      };
     case "SET_SAMP_STAT_CHECKED_BOXES":
       return {
         ...state,
@@ -128,6 +135,11 @@ const rootReducer = (state = initialState, action) => {
       return {
         ...state,
         originOfMaterialList: action.payload,
+      };
+    case "SET_DONOR_CODE_LIST":
+      return {
+        ...state,
+        donorCodeList: action.payload,
       };
     case "SET_SAMP_STAT_LIST":
       return {

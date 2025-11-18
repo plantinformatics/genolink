@@ -33,6 +33,10 @@ export const setOriginOfMaterialCheckedBoxes = (boxes) => ({
   type: "SET_ORIGIN_OF_MATERIAL_CHECKED_BOXES",
   payload: boxes,
 });
+export const setDonorCodeCheckedBoxes = (boxes) => ({
+  type: "SET_DONOR_CODE_CHECKED_BOXES",
+  payload: boxes,
+});
 export const setSampStatCheckedBoxes = (boxes) => ({
   type: "SET_SAMP_STAT_CHECKED_BOXES",
   payload: boxes,
@@ -65,8 +69,14 @@ export const setSpeciesList = (species) => ({
   type: "SET_SPECIES_LIST",
   payload: species,
 });
+
 export const setOriginOfMaterialList = (origin) => ({
   type: "SET_ORIGIN_OF_MATERIAL_LIST",
+  payload: origin,
+});
+
+export const setDonorCodeList = (origin) => ({
+  type: "SET_DONOR_CODE_LIST",
   payload: origin,
 });
 
