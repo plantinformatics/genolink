@@ -914,7 +914,8 @@ const SearchFilters = ({ tokenReady }) => {
                           );
                         }}
                       >
-                        Donor Code <span className={styles.drawerArrow}></span>
+                        Donor Institute{" "}
+                        <span className={styles.drawerArrow}></span>
                       </button>
                       <div className={styles.drawerContent}>
                         {donorCodeList && donorCodeList.length > 0 ? (
