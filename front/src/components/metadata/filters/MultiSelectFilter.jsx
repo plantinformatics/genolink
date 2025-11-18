@@ -6,6 +6,7 @@ import {
   setGenusSpeciesCheckedBoxes,
   setSpeciesCheckedBoxes,
   setOriginOfMaterialCheckedBoxes,
+  setDonorCodeCheckedBoxes,
   setSampStatCheckedBoxes,
   setGermplasmStorageCheckedBoxes,
 } from "../../../redux/passport/passportActions";
@@ -117,6 +118,9 @@ const MultiSelectFilter = ({ options, type }) => {
   const originOfMaterialCheckedBoxes = useSelector(
     (state) => state.passport.originOfMaterialCheckedBoxes
   );
+  const donorCodeCheckedBoxes = useSelector(
+    (state) => state.passport.donorCodeCheckedBoxes
+  );
   const sampStatCheckedBoxes = useSelector(
     (state) => state.passport.sampStatCheckedBoxes
   );
@@ -206,6 +210,16 @@ const MultiSelectFilter = ({ options, type }) => {
         dispatch(
           setOriginOfMaterialCheckedBoxes(
             originOfMaterialCheckedBoxes.filter((item) => item !== option)
+          )
+        );
+      }
+    else if (type === "donorCodeCheckedBoxes")
+      if (checked) {
+        dispatch(setDonorCodeCheckedBoxes([...donorCodeCheckedBoxes, option]));
+      } else {
+        dispatch(
+          setDonorCodeCheckedBoxes(
+            donorCodeCheckedBoxes.filter((item) => item !== option)
           )
         );
       }
@@ -301,6 +315,8 @@ const MultiSelectFilter = ({ options, type }) => {
                         ? cropCheckedBoxes.includes(option[0])
                         : type === "originOfMaterialCheckedBoxes"
                         ? originOfMaterialCheckedBoxes.includes(option[0])
+                        : type === "donorCodeCheckedBoxes"
+                        ? donorCodeCheckedBoxes.includes(option[0])
                         : type === "sampStatCheckedBoxes"
                         ? sampStatCheckedBoxes.includes(option[0])
                         : type === "germplasmStorageCheckedBoxes"
