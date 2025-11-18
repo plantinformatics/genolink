@@ -193,7 +193,7 @@ router.post("/accession/filters", async (req, res) => {
   if (req.query.l) queryParams.push(`l=${req.query.l}`);
   if (req.query.s) queryParams.push(`s=${req.query.s}`);
   if (req.query.d) queryParams.push(`d=${req.query.d}`);
-  if (req.query.f) queryParams.push(`d=${req.query.f}`);
+  if (req.query.f) queryParams.push(`f=${req.query.f}`);
 
   if (queryParams.length > 0) {
     url += `?${queryParams.join("&")}`;
@@ -430,60 +430,109 @@ router.post("/passportQuery", async (req, res) => {
   }
 });
 //////////////////////////////////////////////////////////////
-router.post("/genotype-ids", async (req, res) => {
-  const queryParams = [];
-  let url = `${config.genesysServer}/api/v2/acn/genotype-ids`;
-  if (req.query.p) queryParams.push(`p=${req.query.p}`);
-  if (req.query.l) {
-    queryParams.push(`l=${req.query.l}`);
-  } else {
-    queryParams.push(`l=1000`);
-  }
-  if (queryParams.length > 0) {
-    url += `?${queryParams.join("&")}`;
-  }
-  const sendRequestWithRetry = async () => {
-    try {
-      const token = await getCachedToken();
+// router.post("/genotype-ids", async (req, res) => {
+//   const queryParams = [];
+//   let url = `${config.genesysServer}/api/v2/acn/genotype-ids`;
+//   if (req.query.p) queryParams.push(`p=${req.query.p}`);
+//   if (req.query.l) {
+//     queryParams.push(`l=${req.query.l}`);
+//   } else {
+//     queryParams.push(`l=1000`);
+//   }
+//   if (queryParams.length > 0) {
+//     url += `?${queryParams.join("&")}`;
+//   }
+//   const sendRequestWithRetry = async () => {
+//     try {
+//       const token = await getCachedToken();
 
-      const header = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-          Accept: "application/json, text/plain, */*",
-          Origin: config.genolinkServer,
-        },
-      };
+//       const header = {
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//           "Content-Type": "application/json",
+//           Accept: "application/json, text/plain, */*",
+//           Origin: config.genolinkServer,
+//         },
+//       };
 
-      return await axiosPostIPv4(url, req.body, header);
-    } catch (error) {
-      if (error.response && error.response.status === 401) {
-        cachedToken = await getToken();
-        const header = {
-          headers: {
-            Authorization: `Bearer ${cachedToken}`,
-            "Content-Type": "application/json",
-            Accept: "application/json, text/plain, */*",
-            Origin: config.genolinkServer,
-          },
-        };
-        return await axiosPostIPv4(url, req.body, header);
-      }
-      throw error;
-    }
-  };
+//       return await axiosPostIPv4(url, req.body, header);
+//     } catch (error) {
+//       if (error.response && error.response.status === 401) {
+//         cachedToken = await getToken();
+//         const header = {
+//           headers: {
+//             Authorization: `Bearer ${cachedToken}`,
+//             "Content-Type": "application/json",
+//             Accept: "application/json, text/plain, */*",
+//             Origin: config.genolinkServer,
+//           },
+//         };
+//         return await axiosPostIPv4(url, req.body, header);
+//       }
+//       throw error;
+//     }
+//   };
 
-  try {
-    const response = await sendRequestWithRetry();
-    res.send(response.data);
-  } catch (error) {
-    logger.error(`API Error in /accession/filters: ${error}`);
-    res.status(500).send("API request failed: " + error.message);
-  }
-});
+//   try {
+//     const response = await sendRequestWithRetry();
+//     res.send(response.data);
+//   } catch (error) {
+//     logger.error(`API Error in /accession/filters: ${error}`);
+//     res.status(500).send("API request failed: " + error.message);
+//   }
+// });
 //////////////////////////////////////////////////////////////////////////
-router.post("/subset/filter", async (req, res) => {
-  let url = `${config.genesysServer}/api/v2/subset/filter`;
+// router.post("/subset/filter", async (req, res) => {
+//   let url = `${config.genesysServer}/api/v2/subset/filter`;
+//   const sendRequestWithRetry = async () => {
+//     try {
+//       const token = await getCachedToken();
+
+//       const header = {
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//           "Content-Type": "application/json",
+//           Accept: "application/json, text/plain, */*",
+//           Origin: config.genolinkServer,
+//         },
+//       };
+
+//       return await axiosPostIPv4(url, req.body, header);
+//     } catch (error) {
+//       if (error.response && error.response.status === 401) {
+//         cachedToken = await getToken();
+//         const header = {
+//           headers: {
+//             Authorization: `Bearer ${cachedToken}`,
+//             "Content-Type": "application/json",
+//             Accept: "application/json, text/plain, */*",
+//             Origin: config.genolinkServer,
+//           },
+//         };
+//         return await axiosPostIPv4(url, req.body, header);
+//       }
+//       throw error;
+//     }
+//   };
+
+//   try {
+//     const response = await sendRequestWithRetry();
+//     const subsets = response.data.content.map((subset) => ({
+//       title: subset.title,
+//       uuid: subset.uuid,
+//     }));
+//     res.send(response.data);
+//     // res.send(subsets);
+//   } catch (error) {
+//     logger.error(`API Error in /subset/filter: ${error}`);
+//     res.status(500).send("API request failed: " + error.message);
+//   }
+// });
+//////////////////////////////////////////////////////////////////////////
+router.post("/overview", async (req, res) => {
+  const limit = req.query.l === undefined ? 100000 : Number(req.query.l);
+  const body = req.body;
+  let url = `${config.genesysServer}/api/v2/acn/overview?limit=${limit}`;
   const sendRequestWithRetry = async () => {
     try {
       const token = await getCachedToken();
@@ -497,7 +546,7 @@ router.post("/subset/filter", async (req, res) => {
         },
       };
 
-      return await axiosPostIPv4(url, req.body, header);
+      return await axios.post(url, body, header);
     } catch (error) {
       if (error.response && error.response.status === 401) {
         cachedToken = await getToken();
@@ -509,7 +558,7 @@ router.post("/subset/filter", async (req, res) => {
             Origin: config.genolinkServer,
           },
         };
-        return await axiosPostIPv4(url, req.body, header);
+        return await axios.post(url, body, header);
       }
       throw error;
     }
@@ -517,16 +566,10 @@ router.post("/subset/filter", async (req, res) => {
 
   try {
     const response = await sendRequestWithRetry();
-    const subsets = response.data.content.map((subset) => ({
-      title: subset.title,
-      uuid: subset.uuid,
-    }));
     res.send(response.data);
-    // res.send(subsets);
   } catch (error) {
-    logger.error(`API Error in /subset/filter: ${error}`);
+    logger.error(`API Error in /overview/donorCode: ${error}`);
     res.status(500).send("API request failed: " + error.message);
   }
 });
-
 module.exports = router;
