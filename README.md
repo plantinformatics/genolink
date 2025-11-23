@@ -54,8 +54,16 @@ VITE_Genesys_OIDC_CLIENT_SECRET=<your_client_secret>
 VITE_GENOLINK_SERVER=<your_Genolink_server_address>   # e.g. https://genolink.plantinformatics.io OR http://127.0.0.1:3000
 VITE_GENESYS_SERVER=https://api.sandbox.genesys-pgr.org
 ```
-> **Note:** To obtain the correct Genesys OIDC Client ID and Secret for your Genolink server address (e.g. your domain or local 127.0.0.1:3000), please contact the [Genesys support team](https://www.genesys-pgr.org/content/about/contact).  
-> Also keep in mind that Genesys **Sandbox** environment and **Production/Main** environment each have their own separate Client ID and Client Secret. They are **not interchangeable**, so make sure you use the correct pair depending on which server you are connecting to.
+**Genesys environment alignment**
+- If you are using **Genesys sandbox**, set:
+  - `VITE_GENESYS_SERVER=https://api.sandbox.genesys-pgr.org`
+  - Use the **sandbox** Client ID and Secret.
+- If you are using **Genesys production**, set:
+  - `VITE_GENESYS_SERVER=https://api.genesys-pgr.org`
+  - Use the **production** Client ID and Secret.
+
+> **Note:** To obtain the correct Genesys OIDC Client ID and Secret for your Genolink server address (e.g. your domain or local 127.0.0.1:3000), please contact the [Genesys support team](https://www.genesys-pgr.org/content/about/contact).
+> Sandbox and production have **different** Client IDs and Secrets. Make sure the URL and credentials belong to the same Genesys environment.
 
 
 #### 4. Build Frontend
@@ -95,6 +103,7 @@ DB_PASSWORD=<your_db_password>
 DB_NAME=<your_db_name>
 DB_HOST=localhost
 DB_DIALECT=mysql
+GIGWA_SERVER=<your_Gigwa_server_url>
 GENOLINK_SERVER=<your_Genolink_server_address>   # e.g. https://genolink.plantinformatics.io OR http://127.0.0.1:3000
 GENESYS_SERVER=https://api.sandbox.genesys-pgr.org
 GENOLINK_SERVER_PORT=<PORT> # e.g. 3000
@@ -147,8 +156,17 @@ VITE_PLATFORM=Gigwa
 VITE_REQUIRE_GIGWA_CREDENTIALS=true
 BASE_PATH=<optional_base_path> # e.g. /test OR leave empty for root
 ```
-> **Note:** To obtain the correct Genesys OIDC Client ID and Secret for your Genolink server address (e.g. your domain or local 127.0.0.1:3000), please contact the [Genesys support team](https://www.genesys-pgr.org/content/about/contact).  
-> Also keep in mind that Genesys **Sandbox** environment and **Production/Main** environment each have their own separate Client ID and Client Secret. They are **not interchangeable**, so make sure you use the correct pair depending on which server you are connecting to.
+**Genesys environment alignment**
+- If you are using **Genesys sandbox**, set:
+  - `VITE_GENESYS_SERVER=https://api.sandbox.genesys-pgr.org`
+  - Use the **sandbox** Client ID and Secret.
+- If you are using **Genesys production**, set:
+  - `VITE_GENESYS_SERVER=https://api.genesys-pgr.org`
+  - Use the **production** Client ID and Secret.
+
+> **Note:** To obtain the correct Genesys OIDC Client ID and Secret for your Genolink server address (e.g. your domain or local 127.0.0.1:3000), please contact the [Genesys support team](https://www.genesys-pgr.org/content/about/contact).
+> Sandbox and production have **different** Client IDs and Secrets. Make sure the URL and credentials belong to the same Genesys environment.
+
 
 
 #### 3. Start Docker Containers
