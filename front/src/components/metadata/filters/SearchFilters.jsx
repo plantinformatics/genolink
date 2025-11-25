@@ -16,6 +16,8 @@ import {
   setFigs,
   setCreationStartDate,
   setCreationEndDate,
+  setAcquisitionStartDate,
+  setAcquisitionEndDate,
   setCropCheckedBoxes,
   setGenusCheckedBoxes,
   setGenusSpeciesCheckedBoxes,
@@ -87,6 +89,12 @@ const SearchFilters = ({ tokenReady }) => {
   );
   const creationEndDate = useSelector(
     (state) => state.passport.creationEndDate
+  );
+  const acquisitionStartDate = useSelector(
+    (state) => state.passport.acquisitionStartDate
+  );
+  const acquisitionEndDate = useSelector(
+    (state) => state.passport.acquisitionEndDate
   );
   const cropList = useSelector((state) => state.passport.cropList);
   const genusList = useSelector((state) => state.passport.genusList);
@@ -245,11 +253,17 @@ const SearchFilters = ({ tokenReady }) => {
       case "Institute Code":
         dispatch(setInstituteCheckedBoxes([]));
         break;
-      case "Start Date":
+      case "Creation Start Date":
         dispatch(setCreationStartDate(null));
         break;
-      case "End Date":
+      case "Creation End Date":
         dispatch(setCreationEndDate(null));
+        break;
+      case "Acquisition Start Date":
+        dispatch(setAcquisitionStartDate(null));
+        break;
+      case "Acquisition End Date":
+        dispatch(setAcquisitionEndDate(null));
         break;
       case "Crop":
         dispatch(setCropCheckedBoxes([]));
@@ -443,6 +457,10 @@ const SearchFilters = ({ tokenReady }) => {
         ...(creationStartDate !== null ? { ge: creationStartDate } : {}),
         ...(creationEndDate !== null ? { le: creationEndDate } : {}),
       },
+      acquisitionDate: {
+        ...(acquisitionStartDate !== null ? { ge: acquisitionStartDate } : {}),
+        ...(acquisitionEndDate !== null ? { le: acquisitionEndDate } : {}),
+      },
 
       crop: cropCheckedBoxes.length > 0 ? cropCheckedBoxes : [],
 
@@ -504,9 +522,22 @@ const SearchFilters = ({ tokenReady }) => {
           value: instituteCheckedBoxes,
         });
       if (creationStartDate)
-        newFilters.push({ type: "Start Date", value: creationStartDate });
+        newFilters.push({
+          type: "Creation Start Date",
+          value: creationStartDate,
+        });
       if (creationEndDate)
-        newFilters.push({ type: "End Date", value: creationEndDate });
+        newFilters.push({ type: "Creation End Date", value: creationEndDate });
+      if (acquisitionStartDate)
+        newFilters.push({
+          type: "Acquisition Start Date",
+          value: acquisitionStartDate,
+        });
+      if (acquisitionEndDate)
+        newFilters.push({
+          type: "Acquisition End Date",
+          value: acquisitionEndDate,
+        });
       if (cropCheckedBoxes.length > 0)
         newFilters.push({ type: "Crop", value: cropCheckedBoxes });
       if (genusCheckedBoxes.length > 0) {
@@ -563,8 +594,10 @@ const SearchFilters = ({ tokenReady }) => {
       dispatch(setAccessionNumbers([]));
       dispatch(setGenotypeIds([]));
       dispatch(setSelectedFig(""));
-      dispatch(setCreationEndDate(null));
       dispatch(setCreationStartDate(null));
+      dispatch(setCreationEndDate(null));
+      dispatch(setAcquisitionStartDate(null));
+      dispatch(setAcquisitionEndDate(null));
       dispatch(setCropCheckedBoxes([]));
       dispatch(setGenusCheckedBoxes([]));
       dispatch(setGenusSpeciesCheckedBoxes([]));
@@ -746,8 +779,10 @@ const SearchFilters = ({ tokenReady }) => {
                       </button>
 
                       <div className={styles.drawerContent}>
-                        <DateRangeFilter type="start" />
-                        <DateRangeFilter type="end" />
+                        <DateRangeFilter type="Creation Start Date" />
+                        <DateRangeFilter type="Creation End Date" />
+                        <DateRangeFilter type="Acquisition Start Date" />
+                        <DateRangeFilter type="Acquisition End Date" />
                       </div>
                     </div>
                     <div className={styles.drawer}>
