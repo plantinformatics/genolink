@@ -11,7 +11,7 @@ services:
         VITE_GENOLINK_SERVER: ${VITE_GENOLINK_SERVER}
         VITE_GENESYS_SERVER: ${VITE_GENESYS_SERVER}
     ports:
-      - "3004:5006"
+      - "${APP_PORT}:${APP_PORT}"
     env_file:
       - .env
     environment:
@@ -31,7 +31,7 @@ services:
       DB_DIALECT: ${DB_DIALECT}
       GENOLINK_SERVER: ${GENOLINK_SERVER}
       GENESYS_SERVER: ${GENESYS_SERVER}
-      GENOLINK_SERVER_PORT: ${GENOLINK_SERVER_PORT}
+      GENOLINK_SERVER_PORT: ${APP_PORT}
 
     depends_on:
       - db
@@ -47,7 +47,7 @@ services:
       MYSQL_USER: ${DB_USERNAME}
       MYSQL_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "3309:3306"
+      - "${DB_PORT}:${DB_PORT}"
     volumes:
       - mysql_data:/var/lib/mysql
 
