@@ -106,7 +106,7 @@ DB_DIALECT=mysql
 GIGWA_SERVER=<your_Gigwa_server_url>
 GENOLINK_SERVER=<your_Genolink_server_address>   # e.g. https://genolink.plantinformatics.io OR http://127.0.0.1:3000
 GENESYS_SERVER=https://api.sandbox.genesys-pgr.org
-GENOLINK_SERVER_PORT=<PORT> # e.g. 3000
+APP_PORT=<PORT> # e.g. 3000
 ```
 
 #### 11. Run the Application
@@ -147,7 +147,8 @@ DB_HOST=db
 DB_DIALECT=mysql
 GENOLINK_SERVER=<your_Genolink_server_address>   # e.g. https://genolink.plantinformatics.io OR http://127.0.0.1:3000
 GENESYS_SERVER=https://api.sandbox.genesys-pgr.org
-GENOLINK_SERVER_PORT=<PORT> # e.g. 3000
+APP_PORT=<PORT> # e.g. 3000
+DB_PORT=<PORT> # e.g. 3306
 VITE_Genesys_OIDC_CLIENT_ID=<your_Genesys_client_id>
 VITE_Genesys_OIDC_CLIENT_SECRET=<your_Genesys_client_secret>
 VITE_GENOLINK_SERVER=<your_Genolink_server_address>   # e.g. https://genolink.plantinformatics.io OR http://127.0.0.1:3000
