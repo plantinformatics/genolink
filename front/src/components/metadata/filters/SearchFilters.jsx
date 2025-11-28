@@ -112,7 +112,7 @@ const SearchFilters = ({ tokenReady }) => {
   );
   const dispatch = useDispatch();
 
-  const wheatImage = "/Wheat.PNG";
+  const wheatImage = "Wheat.PNG";
   const selectedUUIDs = selectedSubsets.map((item) => item.uuid);
 
   const withRetryOn401 = async (fn, delay = 500) => {
@@ -640,7 +640,7 @@ const SearchFilters = ({ tokenReady }) => {
       <div className={styles.genolinkContainer}>
         <div className={styles.genolinkSubContainer}>
           <img
-            src="/Genolink.png"
+            src="Genolink.png"
             alt="Genolink-logo"
             className={styles.genolinkLogo}
           />
@@ -1221,12 +1221,12 @@ const SearchFilters = ({ tokenReady }) => {
         </p>
         <div className={styles.logoContainer}>
           <img
-            src="/agriculture-victoria-logo.png"
+            src="agriculture-victoria-logo.png"
             alt="Agriculture-Victoria-logo"
             className={styles.partnerLogo}
           />
           <img
-            src="/Australian-Grains-Genebank-logo.jpg"
+            src="Australian-Grains-Genebank-logo.jpg"
             alt="Australian-Grains-Genebank-logo"
             className={styles.partnerLogo}
           />
@@ -1236,7 +1236,7 @@ const SearchFilters = ({ tokenReady }) => {
             rel="noopener noreferrer"
           >
             <img
-              src="/GRDC-logo.jpg"
+              src="GRDC-logo.jpg"
               alt="GRDC-logo"
               className={styles.partnerLogo}
             />
