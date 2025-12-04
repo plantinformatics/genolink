@@ -26,5 +26,19 @@
 }
 
 .whiteSpace {
-  white-space: pre;
+  display: flex;
+  align-items: center;
+}
+
+.truncatedLabel {
+  flex: 1;
+  max-width: 170px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.count {
+  margin-left: 8px;
+  flex-shrink: 0;
 }

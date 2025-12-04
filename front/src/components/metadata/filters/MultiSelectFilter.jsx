@@ -329,17 +329,33 @@ const MultiSelectFilter = ({ options, type }) => {
                   />
                   <div
                     className={styles.whiteSpace}
-                    key={option[0] + "-" + option[1]}
+                    key={
+                      type === "donorCodeCheckedBoxes"
+                        ? option[0] + "-" + option[2]
+                        : option[0] + "-" + option[1]
+                    }
                   >
-                    {type === "sampStatCheckedBoxes"
-                      ? sampStatMapping[option[0]] +
-                        "                  " +
-                        option[1]
-                      : type === "germplasmStorageCheckedBoxes"
-                      ? germplasmStorageMapping[option[0]] +
-                        "                  " +
-                        option[1]
-                      : option[0] + "                  " + option[1]}
+                    {type === "sampStatCheckedBoxes" ? (
+                      sampStatMapping[option[0]] +
+                      "                  " +
+                      option[1]
+                    ) : type === "germplasmStorageCheckedBoxes" ? (
+                      germplasmStorageMapping[option[0]] +
+                      "                  " +
+                      option[1]
+                    ) : type === "donorCodeCheckedBoxes" ? (
+                      <>
+                        <span
+                          className={styles.truncatedLabel}
+                          title={option[1]}
+                        >
+                          {option[1]}
+                        </span>
+                        <span className={styles.count}>{option[2]}</span>
+                      </>
+                    ) : (
+                      option[0] + "                  " + option[1]
+                    )}
                   </div>
                 </label>
               );

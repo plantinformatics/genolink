@@ -102,6 +102,15 @@ class GenesysApi extends BaseApi {
     }
   }
 
+  async getDonorInstituteFullName(donorList) {
+    let endpoint = "/api/v2/vocabulary/wiews/decode";
+    if (!donorList || donorList.length === 0) {
+      return;
+    }
+    const instituteFullNames = await this.post(endpoint, donorList);
+    return instituteFullNames;
+  }
+
   async getGenesysSubsets(body) {
     const endpoint = "/api/v2/subset/filter";
     const limit = 200;

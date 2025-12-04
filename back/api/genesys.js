@@ -469,8 +469,95 @@ router.post("/overview", async (req, res) => {
     const response = await sendRequestWithRetry();
     res.send(response.data);
   } catch (error) {
-    logger.error(`API Error in /overview/donorCode: ${error}`);
+    logger.error(`API Error in /overview: ${error}`);
     res.status(500).send("API request failed: " + error.message);
   }
 });
+///////////////////////////////////////////////////////////////////
+router.post("/wiews/filter", async (req, res) => {
+  const body = req.body;
+  let url = `${config.genesysServer}/api/v2/wiews/filter`;
+  const sendRequestWithRetry = async () => {
+    try {
+      const token = await getCachedToken();
+
+      const header = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Accept: "application/json, text/plain, */*",
+          Origin: config.genolinkServer,
+        },
+      };
+
+      return await axios.post(url, body, header);
+    } catch (error) {
+      if (error.response && error.response.status === 401) {
+        cachedToken = await getToken();
+        const header = {
+          headers: {
+            Authorization: `Bearer ${cachedToken}`,
+            "Content-Type": "application/json",
+            Accept: "application/json, text/plain, */*",
+            Origin: config.genolinkServer,
+          },
+        };
+        return await axios.post(url, body, header);
+      }
+      throw error;
+    }
+  };
+
+  try {
+    const response = await sendRequestWithRetry();
+    res.send(response.data);
+  } catch (error) {
+    logger.error(`API Error in /wiews/filter: ${error}`);
+    res.status(500).send("API request failed: " + error.message);
+  }
+});
+///////////////////////////////////////////////////////////
+router.post("/wiews/decode", async (req, res) => {
+  const body = req.body;
+  let url = `${config.genesysServer}/api/v1/vocabulary/wiews/decode`;
+  const sendRequestWithRetry = async () => {
+    try {
+      const token = await getCachedToken();
+
+      const header = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Accept: "application/json, text/plain, */*",
+          Origin: config.genolinkServer,
+        },
+      };
+
+      return await axios.post(url, body, header);
+    } catch (error) {
+      if (error.response && error.response.status === 401) {
+        cachedToken = await getToken();
+        const header = {
+          headers: {
+            Authorization: `Bearer ${cachedToken}`,
+            "Content-Type": "application/json",
+            Accept: "application/json, text/plain, */*",
+            Origin: config.genolinkServer,
+          },
+        };
+        return await axios.post(url, body, header);
+      }
+      throw error;
+    }
+  };
+
+  try {
+    const response = await sendRequestWithRetry();
+    res.send(response.data);
+  } catch (error) {
+    logger.error(`API Error in /wiews/filter: ${error}`);
+    res.status(500).send("API request failed: " + error.message);
+  }
+});
+
 module.exports = router;

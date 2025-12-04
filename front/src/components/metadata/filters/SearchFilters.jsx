@@ -15,6 +15,8 @@ import {
   setFigs,
   setCreationStartDate,
   setCreationEndDate,
+  setAcquisitionStartDate,
+  setAcquisitionEndDate,
   setCropCheckedBoxes,
   setGenusCheckedBoxes,
   setGenusSpeciesCheckedBoxes,
@@ -48,9 +50,9 @@ const SearchFilters = ({ tokenReady }) => {
   const [initialRequestSent, setInitialRequestSent] = useState(false);
   const [initialRequestStatus, setInitialRequestStatus] = useState("pending");
   const [filterBody, setFilterBody] = useState({});
-  const [searchButtonName, setSearchButtonName] = useState("Search");
   const [selectedSubsets, setSelectedSubsets] = useState([]);
   const [subsetsTick, setSubsetsTick] = useState(0);
+  const [donorNameList, setDonorNameList] = useState([]);
   const genotypedYesRef = useRef(null);
   const genotypedNoRef = useRef(null);
   const instituteCheckedBoxesRef = useRef([]);
@@ -85,6 +87,12 @@ const SearchFilters = ({ tokenReady }) => {
   const creationEndDate = useSelector(
     (state) => state.passport.creationEndDate
   );
+  const acquisitionStartDate = useSelector(
+    (state) => state.passport.acquisitionStartDate
+  );
+  const acquisitionEndDate = useSelector(
+    (state) => state.passport.acquisitionEndDate
+  );
   const cropList = useSelector((state) => state.passport.cropList);
   const genusList = useSelector((state) => state.passport.genusList);
   const genusSpeciesList = useSelector(
@@ -116,13 +124,6 @@ const SearchFilters = ({ tokenReady }) => {
     }
   };
 
-  useEffect(() => {
-    if (activeFilters.length > 0 && searchButtonName !== "Update Search") {
-      setSearchButtonName("Update Search");
-    } else {
-      setSearchButtonName("Search");
-    }
-  }, [activeFilters]);
   useEffect(() => {
     const fetchFigs = async () => {
       try {
@@ -233,11 +234,17 @@ const SearchFilters = ({ tokenReady }) => {
       case "Institute Code":
         dispatch(setInstituteCheckedBoxes([]));
         break;
-      case "Start Date":
+      case "Creation Start Date":
         dispatch(setCreationStartDate(null));
         break;
-      case "End Date":
+      case "Creation End Date":
         dispatch(setCreationEndDate(null));
+        break;
+      case "Acquisition Start Date":
+        dispatch(setAcquisitionStartDate(null));
+        break;
+      case "Acquisition End Date":
+        dispatch(setAcquisitionEndDate(null));
         break;
       case "Crop":
         dispatch(setCropCheckedBoxes([]));
@@ -342,6 +349,7 @@ const SearchFilters = ({ tokenReady }) => {
       });
     setFilterBody(updatedBody);
   };
+
   const handleSearch = async (userInput = "") => {
     setSubsetsTick((t) => t + 1);
     const state = store.getState();
@@ -410,6 +418,10 @@ const SearchFilters = ({ tokenReady }) => {
         ...(creationStartDate !== null ? { ge: creationStartDate } : {}),
         ...(creationEndDate !== null ? { le: creationEndDate } : {}),
       },
+      acquisitionDate: {
+        ...(acquisitionStartDate !== null ? { ge: acquisitionStartDate } : {}),
+        ...(acquisitionEndDate !== null ? { le: acquisitionEndDate } : {}),
+      },
       crop: cropCheckedBoxes.length > 0 ? cropCheckedBoxes : [],
       taxonomy: {
         ...(genusCheckedBoxes.length > 0 && { genus: genusCheckedBoxes }),
@@ -471,9 +483,22 @@ const SearchFilters = ({ tokenReady }) => {
           value: instituteCheckedBoxes,
         });
       if (creationStartDate)
-        newFilters.push({ type: "Start Date", value: creationStartDate });
+        newFilters.push({
+          type: "Creation Start Date",
+          value: creationStartDate,
+        });
       if (creationEndDate)
-        newFilters.push({ type: "End Date", value: creationEndDate });
+        newFilters.push({ type: "Creation End Date", value: creationEndDate });
+      if (acquisitionStartDate)
+        newFilters.push({
+          type: "Acquisition Start Date",
+          value: acquisitionStartDate,
+        });
+      if (acquisitionEndDate)
+        newFilters.push({
+          type: "Acquisition End Date",
+          value: acquisitionEndDate,
+        });
       if (cropCheckedBoxes.length > 0)
         newFilters.push({ type: "Crop", value: cropCheckedBoxes });
       if (genusCheckedBoxes.length > 0) {
@@ -528,8 +553,10 @@ const SearchFilters = ({ tokenReady }) => {
       dispatch(setAccessionNumbers([]));
       dispatch(setGenotypeIds([]));
       dispatch(setSelectedFig(""));
-      dispatch(setCreationEndDate(null));
       dispatch(setCreationStartDate(null));
+      dispatch(setCreationEndDate(null));
+      dispatch(setAcquisitionStartDate(null));
+      dispatch(setAcquisitionEndDate(null));
       dispatch(setCropCheckedBoxes([]));
       dispatch(setGenusCheckedBoxes([]));
       dispatch(setGenusSpeciesCheckedBoxes([]));
@@ -541,7 +568,21 @@ const SearchFilters = ({ tokenReady }) => {
       dispatch(setCheckedAccessions({}));
     }
   }, [resetTrigger]);
+  useEffect(() => {
+    const convertDonorCodes = async () => {
+      const donorCodes = donorCodeList.map((array) => array[0]);
+      const donorInstituteFullNameObject =
+        await genesysApi.getDonorInstituteFullName(donorCodes);
 
+      const donorFullNameList = donorCodeList.map(([code, count]) => {
+        const fullName = donorInstituteFullNameObject[code] ?? code; // fallback on code
+        return [code, fullName, count]; // [value, label, count]
+      });
+      setDonorNameList(donorFullNameList);
+    };
+
+    convertDonorCodes();
+  }, [donorCodeList]);
   const handleResetFilter = async () => {
     setIsResetLoading(true);
     try {
@@ -624,21 +665,34 @@ const SearchFilters = ({ tokenReady }) => {
           <TabPanel>
             <div className={styles.passportContentRow}>
               <div className={styles.genesysFilterContainer}>
-                <h4>Filters</h4>
-                {initialRequestSent &&
-                  (!isLoading && !isLoadingGenotypedAccessions ? (
-                    <h5>Total Accessions: {totalAccessions}</h5>
-                  ) : (
-                    <LoadingComponent />
-                  ))}
-                <div className={styles.filterActions}>
-                  <button
-                    type="button"
-                    className={styles.buttonSecondary}
-                    onClick={handleResetFilter}
-                  >
-                    Reset Filter
-                  </button>
+                <div className={styles.stickyTitles}>
+                  <h4>Filters</h4>
+                  {initialRequestSent &&
+                    (!isLoading && !isLoadingGenotypedAccessions ? (
+                      <h5>Total Accessions: {totalAccessions}</h5>
+                    ) : (
+                      <LoadingComponent />
+                    ))}
+                  <div className={styles.filterActions}>
+                    <button
+                      type="button"
+                      className={`${styles.buttonPrimary} ${styles.searchButton}`}
+                      onClick={() => handleSearch(wildSearchValue)}
+                      onMouseDown={() => document.activeElement?.blur()}
+                    >
+                      Apply Filter
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.buttonSecondary}
+                      onClick={handleResetFilter}
+                    >
+                      Reset Filter
+                    </button>
+                  </div>
+                </div>
+                <div className={styles.filterModeContainer}>
+                  <h5>Filter Mode:</h5>
                   <select
                     value={filterMode}
                     onChange={(e) => setFilterMode(e.target.value)}
@@ -687,6 +741,13 @@ const SearchFilters = ({ tokenReady }) => {
                     </ul>
                   ) : null}
                 </div>
+                {filterMode === "Passport Filter" ? (
+                  <WildSearchFilter />
+                ) : filterMode === "Accession Filter" ? (
+                  <AccessionFilter />
+                ) : (
+                  <GenotypeIdFilter />
+                )}
                 {filterMode === "Passport Filter" && (
                   <>
                     <div className={styles.drawer}>
@@ -702,8 +763,10 @@ const SearchFilters = ({ tokenReady }) => {
                         Date <span className={styles.drawerArrow}></span>
                       </button>
                       <div className={styles.drawerContent}>
-                        <DateRangeFilter type="start" />
-                        <DateRangeFilter type="end" />
+                        <DateRangeFilter type="Creation Start Date" />
+                        <DateRangeFilter type="Creation End Date" />
+                        <DateRangeFilter type="Acquisition Start Date" />
+                        <DateRangeFilter type="Acquisition End Date" />
                       </div>
                     </div>
                     <div className={styles.drawer}>
@@ -871,9 +934,9 @@ const SearchFilters = ({ tokenReady }) => {
                         <span className={styles.drawerArrow}></span>
                       </button>
                       <div className={styles.drawerContent}>
-                        {donorCodeList && donorCodeList.length > 0 ? (
+                        {donorNameList && donorNameList.length > 0 ? (
                           <MultiSelectFilter
-                            options={donorCodeList}
+                            options={donorNameList}
                             type="donorCodeCheckedBoxes"
                           />
                         ) : (
@@ -1013,7 +1076,7 @@ const SearchFilters = ({ tokenReady }) => {
                     </div>
                   </>
                 )}
-                <div>
+                <div style={{ marginTop: "20px" }}>
                   <h5>Genotyped</h5>
                   <label style={{ fontWeight: 500, paddingRight: "5px" }}>
                     <input
@@ -1051,23 +1114,6 @@ const SearchFilters = ({ tokenReady }) => {
                   <LoadingComponent />
                 ) : (
                   <div className={styles.pageLayout}>
-                    <div className={styles.filterBar}>
-                      {filterMode === "Passport Filter" ? (
-                        <WildSearchFilter />
-                      ) : filterMode === "Accession Filter" ? (
-                        <AccessionFilter />
-                      ) : (
-                        <GenotypeIdFilter />
-                      )}
-                      <button
-                        type="button"
-                        className={`${styles.buttonPrimary} ${styles.searchButton}`}
-                        onClick={() => handleSearch(wildSearchValue)}
-                        onMouseDown={() => document.activeElement?.blur()}
-                      >
-                        {searchButtonName}
-                      </button>
-                    </div>
                     <div className={styles.searchResultsContainer}>
                       {initialRequestStatus === "pending" && (
                         <LoadingComponent />
