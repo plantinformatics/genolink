@@ -1,5 +1,6 @@
 import React from "react";
 import { useSelector, shallowEqual } from "react-redux";
+import { genesysServer } from "../../config/apiConfig";
 
 const ResultRow = React.memo(function ResultRow({
   item,
@@ -78,7 +79,7 @@ const ResultRow = React.memo(function ResultRow({
         }}
       >
         <a
-          href={`https://www.genesys-pgr.org/a/${item.uuid}`}
+          href={`${genesysServer.replace("//api.", "//")}/a/${item.uuid}`}
           target="_blank"
           rel="noopener noreferrer"
         >
