@@ -60,7 +60,7 @@ const WildSearchFilter = () => {
           onChange={onChangeAccession}
           onBlur={handleBlur}
           className={styles.accessionSearchBox}
-          placeholder="Wild Search"
+          placeholder="Text Search"
         />
       </div>
     </>
