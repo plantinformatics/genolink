@@ -132,6 +132,14 @@ export const setCreationEndDate = (creationEndDate) => ({
   type: "SET_CREATION_END_DATE",
   payload: creationEndDate,
 });
+export const setAcquisitionStartDate = (acquisitionStartDate) => ({
+  type: "SET_ACQUISITION_START_DATE",
+  payload: acquisitionStartDate,
+});
+export const setAcquisitionEndDate = (acquisitionEndDate) => ({
+  type: "SET_ACQUISITION_END_DATE",
+  payload: acquisitionEndDate,
+});
 export const setCheckedAccessions = (accessions) => ({
   type: "SET_CHECKED_ACCESSIONS",
   payload: accessions,

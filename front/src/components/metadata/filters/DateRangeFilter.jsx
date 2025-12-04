@@ -2,26 +2,40 @@ import { useState } from "react";
 import {
   setCreationStartDate,
   setCreationEndDate,
+  setAcquisitionStartDate,
+  setAcquisitionEndDate,
 } from "../../../redux/passport/passportActions";
 import { useDispatch } from "react-redux";
 import styles from "./DateRangeFilter.module.css";
 
 const DateRangeFilter = ({ type }) => {
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedDate, setSelectedDate] = useState("");
   const dispatch = useDispatch();
 
   const handleDateChange = (e) => {
     setSelectedDate(e.target.value);
-    const dateValue = `${e.target.value}T00:00:00Z`;
-    if (type === "start") dispatch(setCreationStartDate(dateValue));
-    if (type === "end") dispatch(setCreationEndDate(dateValue));
+    if (type === "Creation Start Date" || type === "Creation End Date") {
+      const dateValue = `${e.target.value}T00:00:00Z`;
+      if (type === "Creation Start Date")
+        dispatch(setCreationStartDate(dateValue));
+      if (type === "Creation End Date") dispatch(setCreationEndDate(dateValue));
+    } else if (
+      type === "Acquisition Start Date" ||
+      type === "Acquisition End Date"
+    ) {
+      const dateValue = e.target.value.replaceAll("-", "");
+      if (type === "Acquisition Start Date")
+        dispatch(setAcquisitionStartDate(dateValue));
+      if (type === "Acquisition End Date")
+        dispatch(setAcquisitionEndDate(dateValue));
+    }
   };
 
   return (
     <div>
       <div>
         <div>
-          <label htmlFor="dateInput">Creation {type} date:</label>
+          <label htmlFor="dateInput">{type}:</label>
           <input
             type="date"
             id="dateInput"

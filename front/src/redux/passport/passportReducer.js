@@ -29,6 +29,8 @@ const initialState = {
   totalPreGenotypedAccessions: 0,
   creationStartDate: null,
   creationEndDate: null,
+  acquisitionStartDate: null,
+  acquisitionEndDate: null,
   checkedAccessions: {},
   checkedAccessionNames: {},
   platform: "Gigwa",
@@ -200,6 +202,16 @@ const rootReducer = (state = initialState, action) => {
       return {
         ...state,
         creationEndDate: action.payload,
+      };
+    case "SET_ACQUISITION_START_DATE":
+      return {
+        ...state,
+        acquisitionStartDate: action.payload,
+      };
+    case "SET_ACQUISITION_END_DATE":
+      return {
+        ...state,
+        acquisitionEndDate: action.payload,
       };
     case "SET_PLATFORM":
       return {
