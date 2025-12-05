@@ -452,7 +452,6 @@ const SearchFilters = ({ tokenReady }) => {
           genusSpecies: genusSpeciesCheckedBoxes,
         }),
         ...(speciesCheckedBoxes.length > 0 && { species: speciesCheckedBoxes }),
-        genotyped: handleGenotypedLogic(),
       },
       countryOfOrigin:
         originOfMaterialCheckedBoxes.length > 0
