@@ -10,15 +10,8 @@ services:
     env_file:
       - .env
     environment:
-      # Frontend-Variables
       VITE_Genesys_OIDC_CLIENT_ID: ${VITE_Genesys_OIDC_CLIENT_ID}
       VITE_Genesys_OIDC_CLIENT_SECRET: ${VITE_Genesys_OIDC_CLIENT_SECRET}
-      VITE_GENOLINK_SERVER: ${VITE_GENOLINK_SERVER}
-      VITE_GENESYS_SERVER: ${VITE_GENESYS_SERVER}
-      VITE_PLATFORM: ${VITE_PLATFORM}
-      BASE_PATH: ${BASE_PATH}
-
-      # Backend-Variables
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
@@ -27,6 +20,7 @@ services:
       GENOLINK_SERVER: ${GENOLINK_SERVER}
       GENESYS_SERVER: ${GENESYS_SERVER}
       GENOLINK_SERVER_PORT: ${APP_PORT}
+      BASE_PATH: ${BASE_PATH}
 
     depends_on:
       - db
