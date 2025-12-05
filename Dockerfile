@@ -4,6 +4,8 @@ FROM node:20-alpine AS frontend-build
 # Set the working directory
 WORKDIR /app
 
+COPY .env . 
+
 # Copy package.json and package-lock.json from frontend
 COPY front/package*.json ./
 
@@ -14,19 +16,6 @@ RUN npm install
 COPY front/ .
 
 COPY shared-data ./shared-data
-
-# Set environment variables for the build
-ARG VITE_Genesys_OIDC_CLIENT_ID
-ARG VITE_Genesys_OIDC_CLIENT_SECRET
-ARG VITE_GENOLINK_SERVER
-ARG VITE_GENESYS_SERVER
-ARG BASE_PATH
-
-ENV BASE_PATH=$BASE_PATH
-ENV VITE_Genesys_OIDC_CLIENT_ID=$VITE_Genesys_OIDC_CLIENT_ID
-ENV VITE_Genesys_OIDC_CLIENT_SECRET=$VITE_Genesys_OIDC_CLIENT_SECRET
-ENV VITE_GENOLINK_SERVER=$VITE_GENOLINK_SERVER
-ENV VITE_GENESYS_SERVER=$VITE_GENESYS_SERVER
 
 # Build the frontend
 RUN npm run build

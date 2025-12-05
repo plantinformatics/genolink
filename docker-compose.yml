@@ -4,12 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        BASE_PATH: ${BASE_PATH}
-        VITE_Genesys_OIDC_CLIENT_ID: ${VITE_Genesys_OIDC_CLIENT_ID}
-        VITE_Genesys_OIDC_CLIENT_SECRET: ${VITE_Genesys_OIDC_CLIENT_SECRET}
-        VITE_GENOLINK_SERVER: ${VITE_GENOLINK_SERVER}
-        VITE_GENESYS_SERVER: ${VITE_GENESYS_SERVER}
+
     ports:
       - "${APP_PORT}:${APP_PORT}"
     env_file:

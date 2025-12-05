@@ -1,5 +1,9 @@
 import BaseApi from "./BaseApi";
-import { genesysServer } from "../config/apiConfig";
+import {
+  genesysServer,
+  DEFAULT_INSTITUTE_CODE,
+  GENOTYPE_FILTER_STATUS,
+} from "../config/apiConfig";
 import oidcConfig from "../config/oidcConfig";
 import { genolinkInternalApi } from "../pages/Home";
 import country2Region from "shared-data/Country2Region.json";
@@ -178,12 +182,17 @@ class GenesysApi extends BaseApi {
         body = {
           _text: userInput,
           institute: {
-            code: ["AUS165"],
+            code: [DEFAULT_INSTITUTE_CODE],
           },
         };
-        dispatch(setInstituteCheckedBoxes(["AUS165"]));
+        if (GENOTYPE_FILTER_STATUS === "yes") {
+          body.genotyped = true;
+        }
+        dispatch(setInstituteCheckedBoxes([DEFAULT_INSTITUTE_CODE]));
         dispatch(
-          setActiveFilters([{ type: "Institute Code", value: ["AUS165"] }])
+          setActiveFilters([
+            { type: "Institute Code", value: [DEFAULT_INSTITUTE_CODE] },
+          ])
         );
       } else if (!isReset && filterMode && genotypeIds) {
         body = {
@@ -252,12 +261,17 @@ class GenesysApi extends BaseApi {
         body = {
           _text: userInput,
           institute: {
-            code: ["AUS165"],
+            code: [DEFAULT_INSTITUTE_CODE],
           },
         };
-        dispatch(setInstituteCheckedBoxes(["AUS165"]));
+        if (GENOTYPE_FILTER_STATUS === "yes") {
+          body.genotyped = true;
+        }
+        dispatch(setInstituteCheckedBoxes([DEFAULT_INSTITUTE_CODE]));
         dispatch(
-          setActiveFilters([{ type: "Institute Code", value: ["AUS165"] }])
+          setActiveFilters([
+            { type: "Institute Code", value: [DEFAULT_INSTITUTE_CODE] },
+          ])
         );
       } else if (!isReset && filterMode && genotypeIds) {
         body = {

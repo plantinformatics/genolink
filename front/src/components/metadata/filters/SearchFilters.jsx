@@ -41,6 +41,10 @@ import DateRangeFilter from "./DateRangeFilter";
 import GenotypeExplorer from "../../genotype/GenotypeExplorer";
 import { genesysApi, genolinkInternalApi } from "../../../pages/Home";
 import { Autocomplete, TextField, Chip, Box } from "@mui/material";
+import {
+  DEFAULT_INSTITUTE_CODE,
+  GENOTYPE_FILTER_STATUS,
+} from "../../../config/apiConfig";
 const SearchFilters = ({ tokenReady }) => {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -53,8 +57,10 @@ const SearchFilters = ({ tokenReady }) => {
   const [selectedSubsets, setSelectedSubsets] = useState([]);
   const [subsetsTick, setSubsetsTick] = useState(0);
   const [donorNameList, setDonorNameList] = useState([]);
-  const genotypedYesRef = useRef(null);
-  const genotypedNoRef = useRef(null);
+  const [genotypedYes, setGenotypedYes] = useState(
+    GENOTYPE_FILTER_STATUS === "yes"
+  );
+  const [genotypedNo, setGenotypedNo] = useState(false);
   const instituteCheckedBoxesRef = useRef([]);
   const cropCheckedBoxesRef = useRef([]);
   const [mappingFailed, setMappingFailed] = useState(false);
@@ -110,7 +116,6 @@ const SearchFilters = ({ tokenReady }) => {
   const dispatch = useDispatch();
   const wheatImage = "Wheat.PNG";
   const selectedUUIDs = selectedSubsets.map((item) => item.uuid);
-
   const withRetryOn401 = async (fn, delay = 500) => {
     try {
       return await fn();
@@ -143,7 +148,7 @@ const SearchFilters = ({ tokenReady }) => {
           institute:
             !isInitialMount || instituteCheckedBoxesRef.current.length > 0
               ? { code: instituteCheckedBoxesRef.current }
-              : { code: ["AUS165"] },
+              : { code: [DEFAULT_INSTITUTE_CODE] },
           crops:
             cropCheckedBoxesRef.current.length > 0
               ? cropCheckedBoxesRef.current
@@ -350,6 +355,24 @@ const SearchFilters = ({ tokenReady }) => {
     setFilterBody(updatedBody);
   };
 
+  const handleGenotypedLogic = () => {
+    if (!genotypedYes && !genotypedNo) {
+      return undefined;
+    }
+
+    if (genotypedYes && genotypedNo) {
+      return undefined;
+    }
+
+    if (genotypedYes) {
+      return true;
+    }
+
+    if (genotypedNo) {
+      return false;
+    }
+  };
+
   const handleSearch = async (userInput = "") => {
     setSubsetsTick((t) => t + 1);
     const state = store.getState();
@@ -429,6 +452,7 @@ const SearchFilters = ({ tokenReady }) => {
           genusSpecies: genusSpeciesCheckedBoxes,
         }),
         ...(speciesCheckedBoxes.length > 0 && { species: speciesCheckedBoxes }),
+        genotyped: handleGenotypedLogic(),
       },
       countryOfOrigin:
         originOfMaterialCheckedBoxes.length > 0
@@ -441,19 +465,9 @@ const SearchFilters = ({ tokenReady }) => {
           ? germplasmStorageCheckedBoxes
           : [],
     };
-    if (typeof genotypedYesRef.current === "boolean") {
-      if (genotypedYesRef.current !== genotypedNoRef.current) {
-        body.genotyped = genotypedYesRef.current;
-      } else {
-        if (body.hasOwnProperty("genotyped")) {
-          delete body.genotyped;
-        }
-      }
-    } else if (typeof genotypedNoRef.current === "boolean") {
-      if (genotypedYesRef.current !== genotypedNoRef.current) {
-        body.genotyped = !genotypedNoRef.current;
-      }
-    }
+
+    const genotyped = handleGenotypedLogic();
+    body.genotyped = genotyped;
 
     if (selectedUUIDs.length > 0) {
       body.subsets = selectedUUIDs;
@@ -598,8 +612,9 @@ const SearchFilters = ({ tokenReady }) => {
       if (cropCheckedBoxesRef.current.length > 0)
         cropCheckedBoxesRef.current = [];
 
-      if (genotypedYesRef.current) genotypedYesRef.current.checked = false;
-      if (genotypedNoRef.current) genotypedNoRef.current.checked = false;
+      setGenotypedYes(false);
+      setGenotypedNo(false);
+
       setSubsetsTick((t) => t + 1);
     } catch (error) {
       setIsResetLoading(false);
@@ -1081,10 +1096,9 @@ const SearchFilters = ({ tokenReady }) => {
                   <label style={{ fontWeight: 500, paddingRight: "5px" }}>
                     <input
                       type="checkbox"
-                      ref={genotypedYesRef}
-                      defaultChecked={false}
-                      onChange={(e) => {
-                        genotypedYesRef.current = e.target.checked;
+                      checked={genotypedYes}
+                      onChange={() => {
+                        setGenotypedYes((prev) => !prev);
                       }}
                       className="mR8"
                     />
@@ -1093,10 +1107,9 @@ const SearchFilters = ({ tokenReady }) => {
                   <label style={{ fontWeight: 500 }}>
                     <input
                       type="checkbox"
-                      ref={genotypedNoRef}
-                      defaultChecked={false}
-                      onChange={(e) => {
-                        genotypedNoRef.current = e.target.checked;
+                      checked={genotypedNo}
+                      onChange={() => {
+                        setGenotypedNo((prev) => !prev);
                       }}
                       className="mR8"
                     />
