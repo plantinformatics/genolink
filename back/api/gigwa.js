@@ -449,7 +449,7 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
         }
       );
     }
-    const genotpeIds = genotypeIdsPlusAccessionsInGenesys.map(
+    const genotypeIds = genotypeIdsPlusAccessionsInGenesys.map(
       (item) => item.genotypeId
     );
     const accessionPlusAccessionName =
@@ -479,27 +479,39 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
     );
 
     const variantSets = variantSetsResponse.data.result.data;
-    const datasetNames = variantSets.map((vs) => vs.variantSetName);
-    const variantSetDbIds = variantSets.map((vs) => vs.variantSetDbId);
-    const studyDbIds = variantSets.map((vs) => vs.studyDbId);
-    const sampleNames = [];
-    for (const vs of variantSets) {
-      const parts = vs.variantSetDbId.split("§").slice(1);
-      for (const sample of genotpeIds) {
-        sampleNames.push(`${sample}-${parts.join("-")}`);
+    const programDbIds = [
+      ...new Set(variantSets.map((vs) => vs.variantSetDbId.split("§")[0])),
+    ];
+    const germplasmDbIds = [];
+    for (const programId of programDbIds) {
+      for (const genotypeId of genotypeIds) {
+        germplasmDbIds.push(`${programId}§${genotypeId}`);
       }
     }
+    const variantSetDbIds = variantSets.map((vs) => vs.variantSetDbId);
+
     const searchResponse = await axios.post(
       `${selectedGigwaServer.replace(/\/$/, "")}/rest/brapi/v2/search/samples`,
       {
-        sampleNames,
-        studyDbIds,
+        germplasmDbIds,
       },
       {
         headers: { Authorization: `Bearer ${token}` },
       }
     );
     const response = searchResponse.data;
+    const targetStudyDbIds = new Set(
+      response.result.data.map((s) => s.studyDbId)
+    );
+    const targetVariantSetDbIds = [
+      ...new Set(
+        variantSetDbIds.filter((vId) => {
+          const parts = vId.split("§");
+          const studyKey = parts.slice(0, 2).join("§");
+          return targetStudyDbIds.has(studyKey);
+        })
+      ),
+    ];
     const genotypeIdsForSorting = [];
     const seen = new Set();
 
@@ -530,8 +542,7 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
 
     res.send({
       response,
-      variantSetDbIds,
-      datasetNames,
+      datasetNames: targetVariantSetDbIds,
       numberOfGenesysAccessions,
       numberOfPresentAccessions,
       numberOfMappedAccessions,
