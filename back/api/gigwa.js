@@ -466,9 +466,13 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
                 .map((item) => `${value}§${key}§${item.genotypeId}`);
             })
         : [];
-    const numberOfMappedAccessions = Array.from(
-      new Set(genotypeIdsPlusAccessionsInGenesys)
-    ).length;
+    const uniqueMappedAccessionsCount = new Set(
+      genotypeIdsPlusAccessionsInGenesys
+    ).size;
+    const numberOfMappedAccessions = Math.min(
+      uniqueMappedAccessionsCount,
+      accessions.length
+    );
     const numberOfGenesysAccessions = accessions.length;
 
     const variantSetsResponse = await axios.get(
