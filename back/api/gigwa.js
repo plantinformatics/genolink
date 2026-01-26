@@ -499,18 +499,14 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
       },
     );
     const response = searchResponse.data;
-    const targetStudyDbIds = new Set(
-      response.result.data.map((s) => s.studyDbId),
+
+    const targetProgramDbIds = new Set(
+      response.result.data.map((s) => s.germplasmDbId.split("§")[0]),
     );
-    const targetVariantSetDbIds = [
-      ...new Set(
-        variantSetDbIds.filter((vId) => {
-          const parts = vId.split("§");
-          const studyKey = parts.slice(0, 2).join("§");
-          return targetStudyDbIds.has(studyKey);
-        }),
-      ),
-    ];
+
+    const targetVariantSetDbIds = variantSetDbIds.filter((vId) =>
+      targetProgramDbIds.has(vId.split("§")[0]),
+    );
     const genotypeIdsForSorting = [];
     const seen = new Set();
 
