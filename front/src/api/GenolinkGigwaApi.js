@@ -125,40 +125,14 @@ class GenolinkGigwaApi extends BaseApi {
     try {
       if (!this.token)
         throw new Error("Token not available. Please authenticate first.");
-      const referenceSetDbIdsResponse = await this.get(
-        `${BASE_PATH}/api/gigwa/brapi/v2/referencesets`,
-        {
-          gigwaToken: this.token,
-          selectedGigwaServer,
-        }
-      );
-      const referenceSetDbIds = referenceSetDbIdsResponse?.result?.data || [];
-      if (!referenceSetDbIds.length) {
-        throw new Error("No reference sets found for the user.");
-      }
-
-      const selectedReferenceSetDbId = referenceSetDbIds
-        .map((referenceSet) => referenceSet.referenceSetDbId)
-        .find((reference) =>
-          reference.startsWith(
-            Array.isArray(selectedStudyDbId)
-              ? selectedStudyDbId[0]
-              : selectedStudyDbId
-          )
-        );
-      if (!selectedReferenceSetDbId) {
-        throw new Error(
-          `No reference set found for study ID: ${selectedStudyDbId}`
-        );
-      }
 
       const referencesResponse = await this.get(
         `${BASE_PATH}/api/gigwa/brapi/v2/references`,
         {
           gigwaToken: this.token,
-          referenceSetDbId: selectedReferenceSetDbId,
+          studyDbId: selectedStudyDbId[0],
           selectedGigwaServer,
-        }
+        },
       );
 
       const linkageGroups =
