@@ -276,9 +276,18 @@ const GenotypeExplorer = () => {
     dispatch(genotypeActions.setSelectedVariantSetDbId(selectedVariantSetDbId));
     dispatch(genotypeActions.setSelectedSamplesDetails(selectedSamples));
     dispatch(
-      genotypeActions.setSelectedStudyDbId([
-        ...new Set(selectedSamples.flat().map((sample) => sample.studyDbId)),
-      ])
+      genotypeActions.setSelectedStudyDbId(
+        datasets.map((innerArray, index) =>
+          innerArray
+            .filter(
+              (variantSetDbId) =>
+                variantSetDbId === updatedSelection[index]?.[0],
+            )
+            .map((variantSetDbId) =>
+              variantSetDbId.split("§").slice(0, 2).join("§"),
+            ),
+        ),
+      ),
     );
 
     dispatch(genotypeActions.setSampleDbIds(selectedSampleDbIds));
