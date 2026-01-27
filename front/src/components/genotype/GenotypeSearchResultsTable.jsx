@@ -13,7 +13,7 @@ const GenotypeSearchResultsTable = () => {
   const samples = useSelector((state) => state.genotype.completeNames);
   const platform = useSelector((state) => state.genotype.selectedOption);
   const pageLengths = useSelector((state) => state.genotype.pageLengths);
-  const itemsPerPage = 1000;
+  const itemsPerPage = 20;
   const unionSamples = useMemo(() => {
     const serverSamples = samples.filter(
       (s, idx) => data[idx] && data[idx].result.data.length > 0
@@ -56,11 +56,11 @@ const GenotypeSearchResultsTable = () => {
   if (platform === "Gigwa" && alleles.length > 0 && data.length > 0) {
     totalPages = Math.max(
       ...alleles.map((server) =>
-        Math.ceil(server.result.pagination[0].totalCount / 1000)
-      )
+        Math.ceil(server.result.pagination[0].totalCount / itemsPerPage),
+      ),
     );
   } else if (platform === "Germinate" && data && data.length > 0) {
-    totalPages = Math.ceil(data[0].result.data.length / 1000);
+    totalPages = Math.ceil(data[0].result.data.length / itemsPerPage);
   }
   const genotypeMaps = useMemo(() => {
     if (platform === "Gigwa" && alleles.length > 0 && samples.length > 0) {

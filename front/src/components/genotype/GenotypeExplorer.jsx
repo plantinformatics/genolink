@@ -749,9 +749,9 @@ const GenotypeExplorer = () => {
               (p) => (p.dimension || "").toUpperCase() === "VARIANTS"
             );
             const count = varPag?.totalCount ?? 0;
-            const fullPages = Math.floor(count / 1000);
-            const remainder = count % 1000;
-            const pagesArr = Array(fullPages).fill(1000);
+            const fullPages = Math.floor(count / variantPageSize);
+            const remainder = count % variantPageSize;
+            const pagesArr = Array(fullPages).fill(variantPageSize);
             if (remainder > 0) pagesArr.push(remainder);
             return pagesArr;
           });
@@ -766,7 +766,10 @@ const GenotypeExplorer = () => {
             (_, i) =>
               newPagesPerServer.reduce((sum, pagesArr) => {
                 if (pagesArr[i] !== undefined) {
-                  return sum + (i < pagesArr.length - 1 ? 1000 : pagesArr[i]);
+                  return (
+                    sum +
+                    (i < pagesArr.length - 1 ? variantPageSize : pagesArr[i])
+                  );
                 }
                 return sum;
               }, 0)
