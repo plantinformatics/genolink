@@ -258,16 +258,18 @@ const GenotypeExplorer = () => {
       searchSamplesInDatasetsResult.map((server, groupIndex) => {
         const [programDbId, projectId, runId] =
           updatedSelection[groupIndex]?.[0].split("§");
-        const targetStudyDbId = `${programDbId}§${projectId}`;
 
-        const matchingGermplasmIds = server.response.result.data
-          .filter((sample) => {
-            return (
-              sample.studyDbId === targetStudyDbId &&
-              sample.sampleName.endsWith(runId)
-            );
-          })
-          .map((sample) => sample.germplasmDbId.split("§")[1]);
+        const matchingGermplasmIds = [
+          ...new Set(
+            server.response.result.data
+              .filter(
+                (sample) =>
+                  sample.germplasmDbId.split("§")[0] === programDbId &&
+                  sample.sampleName.endsWith(runId),
+              )
+              .map((sample) => sample.germplasmDbId.split("§")[1]),
+          ),
+        ];
 
         return server.accessionPlusAccessionName.filter((item) =>
           matchingGermplasmIds.some((gid) => item.includes(gid))
