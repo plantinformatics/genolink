@@ -1,42 +1,53 @@
 import { useState, useMemo, useEffect } from "react";
 import { setGenotypeCurrentPage } from "../../redux/genotype/genotypeActions";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector, useStore } from "react-redux";
 import styles from "./GenotypeSearchResultsTable.module.css";
 
 const GenotypeSearchResultsTable = () => {
   const dispatch = useDispatch();
+  const store = useStore();
+
   const data = useSelector((state) => state.genotype.genomData);
   const alleles = useSelector((state) => state.genotype.alleleData);
   const genotypeCurrentPage = useSelector(
-    (state) => state.genotype.genotypeCurrentPage
+    (state) => state.genotype.genotypeCurrentPage,
   );
-  const samples = useSelector((state) => state.genotype.completeNames);
   const platform = useSelector((state) => state.genotype.selectedOption);
   const pageLengths = useSelector((state) => state.genotype.pageLengths);
+
+  const [samples, setSamples] = useState([]);
+
+  useEffect(() => {
+    const s = store.getState().genotype.completeNames;
+    setSamples(s || []);
+  }, [data, store]);
+
   const itemsPerPage = 20;
+
   const unionSamples = useMemo(() => {
+    if (!Array.isArray(samples)) return [];
     const serverSamples = samples.filter(
-      (s, idx) => data[idx] && data[idx].result.data.length > 0
+      (s, idx) => data?.[idx] && data[idx].result?.data?.length > 0,
     );
     return Array.from(new Set(serverSamples.flat()));
   }, [samples, data]);
+
   const combinedVariants = useMemo(() => {
-    if (platform === "Gigwa" && data && data.length > 0) {
+    if (platform === "Gigwa" && Array.isArray(data) && data.length > 0) {
       const flat = [];
       data.forEach((server, serverIndex) => {
-        if (server.result && server.result.data) {
-          server.result.data.forEach((variant, localIndex) => {
-            flat.push({ serverIndex, variant, localIndex });
-          });
-        }
+        const rows = server?.result?.data || [];
+        rows.forEach((variant, localIndex) => {
+          flat.push({ serverIndex, variant, localIndex });
+        });
       });
       return flat;
     }
     return [];
-  }, [data]);
+  }, [data, platform]);
 
   const [displayVariants, setDisplayVariants] = useState(
-    combinedVariants || []
+    combinedVariants || [],
   );
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
 
@@ -47,27 +58,34 @@ const GenotypeSearchResultsTable = () => {
   }, [combinedVariants, sortConfig.key]);
 
   const rowOffset = useMemo(() => {
-    return pageLengths
+    return (pageLengths || [])
       .slice(0, genotypeCurrentPage - 1)
       .reduce((sum, val) => sum + (val || 0), 0);
   }, [pageLengths, genotypeCurrentPage]);
 
   let totalPages = 1;
-  if (platform === "Gigwa" && alleles.length > 0 && data.length > 0) {
+  if (platform === "Gigwa" && alleles?.length > 0 && data?.length > 0) {
     totalPages = Math.max(
       ...alleles.map((server) =>
-        Math.ceil(server.result.pagination[0].totalCount / itemsPerPage),
+        Math.ceil(
+          (server?.result?.pagination?.[0]?.totalCount || 0) / itemsPerPage,
+        ),
       ),
     );
-  } else if (platform === "Germinate" && data && data.length > 0) {
-    totalPages = Math.ceil(data[0].result.data.length / itemsPerPage);
+  } else if (platform === "Germinate" && data?.length > 0) {
+    totalPages = Math.ceil(
+      (data?.[0]?.result?.data?.length || 0) / itemsPerPage,
+    );
   }
+
   const genotypeMaps = useMemo(() => {
-    if (platform === "Gigwa" && alleles.length > 0 && samples.length > 0) {
+    if (platform === "Gigwa" && alleles?.length > 0 && samples?.length > 0) {
       return alleles.map((serverAlleles, serverIndex) => {
         const map = {};
-        const matrix = serverAlleles.result.dataMatrices[0].dataMatrix;
-        const serverSamples = samples[serverIndex] || [];
+        const matrix =
+          serverAlleles?.result?.dataMatrices?.[0]?.dataMatrix || [];
+        const serverSamples = samples?.[serverIndex] || [];
+
         matrix.forEach((row, variantIndex) => {
           row.forEach((genotype, sampleIndex) => {
             if (sampleIndex < serverSamples.length) {
@@ -77,17 +95,19 @@ const GenotypeSearchResultsTable = () => {
             }
           });
         });
+
         return map;
       });
     }
     return [];
-  }, [alleles, samples]);
+  }, [alleles, samples, platform]);
 
   const handleSort = (columnKey) => {
     let direction = "asc";
     if (sortConfig.key === columnKey && sortConfig.direction === "asc") {
       direction = "desc";
     }
+
     const sorted = [...displayVariants].sort((a, b) => {
       const aVal = a.variant[columnKey];
       const bVal = b.variant[columnKey];
@@ -95,6 +115,7 @@ const GenotypeSearchResultsTable = () => {
       if (aVal > bVal) return direction === "asc" ? 1 : -1;
       return 0;
     });
+
     setSortConfig({ key: columnKey, direction });
     setDisplayVariants(sorted);
   };
@@ -103,7 +124,7 @@ const GenotypeSearchResultsTable = () => {
     const maxPageNumbersToShow = 3;
     let startPage = Math.max(
       genotypeCurrentPage - Math.floor(maxPageNumbersToShow / 2),
-      1
+      1,
     );
     let endPage = startPage + maxPageNumbersToShow - 1;
     if (endPage > totalPages) {
@@ -185,6 +206,7 @@ const GenotypeSearchResultsTable = () => {
                 >
                   <span>ALT</span>
                 </th>
+
                 {unionSamples.map((sample) => (
                   <th
                     className={styles.verticalHeader}
@@ -196,11 +218,12 @@ const GenotypeSearchResultsTable = () => {
                 ))}
               </tr>
             </thead>
+
             <tbody>
               {displayVariants.map((row, index) => {
                 const { serverIndex, variant, localIndex } = row;
                 return (
-                  <tr key={index}>
+                  <tr key={`${serverIndex}-${rowOffset}-${index}`}>
                     <td>{rowOffset + index + 1}</td>
                     <td>{variant.referenceName}</td>
                     <td>{variant.start}</td>
@@ -218,17 +241,26 @@ const GenotypeSearchResultsTable = () => {
                     >
                       {variant.alternateBases[0]}
                     </td>
+
                     {unionSamples.map((sample) => {
-                      const serverSamples = samples[serverIndex] || [];
+                      const serverSamples = samples?.[serverIndex] || [];
                       let genotypeValue = null;
+
                       if (
                         serverSamples.includes(sample) &&
-                        genotypeMaps[serverIndex] &&
+                        genotypeMaps?.[serverIndex] &&
                         genotypeMaps[serverIndex][sample]
                       ) {
                         genotypeValue =
                           genotypeMaps[serverIndex][sample][localIndex];
                       }
+
+                      const isHet =
+                        genotypeValue === "0/1" ||
+                        genotypeValue === "1/0" ||
+                        genotypeValue === "0|1" ||
+                        genotypeValue === "1|0";
+
                       return (
                         <td
                           key={sample}
@@ -236,30 +268,24 @@ const GenotypeSearchResultsTable = () => {
                             background:
                               genotypeValue === "."
                                 ? "#fff"
-                                : (genotypeValue === "0/1") |
-                                  (genotypeValue === "1/0") |
-                                  (genotypeValue === "0|1") |
-                                  (genotypeValue === "1|0")
-                                ? "#dbedf7"
-                                : genotypeValue === "1"
-                                ? "#fac9b0"
-                                : genotypeValue === "0"
-                                ? "#b4c0e7"
-                                : "#fff",
+                                : isHet
+                                  ? "#dbedf7"
+                                  : genotypeValue === "1"
+                                    ? "#fac9b0"
+                                    : genotypeValue === "0"
+                                      ? "#b4c0e7"
+                                      : "#fff",
                           }}
                         >
                           {genotypeValue === "."
                             ? "."
-                            : (genotypeValue === "0/1") |
-                              (genotypeValue === "1/0") |
-                              (genotypeValue === "0|1") |
-                              (genotypeValue === "1|0")
-                            ? "1"
-                            : genotypeValue === "1"
-                            ? "2"
-                            : genotypeValue !== null
-                            ? genotypeValue
-                            : "."}
+                            : isHet
+                              ? "1"
+                              : genotypeValue === "1"
+                                ? "2"
+                                : genotypeValue !== null
+                                  ? genotypeValue
+                                  : "."}
                         </td>
                       );
                     })}
@@ -286,65 +312,62 @@ const GenotypeSearchResultsTable = () => {
               </tr>
             </thead>
             <tbody>
-              {data &&
-                data[0].result.data
-                  .slice(
-                    (genotypeCurrentPage - 1) * itemsPerPage,
-                    genotypeCurrentPage * itemsPerPage
-                  )
-                  .map((item, index1) => (
-                    <tr key={index1}>
-                      <td>
-                        {index1 + 1 + (genotypeCurrentPage - 1) * itemsPerPage}
+              {data?.[0]?.result?.data
+                ?.slice(
+                  (genotypeCurrentPage - 1) * itemsPerPage,
+                  genotypeCurrentPage * itemsPerPage,
+                )
+                .map((item, index1) => (
+                  <tr key={index1}>
+                    <td>
+                      {index1 + 1 + (genotypeCurrentPage - 1) * itemsPerPage}
+                    </td>
+                    <td>{CHROMConverter(item.variantName.split("-")[2])}</td>
+                    <td>{item.variantName.split("-")[1]}</td>
+                    <td>{item.variantName.split("-")[0]}</td>
+                    {samples.map((sample, index2) => (
+                      <td key={index2}>
+                        {data[index2].result.data[index1].genotypeValue}
                       </td>
-                      <td>{CHROMConverter(item.variantName.split("-")[2])}</td>
-                      <td>{item.variantName.split("-")[1]}</td>
-                      <td>{item.variantName.split("-")[0]}</td>
-                      {samples.map((sample, index2) => (
-                        <td key={index2}>
-                          {data[index2].result.data[index1].genotypeValue}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
+                    ))}
+                  </tr>
+                ))}
             </tbody>
           </table>
         ) : null}
       </div>
+
       <div className={styles.dFlex}>
         <button
-          className={`${styles.btn} ${styles.btnPrimary} ${
-            genotypeCurrentPage === 1 ? styles.btnPrimaryDisabled : ""
-          }`}
+          className={`${styles.btn} ${styles.btnPrimary} ${genotypeCurrentPage === 1 ? styles.btnPrimaryDisabled : ""}`}
           onClick={() => dispatch(setGenotypeCurrentPage(1))}
           disabled={genotypeCurrentPage === 1}
         >
           First
         </button>
+
         <button
-          className={`${styles.btn} ${styles.btnPrimary} ${
-            genotypeCurrentPage === 1 ? styles.btnPrimaryDisabled : ""
-          }`}
+          className={`${styles.btn} ${styles.btnPrimary} ${genotypeCurrentPage === 1 ? styles.btnPrimaryDisabled : ""}`}
           onClick={() =>
             dispatch(
-              setGenotypeCurrentPage(Math.max(genotypeCurrentPage - 1, 1))
+              setGenotypeCurrentPage(Math.max(genotypeCurrentPage - 1, 1)),
             )
           }
           disabled={genotypeCurrentPage === 1}
         >
           Prev
         </button>
+
         {getVisiblePages().map((page) => (
           <button
             key={page}
-            className={`${styles.btn} ${styles.btnPrimary} ${
-              genotypeCurrentPage === page ? styles.btnPrimaryActive : ""
-            }`}
+            className={`${styles.btn} ${styles.btnPrimary} ${genotypeCurrentPage === page ? styles.btnPrimaryActive : ""}`}
             onClick={() => dispatch(setGenotypeCurrentPage(page))}
           >
             {page}
           </button>
         ))}
+
         <button
           className={`${styles.btn} ${styles.btnPrimary} ${
             genotypeCurrentPage === totalPages ? styles.btnPrimaryDisabled : ""
@@ -352,14 +375,15 @@ const GenotypeSearchResultsTable = () => {
           onClick={() =>
             dispatch(
               setGenotypeCurrentPage(
-                Math.min(genotypeCurrentPage + 1, totalPages)
-              )
+                Math.min(genotypeCurrentPage + 1, totalPages),
+              ),
             )
           }
           disabled={genotypeCurrentPage === totalPages}
         >
           Next
         </button>
+
         <button
           className={`${styles.btn} ${styles.btnPrimary} ${
             genotypeCurrentPage === totalPages ? styles.btnPrimaryDisabled : ""
