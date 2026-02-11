@@ -1,4 +1,3 @@
-import React from "react";
 import styles from "./GenotypeExplorer.module.css";
 import GigwaWorkflowController from "./workflow/GigwaWorkflowController";
 import ResultsPane from "./workflow/ResultsPane";

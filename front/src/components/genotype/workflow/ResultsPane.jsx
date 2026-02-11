@@ -1,7 +1,6 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import GenotypeSearchResultsTable from "../GenotypeSearchResultsTable";
-import LoadingComponent from "../../LoadingComponent";
 import styles from "../GenotypeExplorer.module.css";
 
 const ResultsPane = React.memo(() => {
