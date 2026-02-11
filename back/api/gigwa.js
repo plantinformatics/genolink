@@ -489,8 +489,8 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
     }
     const variantSetDbIds = variantSets.map((vs) => vs.variantSetDbId);
 
-    const searchResponse = await axios.post(
-      `${selectedGigwaServer.replace(/\/$/, "")}/rest/brapi/v2/search/samples`,
+    const callsetSearchResponse = await axios.post(
+      `${selectedGigwaServer.replace(/\/$/, "")}/rest/brapi/v2/search/callsets`,
       {
         germplasmDbIds,
       },
@@ -498,19 +498,38 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
         headers: { Authorization: `Bearer ${token}` },
       },
     );
-    const response = searchResponse.data;
+    const callsetResponse = callsetSearchResponse.data.result.data;
+    const sampleDbIds = callsetResponse.map((callset) => callset.sampleDbId);
 
-    const targetProgramDbIds = new Set(
-      response.result.data.map((s) => s.germplasmDbId.split("§")[0]),
+    const sampleSearchResponse = await axios.post(
+      `${selectedGigwaServer.replace(/\/$/, "")}/rest/brapi/v2/search/samples`,
+      {
+        sampleDbIds,
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
     );
 
-    const targetVariantSetDbIds = variantSetDbIds.filter((vId) =>
-      targetProgramDbIds.has(vId.split("§")[0]),
+    const sampleResponse = sampleSearchResponse.data.result.data;
+
+    const germplasmBySampleDbId = new Map(
+      sampleResponse.map((s) => [s.sampleDbId, s.germplasmDbId]),
     );
+
+    const combinedResult = callsetResponse.map((cs) => ({
+      ...cs,
+      germplasmDbId: germplasmBySampleDbId.get(cs.sampleDbId) ?? null,
+    }));
+
+    const targetVariantSetDbIds = [
+      ...new Set(callsetResponse.flatMap((cs) => cs.variantSetDbIds || [])),
+    ];
+
     const genotypeIdsForSorting = [];
     const seen = new Set();
 
-    response.result.data.forEach((item) => {
+    sampleResponse.forEach((item) => {
       const genotypeId = item.germplasmDbId.split("§")[1];
       if (!seen.has(genotypeId)) {
         seen.add(genotypeId);
@@ -527,16 +546,20 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
 
       return indexA - indexB;
     });
-    const uniqueSamplePresence = new Set(
-      response.result.data.map(
-        (individual) => individual.germplasmDbId.split("§")[1],
-      ),
-    );
 
-    const numberOfPresentAccessions = uniqueSamplePresence.size;
+    const uniqueGermplasmPresence = [
+      ...new Set(
+        sampleResponse.map(
+          (individual) => individual.germplasmDbId.split("§")[1],
+        ),
+      ),
+    ];
+
+    const numberOfPresentAccessions = uniqueGermplasmPresence.length;
 
     res.send({
-      response,
+      combinedResult,
+      uniqueGermplasmPresence,
       datasetNames: targetVariantSetDbIds,
       numberOfGenesysAccessions,
       numberOfPresentAccessions,
