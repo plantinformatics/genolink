@@ -5,10 +5,11 @@ const initialState = {
   selectedDataset: "",
   selectedStudyDbId: [],
   selectedVariantSetDbId: [],
-  sampleDbIds: [],
-  sampleNames: [],
+  callSetDbIds: [],
+  germplasms: [],
   completeNames: [],
   selectedSamplesDetails: [],
+  selectedCallSetDetails: [],
   genotypeCurrentPage: 1,
   variantList: [],
   selectedGroups: "",
@@ -17,7 +18,7 @@ const initialState = {
   numberOfPresentAccessions: null,
   numberOfMappedAccessions: null,
   datasets: [],
-  sampleDetails: [],
+  callSetDetails: [],
   variantSetDbIds: [],
   sampleVcfNames: [],
   pagesPerServer: [],
@@ -40,14 +41,16 @@ const genotypeReducer = (state = initialState, action) => {
       return { ...state, selectedStudyDbId: action.payload };
     case "SET_SELECTED_VARIANT_SET_DB_ID":
       return { ...state, selectedVariantSetDbId: action.payload };
-    case "SET_SAMPLE_DB_IDS":
-      return { ...state, sampleDbIds: action.payload };
-    case "SET_SAMPLE_NAMES":
-      return { ...state, sampleNames: action.payload };
+    case "SET_CALL_SET_DB_IDS":
+      return { ...state, callSetDbIds: action.payload };
+    case "SET_GERMPLASMS":
+      return { ...state, germplasms: action.payload };
     case "SET_COMPLETE_NAMES":
       return { ...state, completeNames: action.payload };
     case "SET_SELECTED_SAMPLES_DETAILS":
       return { ...state, selectedSamplesDetails: action.payload };
+    case "SET_SELECTED_CALL_SET_DETAILS":
+      return { ...state, selectedCallSetDetails: action.payload };
     case "SET_Genotype_CURRENT_PAGE":
       return { ...state, genotypeCurrentPage: action.payload };
     case "SET_VARIANT_LIST":
@@ -64,8 +67,8 @@ const genotypeReducer = (state = initialState, action) => {
       return { ...state, numberOfMappedAccessions: action.payload };
     case "SET_DATASETS":
       return { ...state, datasets: action.payload };
-    case "SET_SAMPLE_DETAILS":
-      return { ...state, sampleDetails: action.payload };
+    case "SET_CALL_SET_DETAILS":
+      return { ...state, callSetDetails: action.payload };
     case "SET_VARIANT_SET_DB_IDS":
       return { ...state, variantSetDbIds: action.payload };
     case "SET_SAMPLE_VCF_NAMES":
