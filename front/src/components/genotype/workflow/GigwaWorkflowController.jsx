@@ -37,7 +37,6 @@ import DatasetSelector from "./DatasetSelector";
 const GigwaWorkflowController = () => {
   const dispatch = useDispatch();
 
-  // ---------- Local UI state (kept OUT of GenotypeExplorer)
   const [genolinkGerminateApi] = useState(new GenolinkGerminateApi());
   const [copied, setCopied] = useState(false);
   const [posStart, setPosStart] = useState("");
@@ -53,14 +52,13 @@ const GigwaWorkflowController = () => {
   const [showDatasetSelector, setShowDatasetSelector] = useState(false);
   const [searchType, setSearchType] = useState("");
   const [selectedGigwaServers, setSelectedGigwaServers] = useState([]);
-  const [searchSamplesInDatasetsResult, setSearchSamplesInDatasetsResult] =
+  const [accessionPlusAccessionNames, setAccessionPlusAccessionNames] =
     useState([]);
+
   const [uiStep, setUiStep] = useState(0);
-  const [showPrivacyRadio, setShowPrivacyRadio] = useState(true);
 
   const genolinkGigwaApisRef = useRef({});
 
-  // ---------- Redux state (SELECTION + EXECUTION)
   const selectedOption = useSelector((state) => state.genotype.selectedOption);
 
   const datasets = useSelector((state) => state.genotype.datasets);
@@ -74,12 +72,9 @@ const GigwaWorkflowController = () => {
     (state) => state.genotype.selectedVariantSetDbId,
   );
 
-  const sampleDetails = useSelector((state) => state.genotype.sampleDetails);
-  const sampleDbIds = useSelector((state) => state.genotype.sampleDbIds);
-  const sampleNames = useSelector((state) => state.genotype.sampleNames);
-  const selectedSamplesDetails = useSelector(
-    (state) => state.genotype.selectedSamplesDetails,
-  );
+  const callSetDetails = useSelector((state) => state.genotype.callSetDetails);
+  const callSetDbIds = useSelector((state) => state.genotype.callSetDbIds);
+  const germplasms = useSelector((state) => state.genotype.germplasms);
 
   const isGenomeSearchSubmit = useSelector(
     (state) => state.genotype.isGenomeSearchSubmit,
@@ -121,18 +116,14 @@ const GigwaWorkflowController = () => {
       : [];
   }, [searchResults, checkedAccessions]);
 
-  // ---------- Behaviors
-
   useEffect(() => {
     // Pagination fetch ONLY after search has been submitted
     if (selectedOption === "Gigwa" && isGenomeSearchSubmit) {
       fetchData(genotypeCurrentPage);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [genotypeCurrentPage]);
 
   useEffect(() => {
-    // when switching platform, clear results
     dispatch(genotypeActions.setGenomData([]));
   }, [selectedOption, dispatch]);
 
@@ -155,10 +146,8 @@ const GigwaWorkflowController = () => {
       handleReset();
       dispatch(setResetTrigger(false));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetTrigger]);
 
-  // linkage group fetch depends on selectedStudyDbId + servers, so keep here
   useEffect(() => {
     if (selectedStudyDbId.length === 0 || resetTrigger) return;
 
@@ -205,7 +194,6 @@ const GigwaWorkflowController = () => {
       ) {
         setSelectedGigwaServers(gigwaServers);
       }
-
       if (gigwaServers.length > 0) {
         const newInstances = {};
         for (const server of gigwaServers) {
@@ -266,45 +254,33 @@ const GigwaWorkflowController = () => {
         ),
       );
 
-      const selectedSamples = sampleDetails.map((server, gIdx) =>
-        server.filter((sample) => {
+      const selectedCallSets = callSetDetails.map((server, gIdx) =>
+        server.filter((callset) => {
           const sel = updatedSelection[gIdx]?.[0];
           if (!sel) return false;
-          const [programDbId, projectId, runId] = sel.split("§");
-          const targetStudyDbId = `${programDbId}§${projectId}`;
-          return (
-            sample.studyDbId === targetStudyDbId &&
-            sample.sampleName.endsWith(runId)
-          );
+          return sel === callset.variantSetDbIds[0];
         }),
       );
 
-      const selectedSampleDbIdsLocal = selectedSamples.map((server) =>
-        server.map((sample) => sample.sampleDbId),
+      const selectedCallSetDbIdsLocal = selectedCallSets.map((server) =>
+        server.map((callset) => callset.callSetDbId),
       );
+      const selectedAccessionPlusAccessionName = selectedCallSets.map(
+        (matchedCallsets, gIdx) => {
+          if (!matchedCallsets?.length) return [];
 
-      const selectedAccessionPlusAccessionName =
-        searchSamplesInDatasetsResult.map((server, gIdx) => {
-          const sel = updatedSelection[gIdx]?.[0];
-          if (!sel) return [];
-          const [programDbId, projectId, runId] = sel.split("§");
-
-          const matchingGermplasmIds = [
+          const ids = [
             ...new Set(
-              server.response.result.data
-                .filter(
-                  (sample) =>
-                    sample.germplasmDbId.split("§")[0] === programDbId &&
-                    sample.sampleName.endsWith(runId),
-                )
-                .map((sample) => sample.germplasmDbId.split("§")[1]),
+              matchedCallsets.map((s) => s.germplasmDbId.split("§")[1]),
             ),
           ];
 
-          return server.accessionPlusAccessionName.filter((item) =>
-            matchingGermplasmIds.some((gid) => item.includes(gid)),
+          const namesForServer = accessionPlusAccessionNames[gIdx] ?? [];
+          return namesForServer.filter((item) =>
+            ids.some((gid) => item.includes(gid)),
           );
-        });
+        },
+      );
 
       const selectedStudyDbIdLocal = datasets.map((innerArray, index) =>
         innerArray
@@ -319,9 +295,9 @@ const GigwaWorkflowController = () => {
       dispatch(
         genotypeActions.setSelectedVariantSetDbId(selectedVariantSetDbIdLocal),
       );
-      dispatch(genotypeActions.setSelectedSamplesDetails(selectedSamples));
+      dispatch(genotypeActions.setSelectedCallSetDetails(selectedCallSets));
       dispatch(genotypeActions.setSelectedStudyDbId(selectedStudyDbIdLocal));
-      dispatch(genotypeActions.setSampleDbIds(selectedSampleDbIdsLocal));
+      dispatch(genotypeActions.setCallSetDbIds(selectedCallSetDbIdsLocal));
       dispatch(
         genotypeActions.setCompleteNames(selectedAccessionPlusAccessionName),
       );
@@ -329,9 +305,9 @@ const GigwaWorkflowController = () => {
     [
       dispatch,
       datasets,
-      sampleDetails,
+      callSetDetails,
       selectedDataset,
-      searchSamplesInDatasetsResult,
+      accessionPlusAccessionNames,
     ],
   );
 
@@ -341,7 +317,6 @@ const GigwaWorkflowController = () => {
     setPosEnd("");
     setUiStep(0);
     setSearchType("");
-    setSearchSamplesInDatasetsResult([]);
     setSelectedGigwaServers([]);
     genolinkGigwaApisRef.current = {};
 
@@ -354,7 +329,6 @@ const GigwaWorkflowController = () => {
     const newSelectedOption = event.target.value;
     dispatch(genotypeActions.setSelectedOption(newSelectedOption));
     dispatch(setPlatform(newSelectedOption));
-    setShowPrivacyRadio(true);
   };
 
   const handleSearchTypeChange = (newType) => {
@@ -370,8 +344,8 @@ const GigwaWorkflowController = () => {
     setSearchType(newType);
   };
 
-  const handleCopySampleNames = () => {
-    const flatSamples = sampleNames.flat();
+  const handleCopyGermplasms = () => {
+    const flatSamples = germplasms.flat();
     navigator.clipboard
       .writeText(flatSamples.join("\n"))
       .then(() => {
@@ -415,7 +389,7 @@ const GigwaWorkflowController = () => {
         if (posStart && posEnd) {
           alleleReqs = buildAlleleReqs((index) => ({
             selectedGigwaServer: selectedGigwaServers[index],
-            callSetDbIds: sampleDbIds[index],
+            callSetDbIds: callSetDbIds[index],
             variantSetDbIds: selectedVariantSetDbId[index],
             positionRanges: selectedGroups
               ? [`${selectedGroups}:${posStart}-${posEnd}`]
@@ -433,7 +407,7 @@ const GigwaWorkflowController = () => {
         } else if (!posStart && !posEnd && selectedGroups) {
           alleleReqs = buildAlleleReqs((index) => ({
             selectedGigwaServer: selectedGigwaServers[index],
-            callSetDbIds: sampleDbIds[index],
+            callSetDbIds: callSetDbIds[index],
             variantSetDbIds: selectedVariantSetDbId[index],
             positionRanges: [selectedGroups],
             dataMatrixAbbreviations: ["GT"],
@@ -449,7 +423,7 @@ const GigwaWorkflowController = () => {
         } else if (variantList.length > 0) {
           alleleReqs = buildAlleleReqs((index) => ({
             selectedGigwaServer: selectedGigwaServers[index],
-            callSetDbIds: sampleDbIds[index],
+            callSetDbIds: callSetDbIds[index],
             variantSetDbIds: selectedVariantSetDbId[index],
             variantDbIds: variantList.map(
               (variant) =>
@@ -468,7 +442,7 @@ const GigwaWorkflowController = () => {
         } else {
           alleleReqs = buildAlleleReqs((index) => ({
             selectedGigwaServer: selectedGigwaServers[index],
-            callSetDbIds: sampleDbIds[index],
+            callSetDbIds: callSetDbIds[index],
             variantSetDbIds: selectedVariantSetDbId[index],
             dataMatrixAbbreviations: ["GT"],
             pagination: [
@@ -693,7 +667,8 @@ const GigwaWorkflowController = () => {
         const responses = await Promise.all(fetchRequests);
 
         let combinedResults = {
-          responseData: [],
+          combinedResult: [],
+          uniqueGermplasmPresence: [],
           datasetNames: [],
           numberOfGenesysAccessions: [],
           numberOfPresentAccessions: [],
@@ -703,14 +678,18 @@ const GigwaWorkflowController = () => {
 
         responses.forEach(
           ({
-            response,
+            combinedResult,
+            uniqueGermplasmPresence,
             datasetNames,
             numberOfGenesysAccessions,
             numberOfPresentAccessions,
             numberOfMappedAccessions,
             accessionPlusAccessionName,
           }) => {
-            combinedResults.responseData.push(response.result.data);
+            combinedResults.combinedResult.push(combinedResult);
+            combinedResults.uniqueGermplasmPresence.push(
+              uniqueGermplasmPresence,
+            );
             combinedResults.datasetNames.push(datasetNames);
             combinedResults.numberOfGenesysAccessions.push(
               numberOfGenesysAccessions,
@@ -726,8 +705,6 @@ const GigwaWorkflowController = () => {
             );
           },
         );
-
-        setSearchSamplesInDatasetsResult(responses);
 
         const totalNumberOfGenesysAccessions =
           combinedResults.numberOfGenesysAccessions[0];
@@ -746,27 +723,25 @@ const GigwaWorkflowController = () => {
             combinedResults.numberOfMappedAccessions,
           ),
         );
+        setAccessionPlusAccessionNames(
+          combinedResults.accessionPlusAccessionName,
+        );
 
-        if (combinedResults.responseData.length === 0) {
+        if (combinedResults.combinedResult.length === 0) {
           alert("No genotype data found across all Gigwa servers.");
           setIsVerifyLoading(false);
           return;
         }
 
-        const uniqueSampleNames = combinedResults.responseData.map(
-          (apiResponse) =>
-            Array.from(
-              new Set(
-                apiResponse.map((sample) => sample.germplasmDbId.split("§")[1]),
-              ),
-            ),
-        );
-
         dispatch(genotypeActions.setDatasets(combinedResults.datasetNames));
         dispatch(
-          genotypeActions.setSampleDetails(combinedResults.responseData),
+          genotypeActions.setCallSetDetails(combinedResults.combinedResult),
         );
-        dispatch(genotypeActions.setSampleNames(uniqueSampleNames));
+        dispatch(
+          genotypeActions.setGermplasms(
+            combinedResults.uniqueGermplasmPresence,
+          ),
+        );
 
         setShowDatasetSelector(true);
         setUiStep(2);
@@ -1060,7 +1035,7 @@ const GigwaWorkflowController = () => {
             <button
               type="button"
               className={styles.copySampleButton}
-              onClick={handleCopySampleNames}
+              onClick={handleCopyGermplasms}
             >
               <FontAwesomeIcon icon={faCopy} className={styles.copyIcon} /> Copy
               Sample-Names
