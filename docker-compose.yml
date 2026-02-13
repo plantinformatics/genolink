@@ -1,10 +1,36 @@
-version: "3"
+version: "3.8"
+
 services:
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: always
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "127.0.0.1",
+          "-uroot",
+          "-p${DB_ROOT_PASSWORD}",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 40
+      start_period: 30s
+
   app:
     build:
       context: .
       dockerfile: Dockerfile
-
     ports:
       - "${APP_PORT}:${APP_PORT}"
     env_file:
@@ -21,24 +47,12 @@ services:
       GENESYS_SERVER: ${GENESYS_SERVER}
       GENOLINK_SERVER_PORT: ${APP_PORT}
       BASE_PATH: ${BASE_PATH}
-
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: always
     volumes:
       - ./back/uploads:/app/uploads
-
-  db:
-    image: mysql:5.7
-    environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_USER: ${DB_USERNAME}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "${DB_PORT}:${DB_PORT}"
-    volumes:
-      - mysql_data:/var/lib/mysql
 
 volumes:
   mysql_data:
