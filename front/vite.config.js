@@ -9,12 +9,10 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// front/ is where this config lives
 const ROOT_DIR = __dirname;
-// ../shared-data alongside front/
 const SHARED_DATA_DIR = path.resolve(__dirname, "../shared-data");
 
-const rawBase = process.env.BASE_PATH || "";
+const rawBase = process.env.BASE_PATH || process.env.VITE_BASE_PATH || "";
 const BASE_PATH = rawBase.replace(/\/+$/, "");
 const VITE_BASE_FOR_BUILD = BASE_PATH ? `${BASE_PATH}/` : "/";
 
