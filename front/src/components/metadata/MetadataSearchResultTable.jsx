@@ -17,6 +17,7 @@ import {
 import { genesysApi, genolinkInternalApi } from "../../pages/Home";
 import country2Region from "shared-data/Country2Region.json";
 import { batch } from "react-redux";
+import ExportFieldsModal from "./ExportFieldsModal";
 
 const sampStatMapping = {
   100: "Wild",
@@ -168,6 +169,18 @@ const MetadataSearchResultTable = ({ filterCode, filterBody }) => {
     fetchGenotypeIds();
   }, [searchResults]);
 
+  const openModal = () => {
+    setIsModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setIsModalVisible(false);
+  };
+
+  const handleExport = (selectedFields) => {
+    handleExportPassportData(selectedFields);
+  };
+
   const handleCheckboxToggle = useCallback(
     (item, currentlyChecked) => {
       const newCheckedAccessions = { ...checkedAccessions };
@@ -240,14 +253,16 @@ const MetadataSearchResultTable = ({ filterCode, filterBody }) => {
     setExpandedRow((prev) => (prev === index ? null : index));
   }, []);
 
-  const handleExportPassportData = async () => {
+  const handleExportPassportData = async (selectedMappings) => {
     try {
       setIsDownloading(true);
       if (Object.keys(filterBody).length === 0) {
         alert("Please apply filters before exporting data.");
         return;
       }
-      await genesysApi.downloadFilteredData(filterBody);
+
+      await genesysApi.downloadFilteredData(filterBody, selectedMappings);
+
       setIsDownloading(false);
     } catch (error) {
       setIsDownloading(false);
@@ -351,13 +366,19 @@ const MetadataSearchResultTable = ({ filterCode, filterBody }) => {
         <LoadingComponent />
       ) : (
         <button
-          onClick={handleExportPassportData}
+          onClick={openModal}
           className="btn btn-primary"
           style={{ marginLeft: "10px" }}
         >
           Export All Passport Data
         </button>
       )}
+
+      <ExportFieldsModal
+        isVisible={isModalVisible}
+        onClose={closeModal}
+        onExport={handleExport}
+      />
     </>
   );
 };
