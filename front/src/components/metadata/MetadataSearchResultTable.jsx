@@ -68,6 +68,7 @@ const MetadataSearchResultTable = ({ filterCode, filterBody }) => {
     (state) => state.passport.passportCurrentPage
   );
 
+  const [isModalVisible, setIsModalVisible] = useState(false);
   const [isPaginating, setIsPaginating] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [selectAll, setSelectAll] = useState(false);
