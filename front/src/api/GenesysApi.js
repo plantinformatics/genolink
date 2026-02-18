@@ -427,12 +427,16 @@ class GenesysApi extends BaseApi {
     }
   }
 
-  async downloadFilteredData(filterData) {
+  async downloadFilteredData(filterData, selectedMappings) {
     try {
+      console.log("Selected Mappings:", selectedMappings);
+
       const pageSize = 10000;
       const batchSize = 50;
-      const select =
-        "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases,donorName, donorCode, sampStat, remarks.remark, countryOfOrigin.codeNum, taxonomy.genus, taxonomy.species";
+
+      const select = Object.keys(selectedMappings)
+        .map((field) => selectedMappings[field].apiParam)
+        .join(",");
 
       const firstGenesysEndpoint = `/api/v1/acn/query?p=0&l=${pageSize}&select=${select}`;
       const firstGenesysResult = await this.post(
@@ -471,46 +475,22 @@ class GenesysApi extends BaseApi {
 
       if (allResults.length > 0) {
         const accessionIds = allResults.map((item) => item.accessionNumber);
-        const figMapping = await genolinkInternalApi.getFigsByAccessions(
-          accessionIds
-        );
+        const figMapping =
+          await genolinkInternalApi.getFigsByAccessions(accessionIds);
 
-        const fieldsToExport = {
-          "Institute Code": "instituteCode",
-          "Holding Institute": "institute.fullName",
-          "Accession Number": "accessionNumber",
-          "Accession Name": "accessionName",
-          Aliases: "aliases",
-          Remarks: "remarks.remark",
-          Taxonomy: "taxonomy.taxonName",
-          "Crop Name": "cropName",
-          Genus: "taxonomy.genus",
-          Species: "taxonomy.species",
-          "Biological status of accession": "sampStat",
-          "Donor Institute": "donorCombined",
-          "Provenance of Material": "countryOfOrigin.name",
-          Region: "region",
-          "Sub-Region": "sub-region",
-          "Acquisition Date": "acquisitionDate",
-          DOI: "doi",
-          "Last Updated": "lastModifiedDate",
-          "AGG-SP Status": "status",
-          GenotypeID: "GenotypeID",
-          "FIGs Set": "figsSet",
-          Genus: "taxonomy.genus",
-          Species: "taxonomy.species",
-        };
+        const selectedMappingsForTSV = { ...selectedMappings };
+        delete selectedMappingsForTSV["Country Code"];
 
         const tsvContent = this.generateTSV(
           allResults,
-          fieldsToExport,
-          figMapping
+          selectedMappingsForTSV,
+          figMapping,
         );
 
         this.downloadFile(
           tsvContent,
-          "filtered_data_all_pages.tsv",
-          "text/tab-separated-values"
+          "filtered_data_selected_fields.tsv",
+          "text/tab-separated-values",
         );
       } else {
         console.error("No data available to export.");
@@ -520,12 +500,14 @@ class GenesysApi extends BaseApi {
     }
   }
 
-  generateTSV(data, fieldsMap, figMapping) {
-    const header = Object.keys(fieldsMap).join("\t");
-
+  generateTSV(data, selectedMappings, figMapping) {
+    const header = Object.keys(selectedMappings)
+      .map((field) => selectedMappings[field].tsvHeader)
+      .join("\t");
     const rows = data.map((item) => {
-      return Object.entries(fieldsMap)
-        .map(([_, fieldPath]) => {
+      return Object.keys(selectedMappings)
+        .map((field) => {
+          const fieldPath = selectedMappings[field].apiParam;
           if (fieldPath === "status") {
             return (
               this.genotypeStatus?.find?.(
