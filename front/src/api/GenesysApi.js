@@ -24,6 +24,9 @@ import {
   setPassportCurrentPage,
   setResetTrigger,
 } from "../redux/passport/passportActions";
+
+import { germplasmStorageMapping } from "../components/metadata/filters/MultiSelectFilter";
+
 class GenesysApi extends BaseApi {
   constructor() {
     super(genesysServer);
@@ -292,7 +295,7 @@ class GenesysApi extends BaseApi {
 
       const pageSize = 500;
       const select =
-        "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases,donorName, donorCode, sampStat, remarks.remark, countryOfOrigin.codeNum, taxonomy.genus, taxonomy.species";
+        "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases,donorName, donorCode, sampStat, remarks.remark, countryOfOrigin.codeNum, taxonomy.genus, taxonomy.species, storage";
       const endpoint = `/api/v1/acn/query?p=0&l=${pageSize}&select=${select}`;
       const searchData = await this.post(endpoint, body);
 
@@ -310,7 +313,7 @@ class GenesysApi extends BaseApi {
     try {
       const pageSize = 500;
       const select =
-        "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases,donorName, donorCode, sampStat, remarks.remark, countryOfOrigin.codeNum, taxonomy.genus, taxonomy.species";
+        "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases,donorName, donorCode, sampStat, remarks.remark, countryOfOrigin.codeNum, taxonomy.genus, taxonomy.species, storage";
       const endpointQuery = `/api/v1/acn/query?p=0&l=${pageSize}&select=${select}`;
       const limit = 100;
       const endpointOverview = `/api/v1/acn/overview?limit=${limit}`;
@@ -429,8 +432,6 @@ class GenesysApi extends BaseApi {
 
   async downloadFilteredData(filterData, selectedMappings) {
     try {
-      console.log("Selected Mappings:", selectedMappings);
-
       const pageSize = 10000;
       const batchSize = 50;
 
@@ -544,6 +545,16 @@ class GenesysApi extends BaseApi {
 
           if (fieldPath === "taxonomy.species") {
             return item["taxonomy.species"] || "";
+          }
+          if (fieldPath === "storage") {
+            return item["storage"]
+              ? item["storage"]
+                  .toString()
+                  .match(/.{1,2}/g)
+                  ?.map((code) => germplasmStorageMapping[parseInt(code)])
+                  .filter(Boolean)
+                  .join(", ") || "N/A"
+              : "N/A" || "";
           }
 
           if (fieldPath === "region") {
