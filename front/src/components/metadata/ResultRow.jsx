@@ -2,6 +2,8 @@ import React from "react";
 import { useSelector, shallowEqual } from "react-redux";
 import { genesysServer } from "../../config/apiConfig";
 
+import { germplasmStorageMapping } from "../metadata/filters/MultiSelectFilter";
+
 const ResultRow = React.memo(function ResultRow({
   item,
   index,
@@ -156,6 +158,22 @@ const ResultRow = React.memo(function ResultRow({
         }}
       >
         {item["taxonomy.species"] || "N/A"}
+      </td>
+      <td
+        className="cell"
+        style={{
+          overflow: isExpanded ? "visible" : "hidden",
+          whiteSpace: isExpanded ? "normal" : "nowrap",
+        }}
+      >
+        {item["storage"]
+          ? item["storage"]
+              .toString()
+              .match(/.{1,2}/g)
+              ?.map((code) => germplasmStorageMapping[parseInt(code)])
+              .filter(Boolean)
+              .join(", ") || "N/A"
+          : "N/A"}
       </td>
       <td
         className="cell"
