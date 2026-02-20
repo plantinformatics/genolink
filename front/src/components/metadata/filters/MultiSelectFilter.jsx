@@ -13,7 +13,7 @@ import {
 import { useDispatch } from "react-redux";
 import styles from "./MultiSelectFilter.module.css";
 
-const sampStatMapping = {
+export const sampStatMapping = {
   100: "Wild",
   110: "Natural",
   120: "Semi-natural/wild",
@@ -37,7 +37,7 @@ const sampStatMapping = {
   999: "Other",
 };
 
-const germplasmStorageMapping = {
+export const germplasmStorageMapping = {
   10: "Seed collection",
   11: "Short term seed collection",
   12: "Medium term seed collection",
