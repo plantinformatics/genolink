@@ -45,6 +45,9 @@ import {
   DEFAULT_INSTITUTE_CODE,
   GENOTYPE_FILTER_STATUS,
 } from "../../../config/apiConfig";
+
+import { germplasmStorageMapping, sampStatMapping } from "./MultiSelectFilter";
+
 const SearchFilters = ({ tokenReady }) => {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -740,9 +743,21 @@ const SearchFilters = ({ tokenReady }) => {
                               ? `${filter.value[0]}, ..., ${
                                   filter.value[filter.value.length - 1]
                                 }`
-                              : Array.isArray(filter.value)
-                              ? filter.value.join(", ")
-                              : filter.value}
+                              : Array.isArray(filter.value) &&
+                                  filter.type === "Germplasm Storage"
+                                ? filter.value
+                                    .map((v) => germplasmStorageMapping[v])
+                                    .filter(Boolean)
+                                    .join(", ")
+                                : Array.isArray(filter.value) &&
+                                    filter.type === "Biological Status"
+                                  ? filter.value
+                                      .map((v) => sampStatMapping[v])
+                                      .filter(Boolean)
+                                      .join(", ")
+                                  : Array.isArray(filter.value)
+                                    ? filter.value.join(", ")
+                                    : filter.value}
                           </div>
                           <button
                             className={styles.removeFilterButton}
