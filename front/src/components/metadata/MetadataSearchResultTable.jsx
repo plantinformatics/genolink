@@ -311,6 +311,7 @@ const MetadataSearchResultTable = ({ filterCode, filterBody }) => {
               <th scope="col">Crop Name</th>
               <th scope="col">Genus</th>
               <th scope="col">Species</th>
+              <th scope="col">Type of germplasm storage</th>
               <th scope="col">Biological status of accession</th>
               <th scope="col">Donor Institute</th>
               <th scope="col">Provenance of Material</th>
