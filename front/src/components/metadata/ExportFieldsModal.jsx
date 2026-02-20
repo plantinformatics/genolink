@@ -17,6 +17,7 @@ const fieldsMapping = {
   "Crop Name": { apiParam: "cropName", tsvHeader: "Crop Name" },
   Genus: { apiParam: "taxonomy.genus", tsvHeader: "Genus" },
   Species: { apiParam: "taxonomy.species", tsvHeader: "Species" },
+  Storage: { apiParam: "storage", tsvHeader: "Type of germplasm storage" },
   "Biological status of accession": {
     apiParam: "sampStat",
     tsvHeader: "Biological status of accession",
