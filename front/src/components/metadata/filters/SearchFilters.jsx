@@ -27,6 +27,7 @@ import {
   setDonorCodeCheckedBoxes,
   setSampStatCheckedBoxes,
   setGermplasmStorageCheckedBoxes,
+  setAvailibilityCheckedBoxes,
   setCheckedAccessions,
   setActiveFilters,
   setWildSearchValue,
@@ -109,7 +110,10 @@ const SearchFilters = ({ tokenReady }) => {
   const donorCodeList = useSelector((state) => state.passport.donorCodeList);
   const sampStatList = useSelector((state) => state.passport.sampStatList);
   const germplasmStorageList = useSelector(
-    (state) => state.passport.germplasmStorageList
+    (state) => state.passport.germplasmStorageList,
+  );
+  const availibilityList = useSelector(
+    (state) => state.passport.availibilityList,
   );
   const dispatch = useDispatch();
 
@@ -290,6 +294,9 @@ const SearchFilters = ({ tokenReady }) => {
       case "Germplasm Storage":
         dispatch(setGermplasmStorageCheckedBoxes([]));
         break;
+      case "Availibility":
+        dispatch(setAvailibilityCheckedBoxes([]));
+        break;
       case "Subsets":
         setSelectedSubsets([]);
         break;
@@ -389,6 +396,7 @@ const SearchFilters = ({ tokenReady }) => {
       donorCodeCheckedBoxes,
       sampStatCheckedBoxes,
       germplasmStorageCheckedBoxes,
+      availibilityCheckedBoxes,
       selectedFig,
     } = state.passport;
 
@@ -484,6 +492,8 @@ const SearchFilters = ({ tokenReady }) => {
         germplasmStorageCheckedBoxes.length > 0
           ? germplasmStorageCheckedBoxes
           : [],
+      available:
+        availibilityCheckedBoxes.length > 0 ? availibilityCheckedBoxes[0] : "",
     };
 
     if (selectedUUIDs.length > 0) {
@@ -573,6 +583,11 @@ const SearchFilters = ({ tokenReady }) => {
           type: "Germplasm Storage",
           value: germplasmStorageCheckedBoxes,
         });
+      if (availibilityCheckedBoxes.length > 0)
+        newFilters.push({
+          type: "Availibility",
+          value: availibilityCheckedBoxes,
+        });
       if (selectedUUIDs.length > 0) {
         newFilters.push({
           type: "Subsets",
@@ -607,6 +622,7 @@ const SearchFilters = ({ tokenReady }) => {
       dispatch(setDonorCodeCheckedBoxes([]));
       dispatch(setSampStatCheckedBoxes([]));
       dispatch(setGermplasmStorageCheckedBoxes([]));
+      dispatch(setAvailibilityCheckedBoxes([]));
       dispatch(setCheckedAccessions({}));
     }
   }, [resetTrigger]);
@@ -1036,7 +1052,32 @@ const SearchFilters = ({ tokenReady }) => {
                         className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
                         onClick={(e) => {
                           e.currentTarget.parentElement.classList.toggle(
-                            styles.open
+                            styles.open,
+                          );
+                        }}
+                      >
+                        Available for distribution{" "}
+                        <span className={styles.drawerArrow}></span>
+                      </button>
+                      <div className={styles.drawerContent}>
+                        {availibilityList && availibilityList.length > 0 ? (
+                          <MultiSelectFilter
+                            options={availibilityList}
+                            type="availibilityCheckedBoxes"
+                          />
+                        ) : (
+                          <p className={styles.unAwailableFilter}>
+                            No available filters.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className={styles.drawer}>
+                      <button
+                        className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
+                        onClick={(e) => {
+                          e.currentTarget.parentElement.classList.toggle(
+                            styles.open,
                           );
                         }}
                       >

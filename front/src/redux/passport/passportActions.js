@@ -44,6 +44,10 @@ export const setGermplasmStorageCheckedBoxes = (boxes) => ({
   type: "SET_GERMPLASM_STORAGE_CHECKED_BOXES",
   payload: boxes,
 });
+export const setAvailibilityCheckedBoxes = (boxes) => ({
+  type: "SET_AVAILIBILITY_CHECKED_BOXES",
+  payload: boxes,
+});
 export const setInstituteCode = (codes) => ({
   type: "SET_INSTITUTE_CODE",
   payload: codes,
@@ -88,7 +92,10 @@ export const setGermplasmStorageList = (storage) => ({
   type: "SET_GERMPLASM_STORAGE_LIST",
   payload: storage,
 });
-
+export const setAvailibilityList = (availibility) => ({
+  type: "SET_AVAILIBILITY_LIST",
+  payload: availibility,
+});
 export const setResetTrigger = (isTrigger) => ({
   type: "SET_RESET_TRIGGER",
   payload: isTrigger,
