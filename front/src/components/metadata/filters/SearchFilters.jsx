@@ -45,6 +45,7 @@ import DateRangeFilter from "./DateRangeFilter";
 import GenotypeExplorer from "../../genotype/GenotypeExplorer";
 import { genesysApi, genolinkInternalApi } from "../../../pages/Home";
 import { Autocomplete, TextField, Chip, Box } from "@mui/material";
+import { faBriefcaseClock } from "@fortawesome/free-solid-svg-icons";
 
 const SearchFilters = ({ tokenReady }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -63,18 +64,18 @@ const SearchFilters = ({ tokenReady }) => {
   const [isInitialMount, setIsInitialMount] = useState(true);
   const [mappingFailed, setMappingFailed] = useState(false);
   const totalAccessions = useSelector(
-    (state) => state.passport.totalAccessions
+    (state) => state.passport.totalAccessions,
   );
   const searchResults = useSelector((state) => state.passport.searchResults);
 
   const isLoadingGenotypedAccessions = useSelector(
-    (state) => state.genotype.isLoadingGenotypedAccessions
+    (state) => state.genotype.isLoadingGenotypedAccessions,
   );
 
   const activeFilters = useSelector((state) => state.passport.activeFilters);
 
   const wildSearchValue = useSelector(
-    (state) => state.passport.wildSearchValue
+    (state) => state.passport.wildSearchValue,
   );
 
   const instituteCode = useSelector((state) => state.passport.instituteCode);
@@ -82,30 +83,30 @@ const SearchFilters = ({ tokenReady }) => {
 
   const resetTrigger = useSelector((state) => state.passport.resetTrigger);
   const accessionNumbers = useSelector(
-    (state) => state.passport.accessionNumbers
+    (state) => state.passport.accessionNumbers,
   );
   const genotypeIds = useSelector((state) => state.passport.genotypeIds);
   const figs = useSelector((state) => state.passport.figs);
   const creationStartDate = useSelector(
-    (state) => state.passport.creationStartDate
+    (state) => state.passport.creationStartDate,
   );
   const creationEndDate = useSelector(
-    (state) => state.passport.creationEndDate
+    (state) => state.passport.creationEndDate,
   );
   const acquisitionStartDate = useSelector(
-    (state) => state.passport.acquisitionStartDate
+    (state) => state.passport.acquisitionStartDate,
   );
   const acquisitionEndDate = useSelector(
-    (state) => state.passport.acquisitionEndDate
+    (state) => state.passport.acquisitionEndDate,
   );
   const cropList = useSelector((state) => state.passport.cropList);
   const genusList = useSelector((state) => state.passport.genusList);
   const genusSpeciesList = useSelector(
-    (state) => state.passport.genusSpeciesList
+    (state) => state.passport.genusSpeciesList,
   );
   const speciesList = useSelector((state) => state.passport.speciesList);
   const originOfMaterialList = useSelector(
-    (state) => state.passport.originOfMaterialList
+    (state) => state.passport.originOfMaterialList,
   );
   const donorCodeList = useSelector((state) => state.passport.donorCodeList);
   const sampStatList = useSelector((state) => state.passport.sampStatList);
@@ -198,9 +199,8 @@ const SearchFilters = ({ tokenReady }) => {
             .map((id) => id.trim());
           setFilterMode(filterMode);
           try {
-            accessionNums = await genolinkInternalApi.genotypeIdMapping(
-              genotypeIdList
-            );
+            accessionNums =
+              await genolinkInternalApi.genotypeIdMapping(genotypeIdList);
             setMappingFailed(accessionNums.length === 0);
           } catch (e) {
             console.warn("Genotype mapping failed, possibly 404:", e);
@@ -214,16 +214,16 @@ const SearchFilters = ({ tokenReady }) => {
               dispatch,
               " ",
               false,
-              accessionNums
-            )
+              accessionNums,
+            ),
           ),
           withRetryOn401(() =>
             genesysApi.fetchInitialQueryData(
               dispatch,
               " ",
               false,
-              accessionNums
-            )
+              accessionNums,
+            ),
           ),
         ]);
 
@@ -306,8 +306,8 @@ const SearchFilters = ({ tokenReady }) => {
 
     dispatch(
       setActiveFilters(
-        activeFilters.filter((filter) => filter !== filterToRemove)
-      )
+        activeFilters.filter((filter) => filter !== filterToRemove),
+      ),
     );
 
     let updatedBody = {};
@@ -409,7 +409,7 @@ const SearchFilters = ({ tokenReady }) => {
     if (genotypeIds && genotypeIds.length > 0) {
       accessionNums1 = await genolinkInternalApi.genotypeIdMapping(genotypeIds);
       accessionNums1 = accessionNums1.map((acc) =>
-        acc.replace(/"/g, "").trim().toUpperCase()
+        acc.replace(/"/g, "").trim().toUpperCase(),
       );
     }
 
@@ -417,7 +417,7 @@ const SearchFilters = ({ tokenReady }) => {
       const convertedFig = await genolinkInternalApi.figMapping(selectedFig);
       accessionNums2 = [...convertedFig];
       accessionNums2 = accessionNums2.map((acc) =>
-        acc.replace(/"/g, "").trim().toUpperCase()
+        acc.replace(/"/g, "").trim().toUpperCase(),
       );
     }
 
@@ -426,9 +426,9 @@ const SearchFilters = ({ tokenReady }) => {
       sets.push(
         new Set(
           accessionNumbers.map((acc) =>
-            acc.replace(/"/g, "").trim().toUpperCase()
-          )
-        )
+            acc.replace(/"/g, "").trim().toUpperCase(),
+          ),
+        ),
       );
     if (accessionNums1 && accessionNums1.length > 0)
       sets.push(new Set(accessionNums1));
@@ -513,7 +513,7 @@ const SearchFilters = ({ tokenReady }) => {
       const filterCode = await genesysApi.applyFilter(
         body,
         dispatch,
-        hasGenotype
+        hasGenotype,
       );
 
       setFilterCode(filterCode);
@@ -800,7 +800,7 @@ const SearchFilters = ({ tokenReady }) => {
                         onClick={(e) => {
                           // toggle a CSS class on the parent
                           e.currentTarget.parentElement.classList.toggle(
-                            styles.open
+                            styles.open,
                           );
                         }}
                       >
@@ -819,7 +819,7 @@ const SearchFilters = ({ tokenReady }) => {
                         className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
                         onClick={(e) => {
                           e.currentTarget.parentElement.classList.toggle(
-                            styles.open
+                            styles.open,
                           );
                         }}
                       >
@@ -845,7 +845,7 @@ const SearchFilters = ({ tokenReady }) => {
                         className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
                         onClick={(e) => {
                           e.currentTarget.parentElement.classList.toggle(
-                            styles.open
+                            styles.open,
                           );
                         }}
                       >
@@ -870,7 +870,7 @@ const SearchFilters = ({ tokenReady }) => {
                         className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
                         onClick={(e) => {
                           e.currentTarget.parentElement.classList.toggle(
-                            styles.open
+                            styles.open,
                           );
                         }}
                       >
@@ -895,7 +895,7 @@ const SearchFilters = ({ tokenReady }) => {
                         className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
                         onClick={(e) => {
                           e.currentTarget.parentElement.classList.toggle(
-                            styles.open
+                            styles.open,
                           );
                         }}
                       >
@@ -920,7 +920,7 @@ const SearchFilters = ({ tokenReady }) => {
                         className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
                         onClick={(e) => {
                           e.currentTarget.parentElement.classList.toggle(
-                            styles.open
+                            styles.open,
                           );
                         }}
                       >
@@ -947,7 +947,7 @@ const SearchFilters = ({ tokenReady }) => {
                         className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
                         onClick={(e) => {
                           e.currentTarget.parentElement.classList.toggle(
-                            styles.open
+                            styles.open,
                           );
                         }}
                       >
@@ -974,7 +974,7 @@ const SearchFilters = ({ tokenReady }) => {
                         className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
                         onClick={(e) => {
                           e.currentTarget.parentElement.classList.toggle(
-                            styles.open
+                            styles.open,
                           );
                         }}
                       >
@@ -999,7 +999,7 @@ const SearchFilters = ({ tokenReady }) => {
                         className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
                         onClick={(e) => {
                           e.currentTarget.parentElement.classList.toggle(
-                            styles.open
+                            styles.open,
                           );
                         }}
                       >
@@ -1025,7 +1025,7 @@ const SearchFilters = ({ tokenReady }) => {
                         className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
                         onClick={(e) => {
                           e.currentTarget.parentElement.classList.toggle(
-                            styles.open
+                            styles.open,
                           );
                         }}
                       >
@@ -1099,7 +1099,7 @@ const SearchFilters = ({ tokenReady }) => {
                         className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
                         onClick={(e) => {
                           e.currentTarget.parentElement.classList.toggle(
-                            styles.open
+                            styles.open,
                           );
                         }}
                       >

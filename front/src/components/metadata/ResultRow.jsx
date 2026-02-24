@@ -18,7 +18,7 @@ const ResultRow = React.memo(function ResultRow({
   // Subscribe ONLY to this accession’s checked flag
   const checked = useSelector(
     (s) => !!s.passport.checkedAccessions[item.accessionNumber],
-    shallowEqual
+    shallowEqual,
   );
 
   return (
@@ -107,7 +107,7 @@ const ResultRow = React.memo(function ResultRow({
               .filter((alias) => alias.aliasType !== "ACCENAME")
               .map(
                 (alias) =>
-                  `${alias.name}${alias.usedBy ? ` ${alias.usedBy}` : ""}`
+                  `${alias.name}${alias.usedBy ? ` ${alias.usedBy}` : ""}`,
               )
               .join(", ")
           : "N/A"}
@@ -192,8 +192,8 @@ const ResultRow = React.memo(function ResultRow({
         {item.donorName && item.donorCode
           ? `${item.donorName}, ${item.donorCode}`
           : item.donorName
-          ? item.donorName
-          : item.donorCode || "N/A"}
+            ? item.donorName
+            : item.donorCode || "N/A"}
       </td>
       <td
         className="cell"

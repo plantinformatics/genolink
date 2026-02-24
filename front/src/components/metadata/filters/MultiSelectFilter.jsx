@@ -102,28 +102,28 @@ const hierarchy2 = {
 const MultiSelectFilter = ({ options, type }) => {
   const dispatch = useDispatch();
   const instituteCheckedBoxes = useSelector(
-    (state) => state.passport.instituteCheckedBoxes
+    (state) => state.passport.instituteCheckedBoxes,
   );
   const cropCheckedBoxes = useSelector(
-    (state) => state.passport.cropCheckedBoxes
+    (state) => state.passport.cropCheckedBoxes,
   );
   const genusCheckedBoxes = useSelector(
-    (state) => state.passport.genusCheckedBoxes
+    (state) => state.passport.genusCheckedBoxes,
   );
   const genusSpeciesCheckedBoxes = useSelector(
-    (state) => state.passport.genusSpeciesCheckedBoxes
+    (state) => state.passport.genusSpeciesCheckedBoxes,
   );
   const speciesCheckedBoxes = useSelector(
-    (state) => state.passport.speciesCheckedBoxes
+    (state) => state.passport.speciesCheckedBoxes,
   );
   const originOfMaterialCheckedBoxes = useSelector(
-    (state) => state.passport.originOfMaterialCheckedBoxes
+    (state) => state.passport.originOfMaterialCheckedBoxes,
   );
   const donorCodeCheckedBoxes = useSelector(
-    (state) => state.passport.donorCodeCheckedBoxes
+    (state) => state.passport.donorCodeCheckedBoxes,
   );
   const sampStatCheckedBoxes = useSelector(
-    (state) => state.passport.sampStatCheckedBoxes
+    (state) => state.passport.sampStatCheckedBoxes,
   );
   const germplasmStorageCheckedBoxes = useSelector(
     (state) => state.passport.germplasmStorageCheckedBoxes,
@@ -156,8 +156,8 @@ const MultiSelectFilter = ({ options, type }) => {
       } else {
         dispatch(
           setInstituteCheckedBoxes(
-            instituteCheckedBoxes.filter((item) => item !== option)
-          )
+            instituteCheckedBoxes.filter((item) => item !== option),
+          ),
         );
       }
     else if (type === "cropCheckedBoxes")
@@ -166,8 +166,8 @@ const MultiSelectFilter = ({ options, type }) => {
       } else {
         dispatch(
           setCropCheckedBoxes(
-            cropCheckedBoxes.filter((item) => item !== option)
-          )
+            cropCheckedBoxes.filter((item) => item !== option),
+          ),
         );
       }
     else if (type === "genusCheckedBoxes") {
@@ -176,20 +176,20 @@ const MultiSelectFilter = ({ options, type }) => {
       } else {
         dispatch(
           setGenusCheckedBoxes(
-            genusCheckedBoxes.filter((item) => item !== option)
-          )
+            genusCheckedBoxes.filter((item) => item !== option),
+          ),
         );
       }
     } else if (type === "genusSpeciesCheckedBoxes") {
       if (checked) {
         dispatch(
-          setGenusSpeciesCheckedBoxes([...genusSpeciesCheckedBoxes, option])
+          setGenusSpeciesCheckedBoxes([...genusSpeciesCheckedBoxes, option]),
         );
       } else {
         dispatch(
           setGenusSpeciesCheckedBoxes(
-            genusSpeciesCheckedBoxes.filter((item) => item !== option)
-          )
+            genusSpeciesCheckedBoxes.filter((item) => item !== option),
+          ),
         );
       }
     } else if (type === "speciesCheckedBoxes") {
@@ -198,8 +198,8 @@ const MultiSelectFilter = ({ options, type }) => {
       } else {
         dispatch(
           setSpeciesCheckedBoxes(
-            speciesCheckedBoxes.filter((item) => item !== option)
-          )
+            speciesCheckedBoxes.filter((item) => item !== option),
+          ),
         );
       }
     } else if (type === "originOfMaterialCheckedBoxes")
@@ -208,13 +208,13 @@ const MultiSelectFilter = ({ options, type }) => {
           setOriginOfMaterialCheckedBoxes([
             ...originOfMaterialCheckedBoxes,
             option,
-          ])
+          ]),
         );
       } else {
         dispatch(
           setOriginOfMaterialCheckedBoxes(
-            originOfMaterialCheckedBoxes.filter((item) => item !== option)
-          )
+            originOfMaterialCheckedBoxes.filter((item) => item !== option),
+          ),
         );
       }
     else if (type === "donorCodeCheckedBoxes")
@@ -361,10 +361,10 @@ const MultiSelectFilter = ({ options, type }) => {
                         "                  " +
                         option[1]
                       : type === "germplasmStorageCheckedBoxes"
-                      ? germplasmStorageMapping[option[0]] +
-                        "                  " +
-                        option[1]
-                      : option[0] + "                  " + option[1]}
+                        ? germplasmStorageMapping[option[0]] +
+                          "                  " +
+                          option[1]
+                        : option[0] + "                  " + option[1]}
                   </div>
                 </label>
               );
