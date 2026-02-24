@@ -20,7 +20,7 @@ const Home = () => {
   const scheduleRefresh = (expiresInSec) => {
     const waitMs = Math.max(
       1000,
-      (expiresInSec - REFRESH_BUFFER_SECONDS) * 1000
+      (expiresInSec - REFRESH_BUFFER_SECONDS) * 1000,
     );
     if (refreshTimer.current) clearTimeout(refreshTimer.current);
     refreshTimer.current = setTimeout(async () => {
@@ -62,10 +62,10 @@ const Home = () => {
         genesysApi.setGenotypedAccessions(
           safeRows
             .filter((r) => r.Status === "Completed")
-            .map((r) => r.Accession)
+            .map((r) => r.Accession),
         );
         genesysApi.setGenotypedSamples(
-          safeRows.filter((r) => r.Status === "Completed").map((r) => r.Sample)
+          safeRows.filter((r) => r.Status === "Completed").map((r) => r.Sample),
         );
 
         setTokenReady(true);

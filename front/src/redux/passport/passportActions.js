@@ -126,7 +126,7 @@ export const setTotalAccessions = (totalAccessions) => ({
   payload: totalAccessions,
 });
 export const setTotalPreGenotypedAccessions = (
-  totalPreGenotypedAccessions
+  totalPreGenotypedAccessions,
 ) => ({
   type: "SET_TOTAL_PRE_GENOTYPED_ACCESSIONS",
   payload: totalPreGenotypedAccessions,

@@ -61,11 +61,11 @@ function formatDate(dateStr) {
 const MetadataSearchResultTable = ({ filterCode, filterBody }) => {
   const searchResults = useSelector((state) => state.passport.searchResults);
   const totalAccessions = useSelector(
-    (state) => state.passport.totalAccessions
+    (state) => state.passport.totalAccessions,
   );
 
   const passportCurrentPage = useSelector(
-    (state) => state.passport.passportCurrentPage
+    (state) => state.passport.passportCurrentPage,
   );
 
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -74,20 +74,21 @@ const MetadataSearchResultTable = ({ filterCode, filterBody }) => {
   const [selectAll, setSelectAll] = useState(false);
   const [expandedRow, setExpandedRow] = useState(null);
   const [remainingPages, setRemainingPages] = useState(
-    Math.floor(totalAccessions / 500)
+    Math.floor(totalAccessions / 500),
   );
   const [figMapping, setFigMapping] = useState({});
+
   const [genotypeIdMapping, setGenotypeIdMapping] = useState([]);
   const [isPending, startTransition] = useTransition();
   const dispatch = useDispatch();
   const checkedAccessions = useSelector(
-    (state) => state.passport.checkedAccessions
+    (state) => state.passport.checkedAccessions,
   );
   const checkedAccessionNames = useSelector(
-    (state) => state.passport.checkedAccessionNames
+    (state) => state.passport.checkedAccessionNames,
   );
   const isLoadingGenotypedAccessions = useSelector(
-    (state) => state.genotype.isLoadingGenotypedAccessions
+    (state) => state.genotype.isLoadingGenotypedAccessions,
   );
 
   const statusByAcc = useMemo(() => {
@@ -127,9 +128,8 @@ const MetadataSearchResultTable = ({ filterCode, filterBody }) => {
 
     const fetchFigs = async () => {
       try {
-        const mapping = await genolinkInternalApi.getFigsByAccessions(
-          accessionIds
-        );
+        const mapping =
+          await genolinkInternalApi.getFigsByAccessions(accessionIds);
         setFigMapping(mapping); // mapping = { acc1: ["fig1", "fig2"], acc2: ["fig3"] }
       } catch (error) {
         console.error("Failed to fetch figs by accessions:", error);
@@ -148,14 +148,14 @@ const MetadataSearchResultTable = ({ filterCode, filterBody }) => {
         const accessionGenotypeMap = appendedAccessions.reduce(
           (accMap, accessionId) => {
             const foundItem = info.find(
-              (item) => item.acceNumb === accessionId
+              (item) => item.acceNumb === accessionId,
             );
 
             // If genotypeId is found, return an object with accessionId and genotypeId, else null
             accMap[accessionId] = foundItem ? foundItem.genotypeId : null;
             return accMap;
           },
-          {}
+          {},
         );
         setGenotypeIdMapping({
           ...genotypeIdMapping,
@@ -202,7 +202,7 @@ const MetadataSearchResultTable = ({ filterCode, filterBody }) => {
         });
       });
     },
-    [dispatch, checkedAccessions, checkedAccessionNames, startTransition]
+    [dispatch, checkedAccessions, checkedAccessionNames, startTransition],
   );
 
   const handleSelectAllChange = useCallback(() => {

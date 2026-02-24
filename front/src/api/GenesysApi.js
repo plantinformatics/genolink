@@ -152,7 +152,7 @@ class GenesysApi extends BaseApi {
     const allPageResults = await Promise.all(pagesToFetch);
 
     allPageResults.forEach((pageResult) =>
-      allSubsets.push(...pageResult.subsets)
+      allSubsets.push(...pageResult.subsets),
     );
 
     return allSubsets;
@@ -174,7 +174,7 @@ class GenesysApi extends BaseApi {
     dispatch,
     userInput = " ",
     isReset = false,
-    accessionNumbers = []
+    accessionNumbers = [],
   ) {
     try {
       const urlParams = new URLSearchParams(window.location.search);
@@ -196,7 +196,7 @@ class GenesysApi extends BaseApi {
         dispatch(
           setActiveFilters([
             { type: "Institute Code", value: [DEFAULT_INSTITUTE_CODE] },
-          ])
+          ]),
         );
       } else if (!isReset && filterMode && genotypeIds) {
         body = {
@@ -207,7 +207,7 @@ class GenesysApi extends BaseApi {
         dispatch(
           setActiveFilters([
             { type: "Genotype Ids", value: genotypeIds.split(",") },
-          ])
+          ]),
         );
       } else {
         body = {
@@ -223,12 +223,12 @@ class GenesysApi extends BaseApi {
       const genus = this.extractSuggestions(searchData, "taxonomy.genus");
       const genusSpecies = this.extractSuggestions(
         searchData,
-        "taxonomy.genusSpecies"
+        "taxonomy.genusSpecies",
       );
       const species = this.extractSuggestions(searchData, "taxonomy.species");
       const origins = this.extractSuggestions(
         searchData,
-        "countryOfOrigin.code3"
+        "countryOfOrigin.code3",
       );
       const sampStat = this.extractSuggestions(searchData, "sampStat");
       const germplasmStorage = this.extractSuggestions(searchData, "storage");
@@ -256,7 +256,7 @@ class GenesysApi extends BaseApi {
     dispatch,
     userInput = " ",
     isReset = false,
-    accessionNumbers = []
+    accessionNumbers = [],
   ) {
     try {
       const urlParams = new URLSearchParams(window.location.search);
@@ -277,7 +277,7 @@ class GenesysApi extends BaseApi {
         dispatch(
           setActiveFilters([
             { type: "Institute Code", value: [DEFAULT_INSTITUTE_CODE] },
-          ])
+          ]),
         );
       } else if (!isReset && filterMode && genotypeIds) {
         body = {
@@ -288,7 +288,7 @@ class GenesysApi extends BaseApi {
         dispatch(
           setActiveFilters([
             { type: "Genotype Ids", value: genotypeIds.split(",") },
-          ])
+          ]),
         );
       } else {
         body = {
@@ -328,42 +328,44 @@ class GenesysApi extends BaseApi {
       dispatch(setTotalAccessions(queryData.totalElements));
       dispatch(
         setInstituteCode(
-          this.extractSuggestions(filterDataResponse, "institute.code")
-        )
+          this.extractSuggestions(filterDataResponse, "institute.code"),
+        ),
       );
       dispatch(
         setCropList(
-          this.extractSuggestions(filterDataResponse, "crop.shortName")
-        )
+          this.extractSuggestions(filterDataResponse, "crop.shortName"),
+        ),
       );
 
       dispatch(
         setGenusList(
-          this.extractSuggestions(filterDataResponse, "taxonomy.genus")
-        )
+          this.extractSuggestions(filterDataResponse, "taxonomy.genus"),
+        ),
       );
       dispatch(
         setGenusSpeciesList(
-          this.extractSuggestions(filterDataResponse, "taxonomy.genusSpecies")
-        )
+          this.extractSuggestions(filterDataResponse, "taxonomy.genusSpecies"),
+        ),
       );
       dispatch(
         setSpeciesList(
-          this.extractSuggestions(filterDataResponse, "taxonomy.species")
-        )
+          this.extractSuggestions(filterDataResponse, "taxonomy.species"),
+        ),
       );
       dispatch(
         setOriginOfMaterialList(
-          this.extractSuggestions(filterDataResponse, "countryOfOrigin.code3")
-        )
+          this.extractSuggestions(filterDataResponse, "countryOfOrigin.code3"),
+        ),
       );
       dispatch(
         setDonorCodeList(
-          this.extractSuggestions(filterDataResponse, "donorCode")
-        )
+          this.extractSuggestions(filterDataResponse, "donorCode"),
+        ),
       );
       dispatch(
-        setSampStatList(this.extractSuggestions(filterDataResponse, "sampStat"))
+        setSampStatList(
+          this.extractSuggestions(filterDataResponse, "sampStat"),
+        ),
       );
       dispatch(
         setGermplasmStorageList(
@@ -449,7 +451,7 @@ class GenesysApi extends BaseApi {
       const firstGenesysEndpoint = `/api/v1/acn/query?p=0&l=${pageSize}&select=${select}`;
       const firstGenesysResult = await this.post(
         firstGenesysEndpoint,
-        filterData
+        filterData,
       );
       let allResults = firstGenesysResult.content || [];
       const filterCode = firstGenesysResult.filterCode;
@@ -519,7 +521,7 @@ class GenesysApi extends BaseApi {
           if (fieldPath === "status") {
             return (
               this.genotypeStatus?.find?.(
-                (r) => r.Accession === item.accessionNumber
+                (r) => r.Accession === item.accessionNumber,
               )?.Status ??
               (item.accessionNumber.startsWith("AGG") ? "TBC" : "N/A")
             );
@@ -568,7 +570,7 @@ class GenesysApi extends BaseApi {
             return (
               country2Region.find(
                 (country) =>
-                  country["country-code"] == item["countryOfOrigin.codeNum"]
+                  country["country-code"] == item["countryOfOrigin.codeNum"],
               )?.["region"] || ""
             );
           }
@@ -577,7 +579,7 @@ class GenesysApi extends BaseApi {
             return (
               country2Region.find(
                 (country) =>
-                  country["country-code"] == item["countryOfOrigin.codeNum"]
+                  country["country-code"] == item["countryOfOrigin.codeNum"],
               )?.["sub-region"] || ""
             );
           }
@@ -585,16 +587,18 @@ class GenesysApi extends BaseApi {
           if (fieldPath === "taxonomy.taxonName") {
             return item["taxonomy.taxonName"] || "";
           }
+
           if (fieldPath === "sampStat") {
             return this.getSampleStatus(item["sampStat"]) || "";
           }
+
           if (fieldPath === "aliases") {
             return item.aliases && item.aliases.length > 0
               ? item.aliases
                   .filter((alias) => alias.aliasType !== "ACCENAME")
                   .map(
                     (alias) =>
-                      `${alias.name}${alias.usedBy ? ` ${alias.usedBy}` : ""}`
+                      `${alias.name}${alias.usedBy ? ` ${alias.usedBy}` : ""}`,
                   )
                   .join(", ")
               : "";
@@ -614,6 +618,7 @@ class GenesysApi extends BaseApi {
             }
             return dateStr || "";
           }
+
           if (fieldPath === "donorCombined") {
             const name = item["donorName"] || "";
             const code = item["donorCode"] || "";
