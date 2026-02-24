@@ -34,6 +34,10 @@ const fieldsMapping = {
     apiParam: "available",
     tsvHeader: "Available for Distribution",
   },
+  "Curation Type": {
+    apiParam: "curationType",
+    tsvHeader: "Curation Type",
+  },
   Region: { apiParam: "region", tsvHeader: "Region" },
   "Sub-Region": { apiParam: "sub-region", tsvHeader: "Sub-Region" },
   "Acquisition Date": {
