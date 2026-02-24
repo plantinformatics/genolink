@@ -7,6 +7,7 @@ import { FaCircleXmark } from "react-icons/fa6";
 import { AiOutlineQuestionCircle } from "react-icons/ai";
 import styles from "./SearchFilters.module.css";
 import store from "../../../redux/store";
+import { germplasmStorageMapping, sampStatMapping } from "./MultiSelectFilter";
 
 import {
   setInstituteCheckedBoxes,
@@ -747,9 +748,21 @@ const SearchFilters = ({ tokenReady }) => {
                               ? `${filter.value[0]}, ..., ${
                                   filter.value[filter.value.length - 1]
                                 }`
-                              : Array.isArray(filter.value)
-                              ? filter.value.join(", ")
-                              : filter.value}
+                              : Array.isArray(filter.value) &&
+                                  filter.type === "Germplasm Storage"
+                                ? filter.value
+                                    .map((v) => germplasmStorageMapping[v])
+                                    .filter(Boolean)
+                                    .join(", ")
+                                : Array.isArray(filter.value) &&
+                                    filter.type === "Biological Status"
+                                  ? filter.value
+                                      .map((v) => sampStatMapping[v])
+                                      .filter(Boolean)
+                                      .join(", ")
+                                  : Array.isArray(filter.value)
+                                    ? filter.value.join(", ")
+                                    : filter.value}
                           </div>
                           <button
                             className={styles.removeFilterButton}
