@@ -28,6 +28,7 @@ import {
   setSampStatCheckedBoxes,
   setGermplasmStorageCheckedBoxes,
   setAvailibilityCheckedBoxes,
+  setCurationTypeCheckedBoxes,
   setCheckedAccessions,
   setActiveFilters,
   setWildSearchValue,
@@ -115,6 +116,9 @@ const SearchFilters = ({ tokenReady }) => {
   );
   const availibilityList = useSelector(
     (state) => state.passport.availibilityList,
+  );
+  const curationTypeList = useSelector(
+    (state) => state.passport.curationTypeList,
   );
   const dispatch = useDispatch();
 
@@ -297,6 +301,9 @@ const SearchFilters = ({ tokenReady }) => {
       case "Availibility":
         dispatch(setAvailibilityCheckedBoxes([]));
         break;
+      case "Curation Type":
+        dispatch(setCurationTypeCheckedBoxes([]));
+        break;
       case "Subsets":
         setSelectedSubsets([]);
         break;
@@ -397,6 +404,7 @@ const SearchFilters = ({ tokenReady }) => {
       sampStatCheckedBoxes,
       germplasmStorageCheckedBoxes,
       availibilityCheckedBoxes,
+      curationTypeCheckedBoxes,
       selectedFig,
     } = state.passport;
 
@@ -494,6 +502,8 @@ const SearchFilters = ({ tokenReady }) => {
           : [],
       available:
         availibilityCheckedBoxes.length > 0 ? availibilityCheckedBoxes[0] : "",
+      curationType:
+        curationTypeCheckedBoxes.length > 0 ? curationTypeCheckedBoxes : [],
     };
 
     if (selectedUUIDs.length > 0) {
@@ -588,6 +598,11 @@ const SearchFilters = ({ tokenReady }) => {
           type: "Availibility",
           value: availibilityCheckedBoxes,
         });
+      if (curationTypeCheckedBoxes.length > 0)
+        newFilters.push({
+          type: "Curation Type",
+          value: curationTypeCheckedBoxes,
+        });
       if (selectedUUIDs.length > 0) {
         newFilters.push({
           type: "Subsets",
@@ -623,6 +638,7 @@ const SearchFilters = ({ tokenReady }) => {
       dispatch(setSampStatCheckedBoxes([]));
       dispatch(setGermplasmStorageCheckedBoxes([]));
       dispatch(setAvailibilityCheckedBoxes([]));
+      dispatch(setCurationTypeCheckedBoxes([]));
       dispatch(setCheckedAccessions({}));
     }
   }, [resetTrigger]);
@@ -1064,6 +1080,31 @@ const SearchFilters = ({ tokenReady }) => {
                           <MultiSelectFilter
                             options={availibilityList}
                             type="availibilityCheckedBoxes"
+                          />
+                        ) : (
+                          <p className={styles.unAwailableFilter}>
+                            No available filters.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className={styles.drawer}>
+                      <button
+                        className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
+                        onClick={(e) => {
+                          e.currentTarget.parentElement.classList.toggle(
+                            styles.open,
+                          );
+                        }}
+                      >
+                        Curation type{" "}
+                        <span className={styles.drawerArrow}></span>
+                      </button>
+                      <div className={styles.drawerContent}>
+                        {curationTypeList && curationTypeList.length > 0 ? (
+                          <MultiSelectFilter
+                            options={curationTypeList}
+                            type="curationTypeCheckedBoxes"
                           />
                         ) : (
                           <p className={styles.unAwailableFilter}>

@@ -301,6 +301,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
               <th scope="col">Acquisition Date</th>
               <th scope="col">DOI</th>
               <th scope="col">Available for Distribution</th>
+              <th scope="col">Curation Type</th>
               <th scope="col">Last Updated</th>
               <th scope="col">Genotype Status</th>
               <th scope="col">GenotypeID</th>

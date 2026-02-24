@@ -10,6 +10,7 @@ import {
   setSampStatCheckedBoxes,
   setGermplasmStorageCheckedBoxes,
   setAvailibilityCheckedBoxes,
+  setCurationTypeCheckedBoxes,
 } from "../../../redux/passport/passportActions";
 import { useDispatch } from "react-redux";
 import styles from "./MultiSelectFilter.module.css";
@@ -131,6 +132,9 @@ const MultiSelectFilter = ({ options, type }) => {
   const availibilityCheckedBoxes = useSelector(
     (state) => state.passport.availibilityCheckedBoxes,
   );
+  const curationTypeCheckedBoxes = useSelector(
+    (state) => state.passport.curationTypeCheckedBoxes,
+  );
   const getIndentation = (optionKey) => {
     if (
       type !== "sampStatCheckedBoxes" &&
@@ -237,6 +241,18 @@ const MultiSelectFilter = ({ options, type }) => {
           ),
         );
       }
+    } else if (type === "curationTypeCheckedBoxes") {
+      if (checked) {
+        dispatch(
+          setCurationTypeCheckedBoxes([...curationTypeCheckedBoxes, option]),
+        );
+      } else {
+        dispatch(
+          setCurationTypeCheckedBoxes(
+            curationTypeCheckedBoxes.filter((item) => item !== option),
+          ),
+        );
+      }
     } else if (type === "sampStatCheckedBoxes") {
       let newCheckedBoxes = [...sampStatCheckedBoxes];
 
@@ -337,16 +353,20 @@ const MultiSelectFilter = ({ options, type }) => {
                                       ? availibilityCheckedBoxes.includes(
                                           option[0],
                                         )
-                                      : type === "sampStatCheckedBoxes"
-                                        ? sampStatCheckedBoxes.includes(
+                                      : type === "curationTypeCheckedBoxes"
+                                        ? curationTypeCheckedBoxes.includes(
                                             option[0],
                                           )
-                                        : type ===
-                                            "germplasmStorageCheckedBoxes"
-                                          ? germplasmStorageCheckedBoxes.includes(
+                                        : type === "sampStatCheckedBoxes"
+                                          ? sampStatCheckedBoxes.includes(
                                               option[0],
                                             )
-                                          : null
+                                          : type ===
+                                              "germplasmStorageCheckedBoxes"
+                                            ? germplasmStorageCheckedBoxes.includes(
+                                                option[0],
+                                              )
+                                            : null
                     }
                     onChange={(e) =>
                       handleCheckedBox(option[0], e.target.checked)

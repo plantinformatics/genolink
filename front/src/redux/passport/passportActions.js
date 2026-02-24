@@ -48,6 +48,10 @@ export const setAvailibilityCheckedBoxes = (boxes) => ({
   type: "SET_AVAILIBILITY_CHECKED_BOXES",
   payload: boxes,
 });
+export const setCurationTypeCheckedBoxes = (boxes) => ({
+  type: "SET_CURATION_TYPE_CHECKED_BOXES",
+  payload: boxes,
+});
 export const setInstituteCode = (codes) => ({
   type: "SET_INSTITUTE_CODE",
   payload: codes,
@@ -95,6 +99,10 @@ export const setGermplasmStorageList = (storage) => ({
 export const setAvailibilityList = (availibility) => ({
   type: "SET_AVAILIBILITY_LIST",
   payload: availibility,
+});
+export const setCurationTypeList = (curation) => ({
+  type: "SET_CURATION_TYPE_LIST",
+  payload: curation,
 });
 export const setResetTrigger = (isTrigger) => ({
   type: "SET_RESET_TRIGGER",
