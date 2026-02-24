@@ -282,8 +282,10 @@ const SearchFilters = ({ tokenReady }) => {
         break;
       case "Germplasm Storage":
         dispatch(setGermplasmStorageCheckedBoxes([]));
+        break;
       case "Availibility":
         dispatch(setAvailibilityCheckedBoxes([]));
+        break;
       case "Subsets":
         setSelectedSubsets([]);
         break;
