@@ -22,6 +22,8 @@ import {
   setResetTrigger,
 } from "../redux/passport/passportActions";
 import { setLoadingGenotypedAccessions } from "../redux/genotype/genotypeActions";
+import { germplasmStorageMapping } from "../components/metadata/filters/MultiSelectFilter";
+
 class GenesysApi extends BaseApi {
   constructor() {
     super(genesysServer);
@@ -702,6 +704,17 @@ class GenesysApi extends BaseApi {
 
           if (fieldPath === "taxonomy.species") {
             return item["taxonomy.species"] || "";
+          }
+
+          if (fieldPath === "storage") {
+            return item["storage"]
+              ? item["storage"]
+                  .toString()
+                  .match(/.{1,2}/g)
+                  ?.map((code) => germplasmStorageMapping[parseInt(code)])
+                  .filter(Boolean)
+                  .join(", ") || "N/A"
+              : "N/A" || "";
           }
 
           if (fieldPath === "region") {
