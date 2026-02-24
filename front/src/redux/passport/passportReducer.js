@@ -10,6 +10,7 @@ const initialState = {
   donorCodeCheckedBoxes: [],
   sampStatCheckedBoxes: [],
   germplasmStorageCheckedBoxes: [],
+  availibilityCheckedBoxes: [],
   instituteCode: [],
   cropList: [],
   genusList: [],
@@ -19,6 +20,7 @@ const initialState = {
   donorCodeList: [],
   sampStatList: [],
   germplasmStorageList: [],
+  availibilityList: [],
   resetTrigger: false,
   passportCurrentPage: 0,
   accessionNumbers: [],
@@ -108,6 +110,12 @@ const rootReducer = (state = initialState, action) => {
         ...state,
         germplasmStorageCheckedBoxes: action.payload,
       };
+    case "SET_AVAILIBILITY_CHECKED_BOXES":
+      return {
+        ...state,
+        availibilityCheckedBoxes: action.payload,
+      };
+
     case "SET_INSTITUTE_CODE":
       return {
         ...state,
@@ -152,6 +160,11 @@ const rootReducer = (state = initialState, action) => {
       return {
         ...state,
         germplasmStorageList: action.payload,
+      };
+    case "SET_AVAILIBILITY_LIST":
+      return {
+        ...state,
+        availibilityList: action.payload,
       };
     case "SET_RESET_TRIGGER":
       return {

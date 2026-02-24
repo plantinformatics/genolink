@@ -9,6 +9,7 @@ import {
   setDonorCodeCheckedBoxes,
   setSampStatCheckedBoxes,
   setGermplasmStorageCheckedBoxes,
+  setAvailibilityCheckedBoxes,
 } from "../../../redux/passport/passportActions";
 import { useDispatch } from "react-redux";
 import styles from "./MultiSelectFilter.module.css";
@@ -125,7 +126,10 @@ const MultiSelectFilter = ({ options, type }) => {
     (state) => state.passport.sampStatCheckedBoxes
   );
   const germplasmStorageCheckedBoxes = useSelector(
-    (state) => state.passport.germplasmStorageCheckedBoxes
+    (state) => state.passport.germplasmStorageCheckedBoxes,
+  );
+  const availibilityCheckedBoxes = useSelector(
+    (state) => state.passport.availibilityCheckedBoxes,
   );
   const getIndentation = (optionKey) => {
     if (
@@ -219,8 +223,18 @@ const MultiSelectFilter = ({ options, type }) => {
       } else {
         dispatch(
           setDonorCodeCheckedBoxes(
-            donorCodeCheckedBoxes.filter((item) => item !== option)
-          )
+            donorCodeCheckedBoxes.filter((item) => item !== option),
+          ),
+        );
+      }
+    else if (type === "availibilityCheckedBoxes") {
+      if (checked) {
+        dispatch(setAvailibilityCheckedBoxes([option]));
+      } else {
+        dispatch(
+          setAvailibilityCheckedBoxes(
+            availibilityCheckedBoxes.filter((item) => item !== option),
+          ),
         );
       }
     else if (type === "sampStatCheckedBoxes") {
@@ -306,22 +320,33 @@ const MultiSelectFilter = ({ options, type }) => {
                       type === "institueCheckedBoxes"
                         ? instituteCheckedBoxes.includes(option[0])
                         : type === "genusCheckedBoxes"
-                        ? genusCheckedBoxes.includes(option[0])
-                        : type === "genusSpeciesCheckedBoxes"
-                        ? genusSpeciesCheckedBoxes.includes(option[0])
-                        : type === "speciesCheckedBoxes"
-                        ? speciesCheckedBoxes.includes(option[0])
-                        : type === "cropCheckedBoxes"
-                        ? cropCheckedBoxes.includes(option[0])
-                        : type === "originOfMaterialCheckedBoxes"
-                        ? originOfMaterialCheckedBoxes.includes(option[0])
-                        : type === "donorCodeCheckedBoxes"
-                        ? donorCodeCheckedBoxes.includes(option[0])
-                        : type === "sampStatCheckedBoxes"
-                        ? sampStatCheckedBoxes.includes(option[0])
-                        : type === "germplasmStorageCheckedBoxes"
-                        ? germplasmStorageCheckedBoxes.includes(option[0])
-                        : null
+                          ? genusCheckedBoxes.includes(option[0])
+                          : type === "genusSpeciesCheckedBoxes"
+                            ? genusSpeciesCheckedBoxes.includes(option[0])
+                            : type === "speciesCheckedBoxes"
+                              ? speciesCheckedBoxes.includes(option[0])
+                              : type === "cropCheckedBoxes"
+                                ? cropCheckedBoxes.includes(option[0])
+                                : type === "originOfMaterialCheckedBoxes"
+                                  ? originOfMaterialCheckedBoxes.includes(
+                                      option[0],
+                                    )
+                                  : type === "donorCodeCheckedBoxes"
+                                    ? donorCodeCheckedBoxes.includes(option[0])
+                                    : type === "availibilityCheckedBoxes"
+                                      ? availibilityCheckedBoxes.includes(
+                                          option[0],
+                                        )
+                                      : type === "sampStatCheckedBoxes"
+                                        ? sampStatCheckedBoxes.includes(
+                                            option[0],
+                                          )
+                                        : type ===
+                                            "germplasmStorageCheckedBoxes"
+                                          ? germplasmStorageCheckedBoxes.includes(
+                                              option[0],
+                                            )
+                                          : null
                     }
                     onChange={(e) =>
                       handleCheckedBox(option[0], e.target.checked)

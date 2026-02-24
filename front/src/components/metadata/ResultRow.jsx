@@ -251,6 +251,19 @@ const ResultRow = React.memo(function ResultRow({
           whiteSpace: isExpanded ? "normal" : "nowrap",
         }}
       >
+        {item.available === true
+          ? "True"
+          : item.available === false
+            ? "False"
+            : "N/A"}
+      </td>
+      <td
+        className="cell"
+        style={{
+          overflow: isExpanded ? "visible" : "hidden",
+          whiteSpace: isExpanded ? "normal" : "nowrap",
+        }}
+      >
         {item.lastModifiedDate || "N/A"}
       </td>
       <td

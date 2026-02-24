@@ -30,6 +30,10 @@ const fieldsMapping = {
     apiParam: "countryOfOrigin.name",
     tsvHeader: "Provenance of Material",
   },
+  "Available for Distribution": {
+    apiParam: "available",
+    tsvHeader: "Available for Distribution",
+  },
   Region: { apiParam: "region", tsvHeader: "Region" },
   "Sub-Region": { apiParam: "sub-region", tsvHeader: "Sub-Region" },
   "Acquisition Date": {
