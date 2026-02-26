@@ -116,23 +116,27 @@ const ExportFieldsModal = ({ isVisible, onClose, onExport }) => {
       <div className="modal">
         <div className="modal-content">
           <h3>Select Fields to Export</h3>
-          <div>
-            <label>
+
+          <div className="selectAllRow">
+            <label className="selectAllLabel">
               <input
                 type="checkbox"
                 checked={selectAll}
                 onChange={handleSelectAllChange}
               />
-              Select All
+              Select All Fields
             </label>
           </div>
+
+          <div className="divider"></div>
+
           {Object.keys(fieldsMapping).map((field) => {
             if (field === "Accession Number" || field === "Country Code")
               return null;
 
             return (
-              <div key={field}>
-                <label>
+              <div key={field} className="fieldRow">
+                <label className="fieldLabel">
                   <input
                     type="checkbox"
                     value={field}
@@ -144,6 +148,7 @@ const ExportFieldsModal = ({ isVisible, onClose, onExport }) => {
               </div>
             );
           })}
+
           <button onClick={handleExportClick}>Download</button>
           <button onClick={onClose}>Close</button>
         </div>
