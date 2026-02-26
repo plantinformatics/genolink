@@ -23,7 +23,7 @@ const fieldsMapping = {
     tsvHeader: "Biological status of accession",
   },
   "Donor Institute": {
-    apiParam: "donorCombined",
+    apiParam: "donorName",
     tsvHeader: "Donor Institute",
   },
   "Provenance of Material": {
