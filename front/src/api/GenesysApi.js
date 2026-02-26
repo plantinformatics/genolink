@@ -793,7 +793,7 @@ class GenesysApi extends BaseApi {
             }
             return dateStr || "";
           }
-          if (fieldPath === "donorCombined") {
+          if (fieldPath === "donorName") {
             const name = item["donorName"] || "";
             const code = item["donorCode"] || "";
             if (name && code) return `${name}, ${code}`;
