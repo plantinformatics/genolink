@@ -56,9 +56,9 @@ const SearchFilters = ({ tokenReady }) => {
   const [initialRequestSent, setInitialRequestSent] = useState(false);
   const [initialRequestStatus, setInitialRequestStatus] = useState("pending");
   const [filterBody, setFilterBody] = useState({});
-  const [searchButtonName, setSearchButtonName] = useState("Search");
   const [selectedSubsets, setSelectedSubsets] = useState([]);
   const [subsetsTick, setSubsetsTick] = useState(0);
+  const [donorNameList, setDonorNameList] = useState([]);
   const [hasGenotype, setHasGenotype] = useState(false);
   const instituteCheckedBoxesRef = useRef([]);
   const cropCheckedBoxesRef = useRef([]);
@@ -137,14 +137,6 @@ const SearchFilters = ({ tokenReady }) => {
       throw error;
     }
   };
-
-  useEffect(() => {
-    if (activeFilters.length > 0 && searchButtonName !== "Update Search") {
-      setSearchButtonName("Update Search");
-    } else {
-      setSearchButtonName("Search");
-    }
-  }, [activeFilters]);
 
   useEffect(() => {
     const fetchFigs = async () => {
@@ -643,9 +635,21 @@ const SearchFilters = ({ tokenReady }) => {
     }
   }, [resetTrigger]);
 
-  // useEffect(() => {
-  //   setIsFilterApplied(activeFilters.length > 0);
-  // }, [activeFilters]);
+  useEffect(() => {
+    const convertDonorCodes = async () => {
+      const donorCodes = donorCodeList.map((array) => array[0]);
+      const donorInstituteFullNameObject =
+        await genesysApi.getDonorInstituteFullName(donorCodes);
+
+      const donorFullNameList = donorCodeList.map(([code, count]) => {
+        const fullName = donorInstituteFullNameObject[code] ?? code;
+        return [code, fullName, count];
+      });
+      setDonorNameList(donorFullNameList);
+    };
+
+    convertDonorCodes();
+  }, [donorCodeList]);
 
   const handleResetFilter = async () => {
     setIsResetLoading(true);
@@ -729,23 +733,34 @@ const SearchFilters = ({ tokenReady }) => {
           <TabPanel>
             <div className={styles.passportContentRow}>
               <div className={styles.genesysFilterContainer}>
-                <h4>Filters</h4>
-                {initialRequestSent &&
-                  (!isLoading && !isLoadingGenotypedAccessions ? (
-                    <h5>Total Accessions: {totalAccessions}</h5>
-                  ) : (
-                    <LoadingComponent />
-                  ))}
-                <div className={styles.filterActions}>
-                  <button
-                    type="button"
-                    className={styles.buttonSecondary}
-                    id="reset-filter-button"
-                    onClick={handleResetFilter}
-                  >
-                    Reset Filter
-                  </button>
-                  {/* {!isFilterApplied ? ( */}
+                <div className={styles.stickyTitles}>
+                  <h4>Filters</h4>
+                  {initialRequestSent &&
+                    (!isLoading && !isLoadingGenotypedAccessions ? (
+                      <h5>Total Accessions: {totalAccessions}</h5>
+                    ) : (
+                      <LoadingComponent />
+                    ))}
+                  <div className={styles.filterActions}>
+                    <button
+                      type="button"
+                      className={`${styles.buttonPrimary} ${styles.searchButton}`}
+                      onClick={() => handleSearch(wildSearchValue)}
+                      onMouseDown={() => document.activeElement?.blur()}
+                    >
+                      Apply Filter
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.buttonSecondary}
+                      onClick={handleResetFilter}
+                    >
+                      Reset Filter
+                    </button>
+                  </div>
+                </div>
+                <div className={styles.filterModeContainer}>
+                  <h5>Filter Mode:</h5>
                   <select
                     value={filterMode}
                     onChange={(e) => setFilterMode(e.target.value)}
@@ -755,7 +770,6 @@ const SearchFilters = ({ tokenReady }) => {
                     <option value="Accession Filter">Accession Filter</option>
                     <option value="GenotypeId Filter">GenotypeId Filter</option>
                   </select>
-                  {/* ) : null} */}
                 </div>
                 <div>
                   <h5
@@ -807,7 +821,13 @@ const SearchFilters = ({ tokenReady }) => {
                     </ul>
                   ) : null}
                 </div>
-
+                {filterMode === "Passport Filter" ? (
+                  <WildSearchFilter />
+                ) : filterMode === "Accession Filter" ? (
+                  <AccessionFilter />
+                ) : (
+                  <GenotypeIdFilter />
+                )}
                 {filterMode === "Passport Filter" && (
                   <>
                     <div className={styles.drawer}>
@@ -998,9 +1018,9 @@ const SearchFilters = ({ tokenReady }) => {
                         <span className={styles.drawerArrow}></span>
                       </button>
                       <div className={styles.drawerContent}>
-                        {donorCodeList && donorCodeList.length > 0 ? (
+                        {donorNameList && donorNameList.length > 0 ? (
                           <MultiSelectFilter
-                            options={donorCodeList}
+                            options={donorNameList}
                             type="donorCodeCheckedBoxes"
                           />
                         ) : (
@@ -1221,24 +1241,6 @@ const SearchFilters = ({ tokenReady }) => {
                   <LoadingComponent />
                 ) : (
                   <div className={styles.pageLayout}>
-                    <div className={styles.filterBar}>
-                      {filterMode === "Passport Filter" ? (
-                        <WildSearchFilter />
-                      ) : filterMode === "Accession Filter" ? (
-                        <AccessionFilter />
-                      ) : (
-                        <GenotypeIdFilter />
-                      )}
-                      <button
-                        type="button"
-                        className={`${styles.buttonPrimary} ${styles.searchButton}`}
-                        onClick={() => handleSearch(wildSearchValue)}
-                        onMouseDown={() => document.activeElement?.blur()}
-                      >
-                        {searchButtonName}
-                      </button>
-                    </div>
-
                     <div className={styles.searchResultsContainer}>
                       {initialRequestStatus === "pending" && (
                         <LoadingComponent />

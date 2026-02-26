@@ -6,7 +6,7 @@ import styles from "./AccessionFilter.module.css";
 const WildSearchFilter = () => {
   const dispatch = useDispatch();
   const wildSearchValue = useSelector(
-    (state) => state.passport.wildSearchValue
+    (state) => state.passport.wildSearchValue,
   );
   const [inputValue, setInputValue] = useState("");
 
@@ -60,7 +60,7 @@ const WildSearchFilter = () => {
           onChange={onChangeAccession}
           onBlur={handleBlur}
           className={styles.accessionSearchBox}
-          placeholder="Wild Search"
+          placeholder="Text Search"
         />
       </div>
     </>

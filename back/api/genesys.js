@@ -79,7 +79,7 @@ async function fetchAllAccessionNumbers(finalbody, header) {
     const firstResponse = await axios.post(
       `${baseUrl}?p=0&l=${limit}&select=accessionNumber`,
       finalbody,
-      header
+      header,
     );
     const totalPages = firstResponse.data.totalPages || 1;
 
@@ -92,11 +92,11 @@ async function fetchAllAccessionNumbers(finalbody, header) {
       const response = await axios.post(
         `${baseUrl}?p=${page}&l=${limit}&select=accessionNumber`,
         finalbody,
-        header
+        header,
       );
       const content = response.data.content || [];
       allAccessionNumbers.push(
-        ...content.map((entry) => entry.accessionNumber)
+        ...content.map((entry) => entry.accessionNumber),
       );
     }
 
@@ -278,11 +278,11 @@ router.post("/accession/query", async (req, res) => {
     if (req.query.f) queryParams.push(`f=${req.query.f}`);
     if (req.query.select)
       queryParams.push(
-        `select=accessionNumber, countryOfOrigin.codeNum, ${req.query.select}`
+        `select=accessionNumber, countryOfOrigin.codeNum, ${req.query.select}`,
       );
     else {
       queryParams.push(
-        "select=instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases,donorName, donorCode, sampStat, remarks.remark, countryOfOrigin.codeNum, region, subRegion, taxonomy.genus, taxonomy.species"
+        "select=instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases,donorName, donorCode, sampStat, remarks.remark, countryOfOrigin.codeNum, region, subRegion, taxonomy.genus, taxonomy.species",
       );
     }
 
@@ -343,7 +343,7 @@ router.post("/accession/query", async (req, res) => {
         ...new Set(
           data.content
             .map((r) => r.accessionNumber)
-            .filter((v) => typeof v === "string" && v.trim().length)
+            .filter((v) => typeof v === "string" && v.trim().length),
         ),
       ];
       if (accessions.length) {
@@ -372,7 +372,7 @@ router.post("/accession/query", async (req, res) => {
 
         // lookup region mapping
         const mapping = country2Region.find(
-          (c) => c["country-code"] == row["countryOfOrigin.codeNum"]
+          (c) => c["country-code"] == row["countryOfOrigin.codeNum"],
         );
 
         if (wantsRegion && mapping) {
@@ -411,7 +411,7 @@ router.post("/passportQuery", async (req, res) => {
     };
     const allAccessionNumbers = await fetchAllAccessionNumbers(
       finalbody,
-      header
+      header,
     );
 
     const samplesObj = await axios
@@ -419,7 +419,7 @@ router.post("/passportQuery", async (req, res) => {
         `${config.genolinkServer}/api/internalApi/mapAccessionToGenotypeId`,
         {
           Accessions: allAccessionNumbers,
-        }
+        },
       )
       .then((response) => response.data);
 
@@ -427,6 +427,136 @@ router.post("/passportQuery", async (req, res) => {
   } catch (error) {
     logger.error(`API Error in /passportQuery: ${error}`);
     res.status(500).send("API request failed: " + error);
+  }
+});
+//////////////////////////////////////////////////////////////////////////
+router.post("/overview", async (req, res) => {
+  const limit = req.query.l === undefined ? 100000 : Number(req.query.l);
+  const body = req.body;
+  let url = `${config.genesysServer}/api/v2/acn/overview?limit=${limit}`;
+  const sendRequestWithRetry = async () => {
+    try {
+      const token = await getCachedToken();
+
+      const header = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Accept: "application/json, text/plain, */*",
+          Origin: config.genolinkServer,
+        },
+      };
+
+      return await axios.post(url, body, header);
+    } catch (error) {
+      if (error.response && error.response.status === 401) {
+        cachedToken = await getToken();
+        const header = {
+          headers: {
+            Authorization: `Bearer ${cachedToken}`,
+            "Content-Type": "application/json",
+            Accept: "application/json, text/plain, */*",
+            Origin: config.genolinkServer,
+          },
+        };
+        return await axios.post(url, body, header);
+      }
+      throw error;
+    }
+  };
+
+  try {
+    const response = await sendRequestWithRetry();
+    res.send(response.data);
+  } catch (error) {
+    logger.error(`API Error in /overview: ${error}`);
+    res.status(500).send("API request failed: " + error.message);
+  }
+});
+///////////////////////////////////////////////////////////////////
+router.post("/wiews/filter", async (req, res) => {
+  const body = req.body;
+  let url = `${config.genesysServer}/api/v2/wiews/filter`;
+  const sendRequestWithRetry = async () => {
+    try {
+      const token = await getCachedToken();
+
+      const header = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Accept: "application/json, text/plain, */*",
+          Origin: config.genolinkServer,
+        },
+      };
+
+      return await axios.post(url, body, header);
+    } catch (error) {
+      if (error.response && error.response.status === 401) {
+        cachedToken = await getToken();
+        const header = {
+          headers: {
+            Authorization: `Bearer ${cachedToken}`,
+            "Content-Type": "application/json",
+            Accept: "application/json, text/plain, */*",
+            Origin: config.genolinkServer,
+          },
+        };
+        return await axios.post(url, body, header);
+      }
+      throw error;
+    }
+  };
+
+  try {
+    const response = await sendRequestWithRetry();
+    res.send(response.data);
+  } catch (error) {
+    logger.error(`API Error in /wiews/filter: ${error}`);
+    res.status(500).send("API request failed: " + error.message);
+  }
+});
+///////////////////////////////////////////////////////////
+router.post("/wiews/decode", async (req, res) => {
+  const body = req.body;
+  let url = `${config.genesysServer}/api/v1/vocabulary/wiews/decode`;
+  const sendRequestWithRetry = async () => {
+    try {
+      const token = await getCachedToken();
+
+      const header = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Accept: "application/json, text/plain, */*",
+          Origin: config.genolinkServer,
+        },
+      };
+
+      return await axios.post(url, body, header);
+    } catch (error) {
+      if (error.response && error.response.status === 401) {
+        cachedToken = await getToken();
+        const header = {
+          headers: {
+            Authorization: `Bearer ${cachedToken}`,
+            "Content-Type": "application/json",
+            Accept: "application/json, text/plain, */*",
+            Origin: config.genolinkServer,
+          },
+        };
+        return await axios.post(url, body, header);
+      }
+      throw error;
+    }
+  };
+
+  try {
+    const response = await sendRequestWithRetry();
+    res.send(response.data);
+  } catch (error) {
+    logger.error(`API Error in /wiews/filter: ${error}`);
+    res.status(500).send("API request failed: " + error.message);
   }
 });
 

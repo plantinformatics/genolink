@@ -12,7 +12,9 @@
   font-weight: 500;
   border-radius: 0.375rem;
   cursor: pointer;
-  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+  transition:
+    background-color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out;
 }
 
 .btnInfo:hover {
@@ -35,7 +37,9 @@
   margin: 15px 0 5px 0;
   border-radius: 0.375rem;
   cursor: pointer;
-  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+  transition:
+    background-color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out;
 }
 
 .btnDownload:hover {
@@ -127,16 +131,14 @@
 .passportContentRow {
   display: flex;
   flex-direction: row;
-  align-items: stretch;
+  align-items: flex-start;
   height: 100vh;
 }
 
 .genesysFilterContainer {
-  flex: 0 0 340px;
-  max-width: 340px;
-  min-width: 320px;
   border-right: 3px solid gray;
-  padding: 10px;
+  margin-top: 10px;
+  padding: 0 10px 40px 10px;
   overflow-y: auto;
   height: 100%;
   background-color: #eff2f3;
@@ -153,15 +155,27 @@
   margin-bottom: 10px;
 }
 
+.stickyTitles {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #eff2f3;
+}
+
 .filterModeSelect {
-  margin-left: 10px;
-  width: 161px;
+  margin-left: 15px;
+  width: 180px;
+}
+
+.filterModeContainer {
+  display: flex;
+  margin: 20px 0 40px 0;
 }
 
 .activeFiltersList {
   list-style-type: none;
   padding: 0;
-  margin: 0;
+  margin-bottom: 20px;
 }
 
 .activeFilterItem {
@@ -219,11 +233,13 @@
   cursor: pointer;
   text-align: center;
   text-decoration: none;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .buttonSecondary:hover {
-  background-color: #5c636a;
+  background-color: #5c63;
   border-color: #5c636a;
 }
 
@@ -251,7 +267,9 @@
   cursor: pointer;
   text-align: center;
   text-decoration: none;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .buttonPrimary:hover {
@@ -274,7 +292,7 @@
 .searchButton {
   background-color: #0056b3;
   padding: 8px 16px;
-  margin-left: 10px;
+  margin-right: 5px;
 }
 
 .drawerContent {
@@ -288,7 +306,7 @@
 
 .passportFilterDrawers {
   display: inline-block;
-  width: 280px;
+  width: 350px;
   text-align: left;
   border: 2px solid #ebba35;
   background-color: beige;
@@ -334,15 +352,6 @@
   min-height: 0;
 }
 
-.filterBar {
-  display: flex;
-  align-items: center;
-  margin: 10px;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-}
-
 .searchResultsContainer {
   flex: 1 1 auto;
 }
@@ -382,7 +391,9 @@
   text-align: center;
   text-decoration: none;
   cursor: pointer;
-  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+  transition:
+    background-color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out;
 }
 
 .buttonDanger:hover {
