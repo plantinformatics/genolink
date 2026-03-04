@@ -179,3 +179,8 @@ export const setSubsets = (subsets) => ({
   type: "SET_SUBSETS",
   payload: subsets,
 });
+
+export const setMetadataSelectedColumns = (selectedColumnIds) => ({
+  type: "SET_METADATA_SELECTED_COLUMNS",
+  payload: selectedColumnIds,
+});

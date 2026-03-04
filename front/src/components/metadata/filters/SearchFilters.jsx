@@ -47,6 +47,7 @@ import {
   DEFAULT_INSTITUTE_CODE,
   GENOTYPE_FILTER_STATUS,
 } from "../../../config/apiConfig";
+import MetadataFieldsSettings from "../MetadataFieldsSettings";
 
 import { germplasmStorageMapping, sampStatMapping } from "./MultiSelectFilter";
 
@@ -123,6 +124,9 @@ const SearchFilters = ({ tokenReady }) => {
   );
   const curationTypeList = useSelector(
     (state) => state.passport.curationTypeList,
+  );
+  const selectedColumnIds = useSelector(
+    (s) => s.passport.metadataSelectedColumns,
   );
   const dispatch = useDispatch();
   const wheatImage = "Wheat.PNG";
@@ -216,6 +220,7 @@ const SearchFilters = ({ tokenReady }) => {
               " ",
               false,
               accessionNums,
+              selectedColumnIds,
             ),
           ),
         ]);
@@ -504,7 +509,11 @@ const SearchFilters = ({ tokenReady }) => {
       }
     });
     try {
-      const filterCode = await genesysApi.applyFilter(body, dispatch);
+      const filterCode = await genesysApi.applyFilter(
+        body,
+        dispatch,
+        selectedColumnIds,
+      );
       setFilterCode(filterCode);
       setIsLoading(false);
       const newFilters = [];
@@ -669,7 +678,7 @@ const SearchFilters = ({ tokenReady }) => {
           <h2 className={styles.genolinkHeader}>Genolink</h2>
         </div>
         <div className={styles.poweredRow}>
-          <div className={styles.leftSpacer}></div>
+          <MetadataFieldsSettings />
           <p className={styles.dataSourceNote}>
             Powered by{" "}
             <a
