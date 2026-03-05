@@ -138,6 +138,12 @@
   overflow-y: auto;
   height: 100%;
   background-color: #eff2f3;
+
+  flex: 0 0 380px;
+  width: 380px;
+  min-width: 380px;
+  max-width: 380px;
+  overflow-x: hidden;
 }
 
 .fileInput {
@@ -196,6 +202,9 @@
   color: #555;
   padding-left: 10px;
   line-height: 1.6;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .removeFilterButton {
@@ -215,6 +224,7 @@
 
 .activeFilterItem:hover {
   background-color: #e9ecef;
+  min-width: 0;
 }
 
 .buttonSecondary {
@@ -327,7 +337,8 @@
 }
 
 .genesysResultContainer {
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
   background-size: cover;
   background-position: center;
   padding: 10px;
