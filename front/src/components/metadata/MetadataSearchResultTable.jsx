@@ -291,7 +291,11 @@ const MetadataSearchResultTable = ({ filterCode, filterBody }) => {
         }}
       >
         <table
-          style={{ width: "100%", borderCollapse: "collapse" }}
+          style={{
+            width: "100%",
+            borderCollapse: "collapse",
+            tableLayout: "fixed",
+          }}
           className="table table-bordered table-hover"
         >
           <thead
@@ -303,14 +307,16 @@ const MetadataSearchResultTable = ({ filterCode, filterBody }) => {
             }}
           >
             <tr>
-              <th>
+              <th style={{ width: "42px", minWidth: "42px", maxWidth: "42px" }}>
                 <input
                   type="checkbox"
                   checked={selectAll}
                   onChange={handleSelectAllChange}
                 />
               </th>
-              <th>#</th>
+              <th style={{ width: "60px", minWidth: "60px", maxWidth: "60px" }}>
+                #
+              </th>
               {visibleColumnIds.map((id) => {
                 const col = METADATA_COLUMNS.find((c) => c.id === id);
                 return (
