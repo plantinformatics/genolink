@@ -341,11 +341,41 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
           className={`table table-bordered table-hover ${styles.metadataTable}`}
         >
           <colgroup>
-            <col style={{ width: `${getColumnWidth("__checkbox__")}px` }} />
-            <col style={{ width: `${getColumnWidth("__rowNumber__")}px` }} />
-            {visibleColumnIds.map((id) => (
-              <col key={id} style={{ width: `${getColumnWidth(id)}px` }} />
-            ))}
+            <col
+              style={{
+                width: `${getColumnWidth("__checkbox__")}px`,
+                minWidth: `${getColumnWidth("__checkbox__")}px`,
+                maxWidth: `${getColumnWidth("__checkbox__")}px`,
+              }}
+            />
+            <col
+              style={{
+                width: `${getColumnWidth("__rowNumber__")}px`,
+                minWidth: `${getColumnWidth("__rowNumber__")}px`,
+                maxWidth: `${getColumnWidth("__rowNumber__")}px`,
+              }}
+            />
+
+            {visibleColumnIds.map((id, index) => {
+              const isLast = index === visibleColumnIds.length - 1;
+
+              return (
+                <col
+                  key={id}
+                  style={
+                    isLast
+                      ? {
+                          width: "auto",
+                        }
+                      : {
+                          width: `${getColumnWidth(id)}px`,
+                          minWidth: `${getColumnWidth(id)}px`,
+                          maxWidth: `${getColumnWidth(id)}px`,
+                        }
+                  }
+                />
+              );
+            })}
           </colgroup>
           <thead className={styles.tableHead}>
             <tr>
