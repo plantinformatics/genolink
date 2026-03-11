@@ -4,6 +4,7 @@ import {
   useMemo,
   useCallback,
   useTransition,
+  useRef,
 } from "react";
 
 import "../../tableStyles.css";
@@ -19,6 +20,7 @@ import country2Region from "shared-data/Country2Region.json";
 import { batch } from "react-redux";
 import ExportFieldsModal from "./ExportFieldsModal";
 import { METADATA_COLUMNS, sanitizeSelectedColumns } from "./MetadataColumns";
+import styles from "./MetadataSearchResultTable.module.css";
 
 const sampStatMapping = {
   100: "Wild",
@@ -84,6 +86,8 @@ const MetadataSearchResultTable = ({ filterCode, filterBody }) => {
 
   const [genotypeIdMapping, setGenotypeIdMapping] = useState([]);
   const [isPending, startTransition] = useTransition();
+  const [columnWidths, setColumnWidths] = useState({});
+  const resizeStateRef = useRef(null);
   const dispatch = useDispatch();
   const checkedAccessions = useSelector(
     (state) => state.passport.checkedAccessions,
@@ -144,7 +148,6 @@ const MetadataSearchResultTable = ({ filterCode, filterBody }) => {
         console.error("Failed to fetch figs by accessions:", error);
       }
     };
-
     const fetchGenotypeIds = async () => {
       try {
         const pageSize = 500;
@@ -178,6 +181,66 @@ const MetadataSearchResultTable = ({ filterCode, filterBody }) => {
     fetchFigs();
     fetchGenotypeIds();
   }, [searchResults]);
+
+  const getColumnWidth = useCallback(
+    (id) => {
+      if (id === "__checkbox__") return 42;
+      if (id === "__rowNumber__") return 60;
+      return columnWidths[id] || 180;
+    },
+    [columnWidths],
+  );
+
+  const handleMouseMove = useCallback((e) => {
+    const state = resizeStateRef.current;
+    if (!state) return;
+
+    const delta = e.clientX - state.startX;
+    const nextWidth = Math.max(state.minWidth, state.startWidth + delta);
+
+    setColumnWidths((prev) => ({
+      ...prev,
+      [state.columnId]: nextWidth,
+    }));
+  }, []);
+
+  const stopResize = useCallback(() => {
+    resizeStateRef.current = null;
+    document.body.style.cursor = "";
+    document.body.style.userSelect = "";
+    window.removeEventListener("mousemove", handleMouseMove);
+    window.removeEventListener("mouseup", stopResize);
+  }, [handleMouseMove]);
+
+  const startResize = useCallback(
+    (e, columnId) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      resizeStateRef.current = {
+        columnId,
+        startX: e.clientX,
+        startWidth: getColumnWidth(columnId),
+        minWidth: 80,
+      };
+
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none";
+
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", stopResize);
+    },
+    [getColumnWidth, handleMouseMove, stopResize],
+  );
+
+  useEffect(() => {
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", stopResize);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+  }, [handleMouseMove, stopResize]);
 
   const openModal = () => {
     setIsModalVisible(true);
@@ -284,44 +347,45 @@ const MetadataSearchResultTable = ({ filterCode, filterBody }) => {
 
   return (
     <>
-      <div
-        style={{
-          maxHeight: "70vh",
-          overflowY: "auto",
-        }}
-      >
+      <div className={styles.tableWrapper}>
         <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            tableLayout: "fixed",
-          }}
-          className="table table-bordered table-hover"
+          className={`table table-bordered table-hover ${styles.metadataTable}`}
         >
-          <thead
-            style={{
-              backgroundColor: "lightblue",
-              position: "sticky",
-              top: "0",
-              zIndex: 2,
-            }}
-          >
+          <colgroup>
+            <col style={{ width: `${getColumnWidth("__checkbox__")}px` }} />
+            <col style={{ width: `${getColumnWidth("__rowNumber__")}px` }} />
+            {visibleColumnIds.map((id) => (
+              <col key={id} style={{ width: `${getColumnWidth(id)}px` }} />
+            ))}
+          </colgroup>
+          <thead className={styles.tableHead}>
             <tr>
-              <th style={{ width: "42px", minWidth: "42px", maxWidth: "42px" }}>
+              <th className={styles.fixedCheckboxHeader}>
                 <input
                   type="checkbox"
                   checked={selectAll}
                   onChange={handleSelectAllChange}
                 />
               </th>
-              <th style={{ width: "60px", minWidth: "60px", maxWidth: "60px" }}>
-                #
-              </th>
+
+              <th className={styles.fixedRowNumberHeader}>#</th>
+
               {visibleColumnIds.map((id) => {
                 const col = METADATA_COLUMNS.find((c) => c.id === id);
+
                 return (
-                  <th key={id} scope="col">
+                  <th key={id} scope="col" className={styles.resizableHeader}>
+                    <span className={styles.headerLabel}>
                     {col?.label || id}
+                    </span>
+
+                    <div
+                      role="separator"
+                      aria-orientation="vertical"
+                      onMouseDown={(e) => startResize(e, id)}
+                      className={styles.resizeHandle}
+                      title="Drag to resize"
+                    />
                   </th>
                 );
               })}

@@ -24,6 +24,7 @@ const ResultRow = React.memo(function ResultRow({
   const cellStyle = {
     overflow: isExpanded ? "visible" : "hidden",
     whiteSpace: isExpanded ? "normal" : "nowrap",
+    textOverflow: isExpanded ? "clip" : "ellipsis",
   };
 
   const ctx = {
