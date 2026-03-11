@@ -41,6 +41,7 @@ const initialState = {
   activeFilters: [],
   wildSearchValue: "",
   subsets: [],
+  metadataSelectedColumns: null,
 };
 
 const rootReducer = (state = initialState, action) => {
@@ -257,6 +258,11 @@ const rootReducer = (state = initialState, action) => {
       return {
         ...state,
         subsets: action.payload,
+      };
+    case "SET_METADATA_SELECTED_COLUMNS":
+      return {
+        ...state,
+        metadataSelectedColumns: action.payload,
       };
     default:
       return state;

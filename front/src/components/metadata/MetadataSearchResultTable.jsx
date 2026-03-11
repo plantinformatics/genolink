@@ -19,6 +19,7 @@ import { genolinkInternalApi } from "../../pages/Home";
 import country2Region from "../../../shared-data/Country2Region.json";
 import { batch } from "react-redux";
 import ExportFieldsModal from "./ExportFieldsModal";
+import { METADATA_COLUMNS, sanitizeSelectedColumns } from "./MetadataColumns";
 
 const sampStatMapping = {
   100: "Wild",
@@ -70,6 +71,11 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
   const passportCurrentPage = useSelector(
     (state) => state.passport.passportCurrentPage,
   );
+
+  const selectedColumnIds = useSelector(
+    (s) => s.passport.metadataSelectedColumns,
+  );
+
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isPaginating, setIsPaginating] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -121,6 +127,11 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
     }
     return m;
   }, []);
+
+  const visibleColumnIds = useMemo(() => {
+    const ids = sanitizeSelectedColumns(selectedColumnIds);
+    return ids;
+  }, [selectedColumnIds]);
 
   const genotypedSamples = genesysApi.genotypedSamples || [];
 
@@ -225,6 +236,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
         dispatch,
         searchResults,
         hasGenotype,
+        selectedColumnIds: visibleColumnIds,
       });
       setRemainingPages((prev) => Math.max(prev - 1, 0));
     } catch (error) {
@@ -262,7 +274,11 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
     <>
       <div style={{ maxHeight: "70vh", overflowY: "auto" }}>
         <table
-          style={{ width: "100%", borderCollapse: "collapse" }}
+          style={{
+            width: "100%",
+            borderCollapse: "collapse",
+            tableLayout: "fixed",
+          }}
           className="table table-bordered table-hover"
         >
           <thead
@@ -274,38 +290,24 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
             }}
           >
             <tr>
-              <th>
+              <th style={{ width: "42px", minWidth: "42px", maxWidth: "42px" }}>
                 <input
                   type="checkbox"
                   checked={selectAll}
                   onChange={handleSelectAllChange}
                 />
               </th>
-              <th>#</th>
-              <th scope="col">Institute Code</th>
-              <th scope="col">Holding Institute</th>
-              <th scope="col">Accession Number</th>
-              <th scope="col">Accession Name</th>
-              <th scope="col">Aliases</th>
-              <th scope="col">Remarks</th>
-              <th scope="col">Taxonomy</th>
-              <th scope="col">Crop Name</th>
-              <th scope="col">Genus</th>
-              <th scope="col">Species</th>
-              <th scope="col">Type of germplasm storage</th>
-              <th scope="col">Biological status of accession</th>
-              <th scope="col">Donor Institute</th>
-              <th scope="col">Provenance of Material</th>
-              <th scope="col">Region</th>
-              <th scope="col">Sub-Region</th>
-              <th scope="col">Acquisition Date</th>
-              <th scope="col">DOI</th>
-              <th scope="col">Available for Distribution</th>
-              <th scope="col">Curation Type</th>
-              <th scope="col">Last Updated</th>
-              <th scope="col">Genotype Status</th>
-              <th scope="col">GenotypeID</th>
-              <th scope="col">FIGS set</th>
+              <th style={{ width: "60px", minWidth: "60px", maxWidth: "60px" }}>
+                #
+              </th>
+              {visibleColumnIds.map((id) => {
+                const col = METADATA_COLUMNS.find((c) => c.id === id);
+                return (
+                  <th key={id} scope="col">
+                    {col?.label || id}
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody>
@@ -332,6 +334,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
                   status={status}
                   genotypeID={genotypeID}
                   figsForAcc={figMapping[acc]}
+                  visibleColumnIds={visibleColumnIds}
                   formatDate={formatDate}
                   getSampleStatus={getSampleStatus}
                   countryByCode={countryByCode}

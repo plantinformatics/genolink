@@ -7,6 +7,7 @@ import { FaCircleXmark } from "react-icons/fa6";
 import { AiOutlineQuestionCircle } from "react-icons/ai";
 import styles from "./SearchFilters.module.css";
 import store from "../../../redux/store";
+import MetadataFieldsSettings from "../MetadataFieldsSettings";
 import { germplasmStorageMapping, sampStatMapping } from "./MultiSelectFilter";
 
 import {
@@ -120,6 +121,11 @@ const SearchFilters = ({ tokenReady }) => {
   const curationTypeList = useSelector(
     (state) => state.passport.curationTypeList,
   );
+
+  const selectedColumnIds = useSelector(
+    (s) => s.passport.metadataSelectedColumns,
+  );
+
   const dispatch = useDispatch();
 
   const wheatImage = "Wheat.PNG";
@@ -211,6 +217,7 @@ const SearchFilters = ({ tokenReady }) => {
               " ",
               false,
               accessionNums,
+              selectedColumnIds,
             ),
           ),
           withRetryOn401(() =>
@@ -516,6 +523,7 @@ const SearchFilters = ({ tokenReady }) => {
         body,
         dispatch,
         hasGenotype,
+        selectedColumnIds,
       );
 
       setFilterCode(filterCode);
@@ -685,7 +693,7 @@ const SearchFilters = ({ tokenReady }) => {
         </div>
 
         <div className={styles.poweredRow}>
-          <div className={styles.leftSpacer}></div>
+          <MetadataFieldsSettings />
           <p className={styles.dataSourceNote}>
             Powered by{" "}
             <a

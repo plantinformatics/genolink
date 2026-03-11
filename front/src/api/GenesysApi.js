@@ -23,6 +23,7 @@ import {
   setPassportCurrentPage,
   setResetTrigger,
 } from "../redux/passport/passportActions";
+import { buildGenesysSelect } from "../components/metadata/MetadataColumns";
 import { setLoadingGenotypedAccessions } from "../redux/genotype/genotypeActions";
 import { germplasmStorageMapping } from "../components/metadata/filters/MultiSelectFilter";
 
@@ -240,6 +241,7 @@ class GenesysApi extends BaseApi {
     userInput = " ",
     isReset = false,
     accessionNumbers = [],
+    selectedColumnIds = null,
   ) {
     try {
       const urlParams = new URLSearchParams(window.location.search);
@@ -275,9 +277,8 @@ class GenesysApi extends BaseApi {
       }
 
       const pageSize = 500;
-      const select =
-        "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases,donorName, donorCode, sampStat, remarks.remark, countryOfOrigin.codeNum, taxonomy.genus, taxonomy.species, storage, available, curationType";
-      const endpoint = `/api/v1/acn/query?p=0&l=${pageSize}&select=${select}`;
+      const select = buildGenesysSelect(selectedColumnIds);
+      const endpoint = `/api/v1/acn/query?p=0&l=${pageSize}&select=${encodeURIComponent(select)}`;
       const searchData = await this.post(endpoint, body);
 
       dispatch(setSearchResults(searchData.content));
@@ -290,13 +291,16 @@ class GenesysApi extends BaseApi {
     }
   }
 
-  async applyFilter(filterData, dispatch, hasGenotype) {
+  async applyFilter(
+    filterData,
+    dispatch,
+    hasGenotype,
+    selectedColumnIds = null,
+  ) {
     try {
-      // const pageSize = hasGenotype ? 10000 : 500;
       const pageSize = 500;
-      const select =
-        "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases,donorName, donorCode, sampStat, remarks.remark, countryOfOrigin.codeNum, taxonomy.genus, taxonomy.species, storage, available, curationType";
-      const endpointQuery = `/api/v1/acn/query?p=0&l=${pageSize}&select=${select}`;
+      const select = buildGenesysSelect(selectedColumnIds);
+      const endpointQuery = `/api/v1/acn/query?p=0&l=${pageSize}&select=${encodeURIComponent(select)}`;
       const limit = 100;
       const endpointOverview = `/api/v1/acn/overview?limit=${limit}`;
       if (hasGenotype) {
@@ -571,17 +575,14 @@ class GenesysApi extends BaseApi {
     dispatch,
     searchResults,
     hasGenotype,
+    selectedColumnIds = null,
   }) {
     try {
-      const select =
-        "instituteCode,accessionNumber,institute.fullName,taxonomy.taxonName,cropName,countryOfOrigin.name,lastModifiedDate,acquisitionDate,doi,institute.id,accessionName,institute.owner.name,genus,taxonomy.grinTaxonomySpecies.speciesName,taxonomy.grinTaxonomySpecies.name,crop.name,taxonomy.grinTaxonomySpecies.id,taxonomy.grinTaxonomySpecies.name,uuid,institute.owner.lastModifiedDate,institute.owner.createdDate,aliases,donorName, donorCode, sampStat, remarks.remark, countryOfOrigin.codeNum, taxonomy.genus, taxonomy.species, storage, available, curationType";
+      const select = buildGenesysSelect(selectedColumnIds);
+
       const endpoint = filterCode
-        ? `/api/v1/acn/query?f=${filterCode}&p=${
-            passportCurrentPage + 1
-          }&l=${pageSize}&select=${select}`
-        : `/api/v1/acn/query?p=${
-            passportCurrentPage + 1
-          }&l=${pageSize}&select=${select}`;
+        ? `/api/v1/acn/query?f=${filterCode}&p=${passportCurrentPage + 1}&l=${pageSize}&select=${encodeURIComponent(select)}`
+        : `/api/v1/acn/query?p=${passportCurrentPage + 1}&l=${pageSize}&select=${encodeURIComponent(select)}`;
 
       const response = await this.post(endpoint, null);
 

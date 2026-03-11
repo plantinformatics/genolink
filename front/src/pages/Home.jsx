@@ -3,6 +3,9 @@ import GenesysApi from "../api/GenesysApi";
 import SearchFilters from "../components/metadata/filters/SearchFilters";
 import GenolinkGigwaApi from "../api/GenolinkGigwaApi";
 import GenolinkInternalApi from "../api/GenolinkInternalApi";
+import { useDispatch } from "react-redux";
+import { setMetadataSelectedColumns } from "../redux/passport/passportActions";
+import { loadSelectedColumnsFromStorage } from "../components/metadata/MetadataColumns";
 
 export const genesysApi = new GenesysApi();
 export const genolinkGigwaApi = new GenolinkGigwaApi();
@@ -15,7 +18,7 @@ const Home = () => {
   const [tokenReady, setTokenReady] = useState(false);
   const [token, setToken] = useState(null);
   const refreshTimer = useRef(null);
-
+  const dispatch = useDispatch();
   // schedule a refresh before expiry
   const scheduleRefresh = (expiresInSec) => {
     const waitMs = Math.max(
@@ -78,6 +81,11 @@ const Home = () => {
       if (refreshTimer.current) clearTimeout(refreshTimer.current);
     };
   }, []);
+
+  useEffect(() => {
+    const saved = loadSelectedColumnsFromStorage();
+    dispatch(setMetadataSelectedColumns(saved));
+  }, [dispatch]);
 
   return <SearchFilters key={token || "no-token"} tokenReady={tokenReady} />;
 };
