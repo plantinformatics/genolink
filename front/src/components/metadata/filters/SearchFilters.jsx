@@ -389,8 +389,12 @@ const SearchFilters = ({ tokenReady }) => {
   const handleChange = () => {
     setHasGenotype(!hasGenotype);
   };
-  const handleSearch = async (userInput = "") => {
+  const handleSearch = async (
+    userInput = "",
+    overrideSelectedColumns = null,
+  ) => {
     setSubsetsTick((t) => t + 1);
+    const columnsToUse = overrideSelectedColumns || selectedColumnIds;
     const state = store.getState();
     const {
       instituteCheckedBoxes,
@@ -523,7 +527,7 @@ const SearchFilters = ({ tokenReady }) => {
         body,
         dispatch,
         hasGenotype,
-        selectedColumnIds,
+        columnsToUse,
       );
 
       setFilterCode(filterCode);
@@ -693,7 +697,11 @@ const SearchFilters = ({ tokenReady }) => {
         </div>
 
         <div className={styles.poweredRow}>
-          <MetadataFieldsSettings />
+          <MetadataFieldsSettings
+            onSaveView={(finalSelectedColumns) =>
+              handleSearch(wildSearchValue, finalSelectedColumns)
+            }
+          />
           <p className={styles.dataSourceNote}>
             Powered by{" "}
             <a
