@@ -395,8 +395,12 @@ const SearchFilters = ({ tokenReady }) => {
     }
   };
 
-  const handleSearch = async (userInput = "") => {
+  const handleSearch = async (
+    userInput = "",
+    overrideSelectedColumns = null,
+  ) => {
     setSubsetsTick((t) => t + 1);
+    const columnsToUse = overrideSelectedColumns || selectedColumnIds;
     const state = store.getState();
     const {
       instituteCheckedBoxes,
@@ -512,7 +516,7 @@ const SearchFilters = ({ tokenReady }) => {
       const filterCode = await genesysApi.applyFilter(
         body,
         dispatch,
-        selectedColumnIds,
+        columnsToUse,
       );
       setFilterCode(filterCode);
       setIsLoading(false);
@@ -678,7 +682,11 @@ const SearchFilters = ({ tokenReady }) => {
           <h2 className={styles.genolinkHeader}>Genolink</h2>
         </div>
         <div className={styles.poweredRow}>
-          <MetadataFieldsSettings />
+          <MetadataFieldsSettings
+            onSaveView={(finalSelectedColumns) =>
+              handleSearch(wildSearchValue, finalSelectedColumns)
+            }
+          />
           <p className={styles.dataSourceNote}>
             Powered by{" "}
             <a

@@ -11,7 +11,7 @@ import {
 
 import { setMetadataSelectedColumns } from "../../redux/passport/passportActions";
 
-export default function MetadataFieldsSettings() {
+export default function MetadataFieldsSettings({ onSaveView }) {
   const dispatch = useDispatch();
 
   const selectedFromRedux = useSelector(
@@ -42,13 +42,17 @@ export default function MetadataFieldsSettings() {
   const selectAll = () => setDraft(DEFAULT_SELECTED_METADATA_COLUMNS);
   const clearAll = () => setDraft([]);
 
-  const onSave = () => {
+  const onSave = async () => {
     const final = draft.length > 0 ? draft : DEFAULT_SELECTED_METADATA_COLUMNS;
 
     dispatch(setMetadataSelectedColumns(final));
     saveSelectedColumnsToStorage(final);
 
-    window.location.reload();
+    setOpen(false);
+
+    if (onSaveView) {
+      await onSaveView(final);
+    }
   };
 
   return (
