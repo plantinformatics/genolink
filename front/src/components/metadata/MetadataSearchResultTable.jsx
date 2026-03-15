@@ -356,26 +356,16 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
               }}
             />
 
-            {visibleColumnIds.map((id, index) => {
-              const isLast = index === visibleColumnIds.length - 1;
-
-              return (
+            {visibleColumnIds.map((id) => (
                 <col
                   key={id}
-                  style={
-                    isLast
-                      ? {
-                          width: "auto",
-                        }
-                      : {
+                style={{
                           width: `${getColumnWidth(id)}px`,
                           minWidth: `${getColumnWidth(id)}px`,
                           maxWidth: `${getColumnWidth(id)}px`,
-                        }
-                  }
+                }}
                 />
-              );
-            })}
+            ))}
           </colgroup>
           <thead className={styles.tableHead}>
             <tr>
