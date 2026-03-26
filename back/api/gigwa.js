@@ -469,7 +469,6 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
       accessions.length,
     );
     const numberOfGenesysAccessions = accessions.length;
-
     const variantSetsResponse = await axios.get(
       `${selectedGigwaServer.replace(/\/$/, "")}/rest/brapi/v2/variantsets`,
       {
@@ -565,6 +564,176 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
       numberOfPresentAccessions,
       numberOfMappedAccessions,
       accessionPlusAccessionName,
+    });
+  } catch (error) {
+    if (error.response && error.response.data && error.response.data.message) {
+      logger.error(`Error in dataset search - ${error.response.data.message}`);
+      return res
+        .status(error.response.status)
+        .send({ message: error.response.data.message });
+    } else if (error.response && error.response.status === 403) {
+      logger.warn("Access denied during dataset search. Credentials issue.");
+      return res
+        .status(403)
+        .send({ message: "Access denied. Please check your credentials." });
+    } else {
+      logger.error(
+        `Unhandled API error in /searchSamplesInDatasets: ${error.message}`,
+      );
+      res.status(500).send("API request failed: " + error.message);
+    }
+  }
+});
+
+router.post("/searchCallsetDetails", async (req, res) => {
+  const {
+    selectedGigwaServer,
+    genotypeIdsPlusAccessionsInGenesys,
+    accessionDoiPairs,
+  } = req.body;
+
+  let token = "";
+
+  if (!selectedGigwaServer) {
+    return res
+      .status(400)
+      .json({ error: "Please specify Gigwa server in your payload" });
+  }
+
+  try {
+    if (req.body.gigwaToken) {
+      token = req.body.gigwaToken;
+    } else {
+      token = await axios.post(
+        `${selectedGigwaServer.replace(/\/$/, "")}/rest/gigwa/generateToken`,
+        req.body.username && req.body.password
+          ? { username: req.body.username, password: req.body.password }
+          : undefined,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        },
+      );
+    }
+
+    const genotypeIds = genotypeIdsPlusAccessionsInGenesys.map(
+      (item) => item.genotypeId,
+    );
+
+    const accessionByGenotypeId = new Map(
+      genotypeIdsPlusAccessionsInGenesys.map((item) => [
+        String(item.genotypeId),
+        item.accessionNumber,
+      ]),
+    );
+
+    const doiByAccession = new Map(
+      (accessionDoiPairs || []).map((item) => [item.accessionNumber, item.doi]),
+    );
+
+    const variantSetsResponse = await axios.get(
+      `${selectedGigwaServer.replace(/\/$/, "")}/rest/brapi/v2/variantsets`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
+
+    const variantSets = variantSetsResponse.data.result.data;
+    const programDbIds = [
+      ...new Set(variantSets.map((vs) => vs.variantSetDbId.split("§")[0])),
+    ];
+
+    const germplasmDbIds = [];
+    for (const programId of programDbIds) {
+      for (const genotypeId of genotypeIds) {
+        germplasmDbIds.push(`${programId}§${genotypeId}`);
+      }
+    }
+
+    const callsetSearchResponse = await axios.post(
+      `${selectedGigwaServer.replace(/\/$/, "")}/rest/brapi/v2/search/callsets`,
+      {
+        germplasmDbIds,
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
+
+    const callsetResponse = callsetSearchResponse.data.result.data;
+
+    const sampleDbIds = callsetResponse.map((callset) => callset.sampleDbId);
+
+    const sampleSearchResponse = await axios.post(
+      `${selectedGigwaServer.replace(/\/$/, "")}/rest/brapi/v2/search/samples`,
+      {
+        sampleDbIds,
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
+
+    const sampleResponse = sampleSearchResponse.data.result.data;
+
+    const germplasmBySampleDbId = new Map(
+      sampleResponse.map((s) => [s.sampleDbId, s.germplasmDbId]),
+    );
+
+    const studyDbIds = [
+      ...new Set(
+        callsetResponse.map((callset) =>
+          callset.variantSetDbIds[0].split("§").slice(0, 2).join("§"),
+        ),
+      ),
+    ];
+
+    const studySearchResponse = await axios.post(
+      `${selectedGigwaServer.replace(/\/$/, "")}/rest/brapi/v2/search/studies`,
+      {
+        studyDbIds,
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
+
+    const studyResponse = studySearchResponse.data.result.data;
+    const studyNamesByStudyDbId = new Map(
+      studyResponse.map((study) => [study.studyDbId, study.studyName]),
+    );
+
+    const combinedResult = callsetResponse.map((cs) => {
+      const germplasmDbId = germplasmBySampleDbId.get(cs.sampleDbId) ?? null;
+      const genotypeId = germplasmDbId?.split("§")[1] ?? null;
+
+      const accessionNumber =
+        genotypeId != null
+          ? (accessionByGenotypeId.get(String(genotypeId)) ?? null)
+          : null;
+
+      const doi =
+        accessionNumber != null
+          ? (doiByAccession.get(accessionNumber) ?? null)
+          : null;
+
+      return {
+        ...cs,
+        studyName:
+          studyNamesByStudyDbId.get(
+            cs.variantSetDbIds[0].split("§").slice(0, 2).join("§"),
+          ) ?? null,
+        germplasmDbId,
+        accessionNumber,
+        doi,
+        selectedGigwaServer,
+      };
+    });
+
+    res.send({
+      combinedResult,
     });
   } catch (error) {
     if (error.response && error.response.data && error.response.data.message) {

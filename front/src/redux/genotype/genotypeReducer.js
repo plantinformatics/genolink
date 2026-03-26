@@ -25,6 +25,7 @@ const initialState = {
   pageLengths: [],
   linkageGroups: [],
   isLoadingGenotypedAccessions: false,
+  sampleSourceData: [],
 };
 
 const genotypeReducer = (state = initialState, action) => {
@@ -84,6 +85,8 @@ const genotypeReducer = (state = initialState, action) => {
         ...state,
         isLoadingGenotypedAccessions: action.payload,
       };
+    case "SET_SAMPLE_SOURCE_DATA":
+      return { ...state, sampleSourceData: action.payload };
     case "RESET_GENOTYPE":
       return initialState;
     default:

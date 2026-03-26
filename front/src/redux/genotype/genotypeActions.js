@@ -131,3 +131,8 @@ export const setLoadingGenotypedAccessions = (isLoading) => ({
   type: "SET_LOADING_GENOTYPED_ACCESSIONS",
   payload: isLoading,
 });
+
+export const setSampleSourceData = (data) => ({
+  type: "SET_SAMPLE_SOURCE_DATA",
+  payload: data,
+});

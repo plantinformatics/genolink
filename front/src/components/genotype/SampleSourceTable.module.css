@@ -1,0 +1,82 @@
+.tableWrapper {
+  display: inline-block;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 70vh;
+  width: 100%;
+  position: relative;
+}
+
+.table {
+  width: 100%;
+  margin-bottom: 1rem;
+  color: #212529;
+  border-collapse: collapse;
+  min-width: max-content;
+}
+
+.table th,
+.table td {
+  padding: 0.75rem;
+  vertical-align: top;
+  border: 1px solid #dee2e6;
+}
+
+.table thead th {
+  font-family: Roboto, sans-serif;
+  position: sticky;
+  top: 0;
+  background-color: #add8e6;
+  z-index: 10;
+  white-space: nowrap;
+}
+
+.table tbody tr:nth-of-type(odd) {
+  background-color: rgba(0, 0, 0, 0.075);
+}
+
+.headerCell {
+  height: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bodyCell {
+  white-space: nowrap;
+}
+
+.tickCell {
+  white-space: nowrap;
+  text-align: center;
+}
+
+.tickLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background-color: #28a745;
+  color: white;
+  font-weight: bold;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
+}
+
+.tickLink:hover {
+  background-color: #218838;
+  transform: scale(1.1);
+}
+
+.tickLink:active {
+  transform: scale(0.95);
+}
+
+.tickLink:focus {
+  outline: 2px solid #80bdff;
+  outline-offset: 2px;
+}
