@@ -217,7 +217,7 @@ class GenesysApi extends BaseApi {
         };
       }
       const limit = 100;
-      const endpoint = `/api/v1/acn/overview?limit=${limit}`;
+      const endpoint = `/api/v2/acn/overview?limit=${limit}`;
       const searchData = await this.post(endpoint, body);
 
       const codes = this.extractSuggestions(searchData, "institute.code");
@@ -305,7 +305,7 @@ class GenesysApi extends BaseApi {
       const pageSize = 500;
 
       const select = buildGenesysSelect(selectedColumnIds);
-      const endpoint = `/api/v1/acn/query?p=0&l=${pageSize}&select=${encodeURIComponent(select)}`;
+      const endpoint = `/api/v2/acn/query?p=0&l=${pageSize}&select=${encodeURIComponent(select)}`;
       const searchData = await this.post(endpoint, body);
 
       dispatch(setSearchResults(searchData.content));
@@ -322,9 +322,9 @@ class GenesysApi extends BaseApi {
     try {
       const pageSize = 500;
       const select = buildGenesysSelect(selectedColumnIds);
-      const endpointQuery = `/api/v1/acn/query?p=0&l=${pageSize}&select=${encodeURIComponent(select)}`;
+      const endpointQuery = `/api/v2/acn/query?p=0&l=${pageSize}&select=${encodeURIComponent(select)}`;
       const limit = 100;
-      const endpointOverview = `/api/v1/acn/overview?limit=${limit}`;
+      const endpointOverview = `/api/v2/acn/overview?limit=${limit}`;
       const [queryData, filterDataResponse] = await Promise.all([
         this.post(endpointQuery, filterData),
         this.post(endpointOverview, filterData),
@@ -433,8 +433,8 @@ class GenesysApi extends BaseApi {
     try {
       const select = buildGenesysSelect(selectedColumnIds);
       const endpoint = filterCode
-        ? `/api/v1/acn/query?f=${filterCode}&p=${passportCurrentPage + 1}&l=${pageSize}&select=${encodeURIComponent(select)}`
-        : `/api/v1/acn/query?p=${passportCurrentPage + 1}&l=${pageSize}&select=${encodeURIComponent(select)}`;
+        ? `/api/v2/acn/query?f=${filterCode}&p=${passportCurrentPage + 1}&l=${pageSize}&select=${encodeURIComponent(select)}`
+        : `/api/v2/acn/query?p=${passportCurrentPage + 1}&l=${pageSize}&select=${encodeURIComponent(select)}`;
 
       const response = await this.post(endpoint, null);
       dispatch(setSearchResults([...searchResults, ...response.content]));
@@ -454,7 +454,7 @@ class GenesysApi extends BaseApi {
         .map((field) => selectedMappings[field].apiParam)
         .join(",");
 
-      const firstGenesysEndpoint = `/api/v1/acn/query?p=0&l=${pageSize}&select=${select}`;
+      const firstGenesysEndpoint = `/api/v2/acn/query?p=0&l=${pageSize}&select=${select}`;
       const firstGenesysResult = await this.post(
         firstGenesysEndpoint,
         filterData,
@@ -471,7 +471,7 @@ class GenesysApi extends BaseApi {
 
       const genesysRequests = [];
       for (let genesysPage = 1; genesysPage < totalPages; genesysPage++) {
-        const endpoint = `/api/v1/acn/query?f=${filterCode}&p=${genesysPage}&l=${pageSize}&select=${select}`;
+        const endpoint = `/api/v2/acn/query?f=${filterCode}&p=${genesysPage}&l=${pageSize}&select=${select}`;
         genesysRequests.push(async () => {
           const response = await this.post(endpoint, null);
           return response;

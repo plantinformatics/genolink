@@ -70,7 +70,7 @@ const transformInitialToFinal = (initialbody) => {
 };
 
 async function fetchAllAccessionNumbers(finalbody, header) {
-  const baseUrl = `${config.genesysServer}/api/v1/acn/query`;
+  const baseUrl = `${config.genesysServer}/api/v2/acn/query`;
   const limit = 10000;
   let allAccessionNumbers = [];
 
@@ -108,7 +108,7 @@ async function fetchAllAccessionNumbers(finalbody, header) {
 }
 
 router.get("/passportFilter/possibleValues", async (req, res) => {
-  let url = `${config.genesysServer}/api/v1/acn/filter`;
+  let url = `${config.genesysServer}/api/v2/acn/filter`;
 
   const sendRequestWithRetry = async () => {
     try {
@@ -185,7 +185,7 @@ router.get("/passportFilter/possibleValues", async (req, res) => {
 });
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 router.post("/accession/filters", async (req, res) => {
-  let url = `${config.genesysServer}/api/v1/acn/filter`;
+  let url = `${config.genesysServer}/api/v2/acn/filter`;
 
   const queryParams = [];
 
@@ -286,7 +286,7 @@ router.post("/accession/query", async (req, res) => {
       );
     }
 
-    let url = `${config.genesysServer}/api/v1/acn/query`;
+    let url = `${config.genesysServer}/api/v2/acn/query`;
 
     if (queryParams.length > 0) {
       url += `?${queryParams.join("&")}`;
@@ -519,7 +519,7 @@ router.post("/wiews/filter", async (req, res) => {
 ///////////////////////////////////////////////////////////
 router.post("/wiews/decode", async (req, res) => {
   const body = req.body;
-  let url = `${config.genesysServer}/api/v1/vocabulary/wiews/decode`;
+  let url = `${config.genesysServer}/api/v2/vocabulary/wiews/decode`;
   const sendRequestWithRetry = async () => {
     try {
       const token = await getCachedToken();
