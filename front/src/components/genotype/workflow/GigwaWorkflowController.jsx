@@ -128,9 +128,7 @@ const GigwaWorkflowController = () => {
 
   useEffect(() => {
     if (selectedGigwaServers.length > 0) {
-      const defaultAccessModes = selectedGigwaServers.map(() =>
-        REQUIRE_GIGWA_CREDENTIALS ? "private" : "public",
-      );
+      const defaultAccessModes = selectedGigwaServers.map(() => "public");
       const defaultUsernames = selectedGigwaServers.map(() => "");
       const defaultPasswords = selectedGigwaServers.map(() => "");
 
@@ -582,17 +580,6 @@ const GigwaWorkflowController = () => {
         }
 
         if (REQUIRE_GIGWA_CREDENTIALS) {
-          const missingCreds = servers.some((_, i) => {
-            const u = String(usernames[i] ?? "").trim();
-            const p = String(passwords[i] ?? "").trim();
-            return !u || !p;
-          });
-          if (missingCreds) {
-            alert("Please enter both username and password for all servers.");
-            setIsVerifyLoading(false);
-            return;
-          }
-        } else {
           const missingPrivCreds = servers.some((_, i) => {
             const isPrivate = accessMode[i] === "private";
             const u = String(usernames[i] ?? "").trim();
@@ -934,47 +921,7 @@ const GigwaWorkflowController = () => {
 
               {REQUIRE_GIGWA_CREDENTIALS ? (
                 <>
-                  <div className={styles.inputGroup}>
-                    <span className={styles.inputGroupAddon}>
-                      <FontAwesomeIcon icon={faUser} />
-                    </span>
-                    <input
-                      type="text"
-                      className={styles.formControl}
-                      placeholder="Username"
-                      value={usernames[index] || ""}
-                      onChange={(e) =>
-                        handleUsernameChange(index, e.target.value)
-                      }
-                    />
-                  </div>
-                  <div className={styles.inputGroup}>
-                    <span className={styles.inputGroupAddon}>
-                      <FontAwesomeIcon icon={faLock} />
-                    </span>
-                    <input
-                      type="password"
-                      className={styles.formControl}
-                      placeholder="Password"
-                      value={passwords[index] || ""}
-                      onChange={(e) =>
-                        handlePasswordChange(index, e.target.value)
-                      }
-                    />
-                  </div>
-                </>
-              ) : (
-                <>
                   <div className={styles.accessModeToggle}>
-                    <label>
-                      <input
-                        type="radio"
-                        value="private"
-                        checked={accessMode[index] === "private"}
-                        onChange={(e) => handleAccessModeChange(index, e)}
-                      />
-                      Private
-                    </label>
                     <label>
                       <input
                         type="radio"
@@ -983,6 +930,15 @@ const GigwaWorkflowController = () => {
                         onChange={(e) => handleAccessModeChange(index, e)}
                       />
                       Public
+                    </label>
+                    <label>
+                      <input
+                        type="radio"
+                        value="private"
+                        checked={accessMode[index] === "private"}
+                        onChange={(e) => handleAccessModeChange(index, e)}
+                      />
+                      Private
                     </label>
                   </div>
 
@@ -1019,7 +975,7 @@ const GigwaWorkflowController = () => {
                     </>
                   )}
                 </>
-              )}
+              ) : null}
             </div>
           ))}
         </div>
