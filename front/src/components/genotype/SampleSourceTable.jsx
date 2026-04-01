@@ -6,6 +6,7 @@ const SampleSourceTable = ({ sampleSourceData }) => {
   ];
 
   const rowsMap = {};
+  const studyMetaMap = {};
 
   sampleSourceData.forEach((item) => {
     const selectedGigwaServer = item.selectedGigwaServer || "";
@@ -24,12 +25,15 @@ const SampleSourceTable = ({ sampleSourceData }) => {
       };
     }
 
-    rowsMap[genotypeId].studies[studyName] = {
-      selectedGigwaServer,
-      programId,
-      genotypeId,
-      studyName,
-    };
+    rowsMap[genotypeId].studies[studyName] = true;
+
+    if (!studyMetaMap[studyName]) {
+      studyMetaMap[studyName] = {
+        selectedGigwaServer,
+        programId,
+        studyName,
+      };
+    }
   });
 
   const rows = Object.values(rowsMap);
@@ -42,11 +46,29 @@ const SampleSourceTable = ({ sampleSourceData }) => {
             <th className={styles.headerCell}>Accession</th>
             <th className={styles.headerCell}>DOI</th>
             <th className={styles.headerCell}>GenotypeId</th>
-            {studyNames.map((study) => (
-              <th key={study} title={study} className={styles.headerCell}>
-                {study}
-              </th>
-            ))}
+            {studyNames.map((study) => {
+              const studyMeta = studyMetaMap[study];
+
+              return (
+                <th key={study} title={study} className={styles.headerCell}>
+                  {studyMeta ? (
+                    <a
+                      href={`${studyMeta.selectedGigwaServer}/?module=${encodeURIComponent(
+                        studyMeta.programId,
+                      )}&project=${encodeURIComponent(studyMeta.studyName)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.headerLink}
+                      title={`Open ${studyMeta.studyName}`}
+                    >
+                      {study}
+                    </a>
+                  ) : (
+                    study
+                  )}
+                </th>
+              );
+            })}
           </tr>
         </thead>
 
@@ -56,31 +78,15 @@ const SampleSourceTable = ({ sampleSourceData }) => {
               <td className={styles.bodyCell}>{row.accession}</td>
               <td className={styles.bodyCell}>{row.doi}</td>
               <td className={styles.bodyCell}>{row.genotypeId}</td>
-              {studyNames.map((study) => {
-                const studyInfo = row.studies[study];
-
-                return (
-                  <td key={study} className={styles.tickCell}>
-                    {studyInfo ? (
-                      <a
-                        href={`${studyInfo.selectedGigwaServer}/?module=${encodeURIComponent(
-                          studyInfo.programId,
-                        )}&ind=${encodeURIComponent(
-                          studyInfo.genotypeId,
-                        )}&project=${encodeURIComponent(studyInfo.studyName)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={styles.tickLink}
-                        title={`Open ${studyInfo.studyName}`}
-                      >
-                        ✓
-                      </a>
-                    ) : (
-                      ""
-                    )}
-                  </td>
-                );
-              })}
+              {studyNames.map((study) => (
+                <td key={study} className={styles.tickCell}>
+                  {row.studies[study] ? (
+                    <span className={styles.tickBadge}>✓</span>
+                  ) : (
+                    ""
+                  )}
+                </td>
+              ))}
             </tr>
           ))}
         </tbody>

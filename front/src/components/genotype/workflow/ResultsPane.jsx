@@ -12,7 +12,6 @@ const ResultsPane = React.memo(() => {
     (state) => state.genotype.sampleSourceData,
   );
 
-  // Only show results when search has produced data
   const hasGigwaResults =
     selectedOption === "Gigwa" &&
     Array.isArray(genomData) &&
@@ -26,17 +25,25 @@ const ResultsPane = React.memo(() => {
     genomData.length > 0;
 
   const hasSampleSourceResults =
-    Array.isArray(sampleSourceData) && sampleSourceData.length > 0;
+    selectedOption === "Gigwa" &&
+    Array.isArray(sampleSourceData) &&
+    sampleSourceData.length > 0;
 
-  if (hasGigwaResults || hasSampleSourceResults) {
+  if (hasGigwaResults) {
     return (
       <div className={styles.resultsArea}>
         <div className={styles.tableScroll}>
-          {hasGigwaResults ? (
-            <GenotypeSearchResultsTable />
-          ) : (
-            <SampleSourceTable sampleSourceData={sampleSourceData} />
-          )}
+          <GenotypeSearchResultsTable />
+        </div>
+      </div>
+    );
+  }
+
+  if (hasSampleSourceResults) {
+    return (
+      <div className={styles.resultsArea}>
+        <div className={styles.tableScroll}>
+          <SampleSourceTable sampleSourceData={sampleSourceData} />
         </div>
       </div>
     );

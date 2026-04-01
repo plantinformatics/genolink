@@ -47,10 +47,11 @@
 
 .tickCell {
   white-space: nowrap;
-  text-align: center;
+  text-align: left;
+  padding-right: 15px;
 }
 
-.tickLink {
+.tickBadge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -61,22 +62,29 @@
   color: white;
   font-weight: bold;
   text-decoration: none;
-  cursor: pointer;
+  box-sizing: border-box;
   transition:
     background-color 0.2s ease,
     transform 0.1s ease;
 }
 
-.tickLink:hover {
-  background-color: #218838;
-  transform: scale(1.1);
+.headerLink {
+  color: #0056b3;
+  text-decoration: underline;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-block;
+  padding: 2px 4px;
+  border-radius: 4px;
 }
 
-.tickLink:active {
-  transform: scale(0.95);
+.headerLink:hover {
+  color: #003d80;
+  background-color: rgba(0, 123, 255, 0.08);
+  text-decoration: underline;
 }
 
-.tickLink:focus {
+.headerLink:focus {
   outline: 2px solid #80bdff;
   outline-offset: 2px;
 }

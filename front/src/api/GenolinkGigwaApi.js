@@ -17,43 +17,49 @@ class GenolinkGigwaApi extends BaseApi {
 
       const response = await this.post(
         `${BASE_PATH}/api/gigwa/generateGigwaToken`,
-        body
+        body,
       );
       this.token = response.token;
     } catch (error) {
       console.error(
         `Login failed for ${selectedGigwaServer}:`,
-        error?.response?.data || error.message
+        error?.response?.data || error.message,
       );
       throw error;
     }
   }
 
-  async searchSamplesInDatasets(
+  async searchSamplesInDatasets({
     selectedGigwaServer,
     accessions,
-    accessionNames,
-    onlyAccessions = false
-  ) {
+    accessionNames = {},
+    accessionDoiPairs = [],
+    onlyAccessions = false,
+  }) {
     try {
       if (!this.token)
         throw new Error("Token not available. Please authenticate first.");
+
       const info = await genesysApi.genotypeInfo(accessions);
+
       const genotypeIdsPlusAccessionsInGenesys = info.map((item) => ({
         genotypeId: item.genotypeId,
         accessionNumber: item.acceNumb,
       }));
+
       const body = {
         selectedGigwaServer,
         genotypeIdsPlusAccessionsInGenesys,
         gigwaToken: this.token,
-        accessions: accessions,
-        accessionNames: accessionNames,
-        onlyAccessions: onlyAccessions,
+        accessions,
+        accessionNames,
+        accessionDoiPairs,
+        onlyAccessions,
       };
+
       return await this.post(
         `${BASE_PATH}/api/gigwa/searchSamplesInDatasets`,
-        body
+        body,
       );
     } catch (error) {
       console.error("Error searching samples in datasets:", error);
@@ -68,7 +74,7 @@ class GenolinkGigwaApi extends BaseApi {
       body.gigwaToken = this.token;
       return await this.post(
         `${BASE_PATH}/api/gigwa/brapi/v2/search/variants`,
-        body
+        body,
       );
     } catch (error) {
       console.error("Error fetching variants:", error);
@@ -83,7 +89,7 @@ class GenolinkGigwaApi extends BaseApi {
       body.gigwaToken = this.token;
       return await this.post(
         `${BASE_PATH}/api/gigwa/brapi/v2/search/allelematrix`,
-        body
+        body,
       );
     } catch (error) {
       console.error("Error fetching alleles:", error);
@@ -100,17 +106,17 @@ class GenolinkGigwaApi extends BaseApi {
         `${BASE_PATH}/api/gigwa/exportData`,
         body,
         {},
-        "blob"
+        "blob",
       );
 
       const url = window.URL.createObjectURL(
-        new Blob([response], { type: "application/octet-stream" })
+        new Blob([response], { type: "application/octet-stream" }),
       );
       const link = document.createElement("a");
       link.href = url;
       link.setAttribute(
         "download",
-        `${body.selectedSamplesDetails[0]?.studyDbId.split("§")[0]}.zip`
+        `${body.selectedSamplesDetails[0]?.studyDbId.split("§")[0]}.zip`,
       );
       document.body.appendChild(link);
       link.click();
