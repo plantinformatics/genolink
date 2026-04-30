@@ -298,6 +298,8 @@ router.post("/accession/query", async (req, res) => {
       !req.query.select || req.query.select.includes("subRegion");
     const wantsGenotypeStatus =
       !!req.query.select && req.query.select.includes("genotypeStatus");
+    const wantsSampStat =
+      !req.query.select || req.query.select.includes("sampStat");
 
     const sendRequestWithRetry = async () => {
       try {
@@ -384,6 +386,15 @@ router.post("/accession/query", async (req, res) => {
         if (statusMap) {
           const s = statusMap.get(row.accessionNumber);
           if (typeof s !== "undefined") base.genotypeStatus = s;
+        }
+
+         if (wantsSampStat) {
+          const sampStatMapping = config.sampStatMapping || {};
+          const mappedSampStat = sampStatMapping[row.sampStat];
+
+          if (typeof mappedSampStat !== "undefined") {
+            base.sampStat = mappedSampStat;
+          }
         }
 
         return base;
