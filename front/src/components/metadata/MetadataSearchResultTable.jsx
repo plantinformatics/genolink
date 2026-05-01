@@ -17,7 +17,8 @@ import {
 } from "../../redux/passport/passportActions";
 import { genesysApi } from "../../pages/Home";
 import { genolinkInternalApi } from "../../pages/Home";
-import country2Region from "../../../shared-data/Country2Region.json";
+import country2Region from "shared-data/Country2Region.json";
+
 import { batch } from "react-redux";
 import ExportFieldsModal from "./ExportFieldsModal";
 import { METADATA_COLUMNS, sanitizeSelectedColumns } from "./MetadataColumns";
