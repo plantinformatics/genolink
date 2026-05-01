@@ -1,5 +1,6 @@
 import BaseApi from "./BaseApi";
 import { genolinkServer } from "../config/apiConfig";
+import { BASE_PATH } from "../config/basePath";
 
 class GenolinkGigwaApi extends BaseApi {
   constructor() {
@@ -14,7 +15,10 @@ class GenolinkGigwaApi extends BaseApi {
         body.password = password;
       }
 
-      const response = await this.post("/api/gigwa/generateGigwaToken", body);
+      const response = await this.post(
+        `${BASE_PATH}/api/gigwa/generateGigwaToken`,
+        body,
+      );
       this.token = response.token;
     } catch (error) {
       console.error(
@@ -41,7 +45,10 @@ class GenolinkGigwaApi extends BaseApi {
         accessionNames: accessionNames,
         onlyAccessions: onlyAccessions,
       };
-      return await this.post("/api/gigwa/searchSamplesInDatasets", body);
+      return await this.post(
+        `${BASE_PATH}/api/gigwa/searchSamplesInDatasets`,
+        body,
+      );
     } catch (error) {
       console.error("Error searching samples in datasets:", error);
       throw error;
@@ -53,7 +60,10 @@ class GenolinkGigwaApi extends BaseApi {
       if (!this.token)
         throw new Error("Token not available. Please authenticate first.");
       body.gigwaToken = this.token;
-      return await this.post("/api/gigwa/brapi/v2/search/variants", body);
+      return await this.post(
+        `${BASE_PATH}/api/gigwa/brapi/v2/search/variants`,
+        body,
+      );
     } catch (error) {
       console.error("Error fetching variants:", error);
       throw error;
@@ -65,7 +75,10 @@ class GenolinkGigwaApi extends BaseApi {
       if (!this.token)
         throw new Error("Token not available. Please authenticate first.");
       body.gigwaToken = this.token;
-      return await this.post("/api/gigwa/brapi/v2/search/allelematrix", body);
+      return await this.post(
+        `${BASE_PATH}/api/gigwa/brapi/v2/search/allelematrix`,
+        body,
+      );
     } catch (error) {
       console.error("Error fetching alleles:", error);
       throw error;
@@ -78,7 +91,7 @@ class GenolinkGigwaApi extends BaseApi {
         throw new Error("Token not available. Please authenticate first.");
       body.gigwaToken = this.token;
       const response = await this.post(
-        "/api/gigwa/exportData",
+        `${BASE_PATH}/api/gigwa/exportData`,
         body,
         {},
         "blob"
@@ -107,7 +120,7 @@ class GenolinkGigwaApi extends BaseApi {
       if (!this.token)
         throw new Error("Token not available. Please authenticate first.");
       const referenceSetDbIdsResponse = await this.get(
-        "/api/gigwa/brapi/v2/referencesets",
+        `${BASE_PATH}/api/gigwa/brapi/v2/referencesets`,
         {
           gigwaToken: this.token,
           selectedGigwaServer,
@@ -134,7 +147,7 @@ class GenolinkGigwaApi extends BaseApi {
       }
 
       const referencesResponse = await this.get(
-        "/api/gigwa/brapi/v2/references",
+        `${BASE_PATH}/api/gigwa/brapi/v2/references`,
         {
           gigwaToken: this.token,
           referenceSetDbId: selectedReferenceSetDbId,
