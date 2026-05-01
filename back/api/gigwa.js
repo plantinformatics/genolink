@@ -3,6 +3,8 @@ const router = express.Router();
 const axios = require("axios");
 const logger = require("../middlewares/logger");
 const config = require("../config/appConfig");
+const rawBase = process.env.BASE_PATH || "";
+const BASE_PATH = rawBase.replace(/\/+$/, "");
 
 // Get Gigwa Servers
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -443,7 +445,7 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
     }
     const samplesObj = await axios
       .post(
-        `${config.genolinkServer}/api/internalApi/mapAccessionToGenotypeId`,
+        `${config.genolinkServer}${BASE_PATH}/api/internalApi/mapAccessionToGenotypeId`,
         {
           Accessions: accessions,
         }
@@ -978,7 +980,7 @@ router.post("/samplesDatasetInfo", async (req, res) => {
     if (!samples && accessions.length > 0) {
       samples = await axios
         .post(
-          `${config.genolinkServer}/api/internalApi/mapAccessionToGenotypeId`,
+          `${config.genolinkServer}${BASE_PATH}/api/internalApi/mapAccessionToGenotypeId`,
           {
             Accessions: accessions,
           }
