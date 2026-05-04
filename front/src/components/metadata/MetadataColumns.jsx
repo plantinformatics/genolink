@@ -74,7 +74,11 @@ export const METADATA_COLUMNS = [
   },
   { id: "curationType", label: "Curation Type", apiParams: ["curationType"] },
   { id: "lastUpdated", label: "Last Updated", apiParams: ["lastModifiedDate"] },
-
+  {
+    id: "pdciScore",
+    label: "PDCI Score",
+    apiParams: ["pdci.score"],
+  },
   // computed / local-only (no Genesys select needed)
   { id: "genotypeStatus", label: "Genotype Status", apiParams: [] },
   { id: "genotypeId", label: "GenotypeID", apiParams: [] },
@@ -261,6 +265,8 @@ export function renderMetadataCell(colId, item, ctx) {
       //   return figs?.length > 0 ? figs.join(", ") : "N/A";
       return ctx.figsForAcc;
     }
+    case "pdciScore":
+      return item["pdci.score"] || "N/A";
 
     default:
       return "N/A";
