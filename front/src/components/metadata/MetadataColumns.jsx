@@ -259,8 +259,6 @@ export function renderMetadataCell(colId, item, ctx) {
       const figs = ctx.figMapping[item.accessionNumber];
       return figs?.length > 0 ? figs.join(", ") : "N/A";
     }
-    case "lastUpdated":
-      return item.lastModifiedDate || "N/A";
     case "pdciScore":
       return item["pdci.score"] || "N/A";
 
