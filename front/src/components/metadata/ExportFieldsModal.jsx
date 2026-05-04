@@ -53,6 +53,10 @@ const fieldsMapping = {
     apiParam: "countryOfOrigin.codeNum",
     tsvHeader: "Country Code",
   },
+  "PDCI Score": {
+    apiParam: "pdci.score",
+    tsvHeader: "PDCI Score",
+  },
 };
 
 const ExportFieldsModal = ({ isVisible, onClose, onExport }) => {
