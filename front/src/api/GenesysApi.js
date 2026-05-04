@@ -634,6 +634,10 @@ class GenesysApi extends BaseApi {
             return "";
           }
 
+          if (fieldPath === "pdci.score") {
+            return item["pdci.score"] || "";
+          }
+
           return item[fieldPath] || "";
         })
         .join("\t");
