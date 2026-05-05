@@ -384,13 +384,49 @@ const GigwaWorkflowController = () => {
         const variantPageSize = 20;
         const callsetPageSize = 500;
 
-        if (posStart && posEnd) {
+        if (posStart && posEnd && selectedGroups) {
           alleleReqs = buildAlleleReqs((index) => ({
             selectedGigwaServer: selectedGigwaServers[index],
             callSetDbIds: callSetDbIds[index],
             variantSetDbIds: selectedVariantSetDbId[index],
             positionRanges: selectedGroups
               ? [`${selectedGroups}:${posStart}-${posEnd}`]
+              : [],
+            dataMatrixAbbreviations: ["GT"],
+            pagination: [
+              {
+                dimension: "variants",
+                page: page - 1,
+                pageSize: variantPageSize,
+              },
+              { dimension: "callsets", page: 0, pageSize: callsetPageSize },
+            ],
+          }));
+        } else if (posStart && !posEnd && selectedGroups) {
+          alleleReqs = buildAlleleReqs((index) => ({
+            selectedGigwaServer: selectedGigwaServers[index],
+            callSetDbIds: callSetDbIds[index],
+            variantSetDbIds: selectedVariantSetDbId[index],
+            positionRanges: selectedGroups
+              ? [`${selectedGroups}:${posStart}-`]
+              : [],
+            dataMatrixAbbreviations: ["GT"],
+            pagination: [
+              {
+                dimension: "variants",
+                page: page - 1,
+                pageSize: variantPageSize,
+              },
+              { dimension: "callsets", page: 0, pageSize: callsetPageSize },
+            ],
+          }));
+        } else if (!posStart && posEnd && selectedGroups) {
+          alleleReqs = buildAlleleReqs((index) => ({
+            selectedGigwaServer: selectedGigwaServers[index],
+            callSetDbIds: callSetDbIds[index],
+            variantSetDbIds: selectedVariantSetDbId[index],
+            positionRanges: selectedGroups
+              ? [`${selectedGroups}:-${posEnd}`]
               : [],
             dataMatrixAbbreviations: ["GT"],
             pagination: [
@@ -418,6 +454,9 @@ const GigwaWorkflowController = () => {
               { dimension: "callsets", page: 0, pageSize: callsetPageSize },
             ],
           }));
+        } else if ((posStart || posEnd) && !selectedGroups) {
+          alert("Please select the Chromosome");
+          return;
         } else if (variantList.length > 0) {
           alleleReqs = buildAlleleReqs((index) => ({
             selectedGigwaServer: selectedGigwaServers[index],
