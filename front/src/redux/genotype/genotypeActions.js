@@ -136,3 +136,8 @@ export const setSampleSourceData = (data) => ({
   type: "SET_SAMPLE_SOURCE_DATA",
   payload: data,
 });
+
+export const setGenotypeDataLoading = (data) => ({
+  type: "SET_GENOTYPE_DATA_LOADING",
+  payload: data,
+});

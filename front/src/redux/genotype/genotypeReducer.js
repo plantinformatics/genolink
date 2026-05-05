@@ -26,6 +26,7 @@ const initialState = {
   linkageGroups: [],
   isLoadingGenotypedAccessions: false,
   sampleSourceData: [],
+  genotypeDataLoading: false,
 };
 
 const genotypeReducer = (state = initialState, action) => {
@@ -87,6 +88,8 @@ const genotypeReducer = (state = initialState, action) => {
       };
     case "SET_SAMPLE_SOURCE_DATA":
       return { ...state, sampleSourceData: action.payload };
+    case "SET_GENOTYPE_DATA_LOADING":
+      return { ...state, genotypeDataLoading: action.payload };
     case "RESET_GENOTYPE":
       return initialState;
     default:

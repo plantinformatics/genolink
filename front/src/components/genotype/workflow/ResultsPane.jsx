@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import GenotypeSearchResultsTable from "../GenotypeSearchResultsTable";
 import styles from "../GenotypeExplorer.module.css";
 import SampleSourceTable from "../SampleSourceTable";
+import LoadingComponent from "../../LoadingComponent";
 
 const ResultsPane = React.memo(() => {
   const selectedOption = useSelector((state) => state.genotype.selectedOption);
@@ -10,6 +11,9 @@ const ResultsPane = React.memo(() => {
   const alleleData = useSelector((state) => state.genotype.alleleData);
   const sampleSourceData = useSelector(
     (state) => state.genotype.sampleSourceData,
+  );
+  const genotypeDataLoading = useSelector(
+    (state) => state.genotype.genotypeDataLoading,
   );
 
   const hasGigwaResults =
@@ -30,7 +34,9 @@ const ResultsPane = React.memo(() => {
     sampleSourceData.length > 0;
 
   if (hasGigwaResults) {
-    return (
+    return genotypeDataLoading ? (
+      <LoadingComponent />
+    ) : (
       <div className={styles.resultsArea}>
         <div className={styles.tableScroll}>
           <GenotypeSearchResultsTable />

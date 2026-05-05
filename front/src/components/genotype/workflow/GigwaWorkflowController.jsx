@@ -41,7 +41,6 @@ const GigwaWorkflowController = () => {
   const [copied, setCopied] = useState(false);
   const [posStart, setPosStart] = useState("");
   const [posEnd, setPosEnd] = useState("");
-  const [isGenomDataLoading, setIsGenomDataLoading] = useState(false);
   const [isLookupLoading, setIsLookupLoading] = useState(false);
   const [isVerifyLoading, setIsVerifyLoading] = useState(false);
 
@@ -65,6 +64,7 @@ const GigwaWorkflowController = () => {
   const selectedDataset = useSelector(
     (state) => state.genotype.selectedDataset,
   );
+
   const selectedStudyDbId = useSelector(
     (state) => state.genotype.selectedStudyDbId,
   );
@@ -364,7 +364,7 @@ const GigwaWorkflowController = () => {
         return;
       }
 
-      setIsGenomDataLoading(true);
+      dispatch(genotypeActions.setGenotypeDataLoading(true));
 
       if (selectedOption === "Gigwa") {
         const buildAlleleReqs = (buildBody) => {
@@ -569,7 +569,7 @@ const GigwaWorkflowController = () => {
       console.error(error);
       alert("An error occurred: " + (error?.message || "Unknown error"));
     } finally {
-      setIsGenomDataLoading(false);
+      dispatch(genotypeActions.setGenotypeDataLoading(false));
     }
   };
   const handleSearch = async () => {
@@ -947,8 +947,6 @@ const GigwaWorkflowController = () => {
           </div>
         )}
       </div>
-
-      {isGenomDataLoading && <LoadingComponent />}
 
       {/* STEP 1: credentials */}
       {uiStep === 1 && (
