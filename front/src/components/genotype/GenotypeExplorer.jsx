@@ -33,6 +33,7 @@ const GenotypeExplorer = () => {
   const [copied, setCopied] = useState(false);
   const [posStart, setPosStart] = useState("");
   const [posEnd, setPosEnd] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [isGenomDataLoading, setIsGenomDataLoading] = useState(false);
   const [isExportGenomDataLoading, setIsExportGenomDataLoading] =
     useState(false);
@@ -387,6 +388,7 @@ const GenotypeExplorer = () => {
         }
 
         if (!isGenomeSearchSubmit) {
+          setIsLoading(true);
           const authResults = await Promise.all(
             selectedGigwaServers.map(async (server, index) => {
               const username =
@@ -427,6 +429,7 @@ const GenotypeExplorer = () => {
               .join("\n");
 
             alert(messages);
+            setIsLoading(false);
             return;
           }
 
@@ -509,6 +512,7 @@ const GenotypeExplorer = () => {
 
           if (combinedResults.responseData.length === 0) {
             alert("No genotype data found across all Gigwa servers.");
+            setIsLoading(false);
             return;
           }
 
@@ -541,6 +545,7 @@ const GenotypeExplorer = () => {
           );
           dispatch(genotypeActions.setSampleNames(uniqueSampleNames));
           dispatch(genotypeActions.setIsGenomeSearchSubmit(true));
+          setIsLoading(false);
           setShowDatasetSelector(true);
         }
 
@@ -611,13 +616,41 @@ const GenotypeExplorer = () => {
 
         let alleleReqs = [];
 
-        if (posStart && posEnd) {
+        if (posStart && posEnd && selectedGroups) {
           alleleReqs = buildAlleleReqs((index) => ({
             selectedGigwaServer: selectedGigwaServers[index],
             callSetDbIds: sampleDbIds[index],
             variantSetDbIds: selectedVariantSetDbId[index],
             positionRanges: selectedGroups
               ? [`${selectedGroups}:${posStart}-${posEnd}`]
+              : [],
+            dataMatrixAbbreviations: ["GT"],
+            pagination: [
+              { dimension: "variants", page: page - 1, pageSize: 1000 },
+              { dimension: "callsets", page: 0, pageSize: 1000 },
+            ],
+          }));
+        } else if (posStart && !posEnd && selectedGroups) {
+          alleleReqs = buildAlleleReqs((index) => ({
+            selectedGigwaServer: selectedGigwaServers[index],
+            callSetDbIds: sampleDbIds[index],
+            variantSetDbIds: selectedVariantSetDbId[index],
+            positionRanges: selectedGroups
+              ? [`${selectedGroups}:${posStart}-`]
+              : [],
+            dataMatrixAbbreviations: ["GT"],
+            pagination: [
+              { dimension: "variants", page: page - 1, pageSize: 1000 },
+              { dimension: "callsets", page: 0, pageSize: 1000 },
+            ],
+          }));
+        } else if (!posStart && posEnd && selectedGroups) {
+          alleleReqs = buildAlleleReqs((index) => ({
+            selectedGigwaServer: selectedGigwaServers[index],
+            callSetDbIds: sampleDbIds[index],
+            variantSetDbIds: selectedVariantSetDbId[index],
+            positionRanges: selectedGroups
+              ? [`${selectedGroups}:-${posEnd}`]
               : [],
             dataMatrixAbbreviations: ["GT"],
             pagination: [
@@ -637,6 +670,9 @@ const GenotypeExplorer = () => {
               { dimension: "callsets", page: 0, pageSize: 1000 },
             ],
           }));
+        } else if ((posStart || posEnd) && !selectedGroups) {
+          alert("Please select the Chromosome");
+          return;
         } else if (variantList.length > 0) {
           alleleReqs = buildAlleleReqs((index) => ({
             selectedGigwaServer: selectedGigwaServers[index],
@@ -847,8 +883,7 @@ const GenotypeExplorer = () => {
       <div>
         <h3>Genotype Data</h3>
         <br />
-        {isGenomDataLoading && <LoadingComponent />}
-        {!isGenomDataLoading && (
+        {isLoading && <LoadingComponent />}
           <div className={styles.genoSplit}>
             {/* LEFT: FILTERS */}
             <aside className={styles.filtersPane}>
