@@ -1208,7 +1208,6 @@ const GenotypeExplorer = () => {
               ) : null}
             </main>
           </div>
-        )}
       </div>
     )
   );
