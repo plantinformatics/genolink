@@ -70,10 +70,6 @@ const SearchFilters = ({ tokenReady }) => {
   );
   const searchResults = useSelector((state) => state.passport.searchResults);
 
-  const isLoadingGenotypedAccessions = useSelector(
-    (state) => state.genotype.isLoadingGenotypedAccessions,
-  );
-
   const activeFilters = useSelector((state) => state.passport.activeFilters);
 
   const wildSearchValue = useSelector(
@@ -752,7 +748,7 @@ const SearchFilters = ({ tokenReady }) => {
                 <div className={styles.stickyTitles}>
                   <h4>Filters</h4>
                   {initialRequestSent &&
-                    (!isLoading && !isLoadingGenotypedAccessions ? (
+                    (!isLoading ? (
                       <h5>Total Accessions: {totalAccessions}</h5>
                     ) : (
                       <LoadingComponent />

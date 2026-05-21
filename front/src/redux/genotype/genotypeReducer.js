@@ -23,7 +23,6 @@ const initialState = {
   pagesPerServer: [],
   pageLengths: [],
   linkageGroups: [],
-  isLoadingGenotypedAccessions: false,
 };
 
 const genotypeReducer = (state = initialState, action) => {
@@ -76,11 +75,6 @@ const genotypeReducer = (state = initialState, action) => {
       return { ...state, pageLengths: action.payload };
     case "SET_LINKAGE_GROUPS":
       return { ...state, linkageGroups: action.payload };
-    case "SET_LOADING_GENOTYPED_ACCESSIONS":
-      return {
-        ...state,
-        isLoadingGenotypedAccessions: action.payload,
-      };
     case "RESET_GENOTYPE":
       return initialState;
     default:

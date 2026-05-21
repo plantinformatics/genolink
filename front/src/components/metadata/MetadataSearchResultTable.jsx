@@ -100,9 +100,6 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
   const checkedAccessionNames = useSelector(
     (state) => state.passport.checkedAccessionNames,
   );
-  const isLoadingGenotypedAccessions = useSelector(
-    (state) => state.genotype.isLoadingGenotypedAccessions,
-  );
 
   const statusByAcc = useMemo(() => {
     const arr = Array.isArray(genesysApi.genotypeStatus)
@@ -434,7 +431,6 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
       </div>
 
       {!isPaginating &&
-        !isLoadingGenotypedAccessions &&
         (remainingPages > 0 ? (
           <button type="button" className="btn btn-primary" onClick={fetchMore}>
             More Results ({remainingPages})

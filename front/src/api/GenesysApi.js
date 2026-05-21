@@ -25,7 +25,6 @@ import {
   setResetTrigger,
 } from "../redux/passport/passportActions";
 import { buildGenesysSelect } from "../components/metadata/MetadataColumns";
-import { setLoadingGenotypedAccessions } from "../redux/genotype/genotypeActions";
 import { germplasmStorageMapping } from "../components/metadata/filters/MultiSelectFilter";
 
 class GenesysApi extends BaseApi {
@@ -305,41 +304,41 @@ class GenesysApi extends BaseApi {
       const limit = 100;
       const endpointOverview = `/api/v1/acn/overview?limit=${limit}`;
       if (hasGenotype) {
-        if (filterData.hasOwnProperty("accessionNumbers")) {
-          filterData.accessionNumbers = Array.from(
-            new Set([
-              ...filterData.accessionNumbers,
-              ...this.genotypedAccessions,
-            ]),
+        const requestBody = JSON.parse(JSON.stringify(filterData));
+
+        const genotypedAccessionSet = new Set(
+          this.genotypedAccessions.map((acc) =>
+            String(acc).replace(/"/g, "").trim().toUpperCase(),
+          ),
+        );
+
+        if (
+          Array.isArray(requestBody.accessionNumbers) &&
+          requestBody.accessionNumbers.length > 0
+        ) {
+          const existingAccessions = requestBody.accessionNumbers.map((acc) =>
+            String(acc).replace(/"/g, "").trim().toUpperCase(),
           );
+
+          const matchedAccessions = existingAccessions.filter((acc) =>
+            genotypedAccessionSet.has(acc),
+          );
+
+          requestBody.accessionNumbers =
+            matchedAccessions.length > 0 ? matchedAccessions : ["__INVALID__"];
         } else {
-          filterData.accessionNumbers = this.genotypedAccessions;
+          requestBody.accessionNumbers = Array.from(genotypedAccessionSet);
         }
 
         const [queryData, filterDataResponse] = await Promise.all([
-          this.post(endpointQuery, filterData),
-          this.post(endpointOverview, filterData),
+          this.post(endpointQuery, requestBody),
+          this.post(endpointOverview, requestBody),
         ]);
 
-        const genesysAccessions = queryData.content.map(
-          (item) => item.accessionNumber,
-        );
-        let genotypedResult = [];
-
-        const matchedAccessions = this.genotypedAccessions.filter((accession) =>
-          genesysAccessions.includes(accession),
-        );
-
-        genotypedResult = genotypedResult.concat(
-          queryData.content.filter((item) =>
-            matchedAccessions.includes(item.accessionNumber),
-          ),
-        );
-        // Fetch total genotyped accessions asynchronously
-        this.fetchTotalGenotypedAccessionsInBackground(filterData, dispatch);
-
-        dispatch(setSearchResults(genotypedResult));
+        dispatch(setSearchResults(queryData.content));
+        dispatch(setTotalAccessions(queryData.totalElements));
         dispatch(setTotalPreGenotypedAccessions(queryData.totalElements));
+
         dispatch(
           setInstituteCode(
             this.extractSuggestions(filterDataResponse, "institute.code"),
@@ -396,7 +395,14 @@ class GenesysApi extends BaseApi {
             this.extractSuggestions(filterDataResponse, "available"),
           ),
         );
+        dispatch(
+          setCurationTypeList(
+            this.extractSuggestions(filterDataResponse, "curationType"),
+          ),
+        );
+
         dispatch(setPassportCurrentPage(0));
+
         return queryData.filterCode;
       } else {
         const [queryData, filterDataResponse] = await Promise.all([
@@ -467,78 +473,6 @@ class GenesysApi extends BaseApi {
     } catch (error) {
       console.error("Error applying filter:", error);
       throw error;
-    }
-  }
-
-  async getTotalGenotypedAccessions(filterData) {
-    try {
-      const pageSize = 10000;
-      const batchSize = 50;
-      let genotypedCount = 0;
-
-      const firstGenesysEndpoint = `/api/v1/acn/query?p=0&l=${pageSize}&select=accessionNumber`;
-      const firstGenesysResult = await this.post(
-        firstGenesysEndpoint,
-        filterData,
-      );
-
-      if (!firstGenesysResult || !firstGenesysResult.filterCode) {
-        throw new Error("No filterCode returned from Genesys.");
-      }
-
-      const filterCode = firstGenesysResult.filterCode;
-      const totalGenesysPages = Math.ceil(
-        firstGenesysResult.totalElements / pageSize,
-      );
-
-      const genesysRequests = [];
-      for (
-        let genesysPage = 0;
-        genesysPage < totalGenesysPages;
-        genesysPage++
-      ) {
-        const endpoint = `/api/v1/acn/query?f=${filterCode}&p=${genesysPage}&l=${pageSize}&select=accessionNumber`;
-        genesysRequests.push(async () => {
-          const response = await this.post(endpoint, null);
-          return response;
-        });
-      }
-
-      for (let i = 0; i < genesysRequests.length; i += batchSize) {
-        const batch = genesysRequests.slice(i, i + batchSize);
-        const batchResults = await Promise.all(batch.map((req) => req()));
-
-        batchResults.forEach((genesysResult) => {
-          if (genesysResult && genesysResult.content) {
-            const genesysAccessions = genesysResult.content.map(
-              (item) => item.accessionNumber,
-            );
-
-            const matchedAccessions = genesysAccessions.filter((accession) =>
-              this.genotypedAccessions.includes(accession),
-            );
-            genotypedCount += matchedAccessions.length;
-          }
-        });
-      }
-
-      return genotypedCount;
-    } catch (error) {
-      console.error("Error calculating total genotyped accessions:", error);
-      throw error;
-    }
-  }
-
-  async fetchTotalGenotypedAccessionsInBackground(filterData, dispatch) {
-    try {
-      dispatch(setLoadingGenotypedAccessions(true));
-      const totalGenotypedAccession =
-        await this.getTotalGenotypedAccessions(filterData);
-      dispatch(setTotalAccessions(totalGenotypedAccession));
-    } catch (error) {
-      console.error("Error fetching total genotyped accessions:", error);
-    } finally {
-      dispatch(setLoadingGenotypedAccessions(false));
     }
   }
 

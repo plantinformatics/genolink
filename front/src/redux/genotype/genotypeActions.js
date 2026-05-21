@@ -122,7 +122,3 @@ export const resetGenotype = () => ({
   type: "RESET_GENOTYPE",
 });
 
-export const setLoadingGenotypedAccessions = (isLoading) => ({
-  type: "SET_LOADING_GENOTYPED_ACCESSIONS",
-  payload: isLoading,
-});
