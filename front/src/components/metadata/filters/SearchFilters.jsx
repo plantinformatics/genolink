@@ -47,9 +47,8 @@ import DateRangeFilter from "./DateRangeFilter";
 import GenotypeExplorer from "../../genotype/GenotypeExplorer";
 import { genesysApi, genolinkInternalApi } from "../../../pages/Home";
 import { Autocomplete, TextField, Chip, Box } from "@mui/material";
-import { faBriefcaseClock } from "@fortawesome/free-solid-svg-icons";
 
-const SearchFilters = ({ tokenReady }) => {
+const SearchFilters = ({ initialDataReady }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isResetLoading, setIsResetLoading] = useState(false);
   const [filterCode, setFilterCode] = useState(null);
@@ -127,19 +126,6 @@ const SearchFilters = ({ tokenReady }) => {
   const wheatImage = "Wheat.PNG";
   const selectedUUIDs = selectedSubsets.map((item) => item.uuid);
 
-  const withRetryOn401 = async (fn, delay = 500) => {
-    try {
-      return await fn();
-    } catch (error) {
-      if (error?.response?.status === 401) {
-        console.warn("401 Unauthorized — retrying after delay...");
-        await new Promise((res) => setTimeout(res, delay));
-        return await fn();
-      }
-      throw error;
-    }
-  };
-
   useEffect(() => {
     const fetchFigs = async () => {
       try {
@@ -181,7 +167,7 @@ const SearchFilters = ({ tokenReady }) => {
   }, [wildSearchValue, subsetsTick]);
 
   useEffect(() => {
-    if (!tokenReady) return;
+    if (!initialDataReady) return;
     const fetchData = async () => {
       setIsLoading(true);
       try {
@@ -207,22 +193,18 @@ const SearchFilters = ({ tokenReady }) => {
         }
 
         const [_, { filterCode, body }] = await Promise.all([
-          withRetryOn401(() =>
-            genesysApi.fetchInitialFilterData(
-              dispatch,
-              " ",
-              false,
-              accessionNums,
-              selectedColumnIds,
-            ),
+          genesysApi.fetchInitialFilterData(
+            dispatch,
+            " ",
+            false,
+            accessionNums,
           ),
-          withRetryOn401(() =>
-            genesysApi.fetchInitialQueryData(
-              dispatch,
-              " ",
-              false,
-              accessionNums,
-            ),
+          genesysApi.fetchInitialQueryData(
+            dispatch,
+            " ",
+            false,
+            accessionNums,
+            selectedColumnIds,
           ),
         ]);
 
@@ -239,7 +221,7 @@ const SearchFilters = ({ tokenReady }) => {
     };
 
     fetchData();
-  }, [dispatch, tokenReady]);
+  }, [dispatch, initialDataReady]);
   const removeFilter = (filterToRemove) => {
     switch (filterToRemove.type) {
       case "Text":

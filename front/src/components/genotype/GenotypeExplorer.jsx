@@ -28,7 +28,7 @@ import styles from "./GenotypeExplorer.module.css";
 
 const GenotypeExplorer = () => {
   const [genolinkGerminateApi, setGenolinkGerminateApi] = useState(
-    new GenolinkGerminateApi()
+    new GenolinkGerminateApi(),
   );
   const [copied, setCopied] = useState(false);
   const [posStart, setPosStart] = useState("");
@@ -53,49 +53,49 @@ const GenotypeExplorer = () => {
   const alleleData = useSelector((state) => state.genotype.alleleData);
   const datasets = useSelector((state) => state.genotype.datasets);
   const selectedDataset = useSelector(
-    (state) => state.genotype.selectedDataset
+    (state) => state.genotype.selectedDataset,
   );
   const selectedStudyDbId = useSelector(
-    (state) => state.genotype.selectedStudyDbId
+    (state) => state.genotype.selectedStudyDbId,
   );
   const selectedVariantSetDbId = useSelector(
-    (state) => state.genotype.selectedVariantSetDbId
+    (state) => state.genotype.selectedVariantSetDbId,
   );
   const sampleDetails = useSelector((state) => state.genotype.sampleDetails);
   const variantSetDbIds = useSelector(
-    (state) => state.genotype.variantSetDbIds
+    (state) => state.genotype.variantSetDbIds,
   );
   const sampleDbIds = useSelector((state) => state.genotype.sampleDbIds);
   const sampleNames = useSelector((state) => state.genotype.sampleNames);
   const selectedSamplesDetails = useSelector(
-    (state) => state.genotype.selectedSamplesDetails
+    (state) => state.genotype.selectedSamplesDetails,
   );
   const isGenomeSearchSubmit = useSelector(
-    (state) => state.genotype.isGenomeSearchSubmit
+    (state) => state.genotype.isGenomeSearchSubmit,
   );
   const pagesPerServer = useSelector((state) => state.genotype.pagesPerServer);
   const genotypeCurrentPage = useSelector(
-    (state) => state.genotype.genotypeCurrentPage
+    (state) => state.genotype.genotypeCurrentPage,
   );
   const selectedGroups = useSelector((state) => state.genotype.selectedGroups);
   const linkageGroups = useSelector((state) => state.genotype.linkageGroups);
   const variantList = useSelector((state) => state.genotype.variantList);
   const numberOfGenesysAccessions = useSelector(
-    (state) => state.genotype.numberOfGenesysAccessions
+    (state) => state.genotype.numberOfGenesysAccessions,
   );
   const numberOfPresentAccessions = useSelector(
-    (state) => state.genotype.numberOfPresentAccessions
+    (state) => state.genotype.numberOfPresentAccessions,
   );
   const numberOfMappedAccessions = useSelector(
-    (state) => state.genotype.numberOfMappedAccessions
+    (state) => state.genotype.numberOfMappedAccessions,
   );
   const resetTrigger = useSelector((state) => state.passport.resetTrigger);
   const searchResults = useSelector((state) => state.passport.searchResults);
   const checkedAccessionsObject = useSelector(
-    (state) => state.passport.checkedAccessions
+    (state) => state.passport.checkedAccessions,
   );
   const checkedAccessionNamesObject = useSelector(
-    (state) => state.passport.checkedAccessionNames
+    (state) => state.passport.checkedAccessionNames,
   );
 
   const genolinkGigwaApisRef = useRef({});
@@ -103,7 +103,7 @@ const GenotypeExplorer = () => {
   const checkedResults = useMemo(() => {
     return Array.isArray(searchResults)
       ? searchResults.filter((item) =>
-          checkedAccessions.includes(item.accessionNumber)
+          checkedAccessions.includes(item.accessionNumber),
         )
       : [];
   }, [searchResults, checkedAccessions]);
@@ -141,7 +141,7 @@ const GenotypeExplorer = () => {
     const fetchGigwaServers = async () => {
       try {
         const response = await axios.get(
-          `${genolinkServer}/api/gigwa/gigwaServers`
+          `${genolinkServer}/api/gigwa/gigwaServers`,
         );
         setGigwaServers(response.data);
       } catch (error) {
@@ -164,7 +164,6 @@ const GenotypeExplorer = () => {
           genolinkGigwaApi:
             genolinkGigwaApisRef.current[selectedGigwaServers[i]],
           genolinkGerminateApi: genolinkGerminateApi,
-          selectedGigwaServer: selectedGigwaServers[i],
           platform: selectedOption,
           checkedAccessionsObject,
         });
@@ -223,10 +222,11 @@ const GenotypeExplorer = () => {
 
       if (matchedServers.length > 0) {
         const newInstances = {};
+
         for (const server of matchedServers) {
           if (
             genolinkGigwaApisRef.current[server] &&
-            genolinkGigwaApisRef.current[server].token
+            genolinkGigwaApisRef.current[server].gigwaSessionId
           ) {
             newInstances[server] = genolinkGigwaApisRef.current[server];
           } else {
@@ -258,24 +258,24 @@ const GenotypeExplorer = () => {
 
     const selectedSamples = sampleDetails.map((innerArray, index) =>
       innerArray.filter((sample) =>
-        updatedSelection[index]?.some((ds) => sample?.sampleName.includes(ds))
-      )
+        updatedSelection[index]?.some((ds) => sample?.sampleName.includes(ds)),
+      ),
     );
 
     const selectedVariantSetDbId = variantSetDbIds.map((innerArray, index) =>
       innerArray.filter((variantSetDbId) =>
-        updatedSelection[index]?.some((ds) => variantSetDbId.includes(ds))
-      )
+        updatedSelection[index]?.some((ds) => variantSetDbId.includes(ds)),
+      ),
     );
     const selectedSampleDbIds = searchSamplesInDatasetsResult.map(
       (server, groupIndex) =>
         server.response.result.data
           .filter((sample) =>
             updatedSelection[groupIndex]?.some((ds) =>
-              sample.sampleName.includes(ds)
-            )
+              sample.sampleName.includes(ds),
+            ),
           )
-          .map((sample) => sample.sampleDbId)
+          .map((sample) => sample.sampleDbId),
     );
 
     const selectedAccessionPlusAccessionName =
@@ -286,7 +286,7 @@ const GenotypeExplorer = () => {
           .map((sample) => sample.germplasmDbId.split("§")[1]);
 
         return server.accessionPlusAccessionName.filter((item) =>
-          matchingGermplasmIds.some((gid) => item.includes(gid))
+          matchingGermplasmIds.some((gid) => item.includes(gid)),
         );
       });
     dispatch(genotypeActions.setSelectedVariantSetDbId(selectedVariantSetDbId));
@@ -294,12 +294,12 @@ const GenotypeExplorer = () => {
     dispatch(
       genotypeActions.setSelectedStudyDbId([
         ...new Set(selectedSamples.flat().map((sample) => sample.studyDbId)),
-      ])
+      ]),
     );
 
     dispatch(genotypeActions.setSampleDbIds(selectedSampleDbIds));
     dispatch(
-      genotypeActions.setCompleteNames(selectedAccessionPlusAccessionName)
+      genotypeActions.setCompleteNames(selectedAccessionPlusAccessionName),
     );
   };
   const handleExportVCF = async () => {
@@ -317,7 +317,7 @@ const GenotypeExplorer = () => {
     }
 
     const exportIndex = selectedGigwaServers.findIndex(
-      (srv) => srv === exportServer
+      (srv) => srv === exportServer,
     );
     const exportSamples =
       exportIndex !== -1 && selectedSamplesDetails[exportIndex]
@@ -360,12 +360,12 @@ const GenotypeExplorer = () => {
               accessMode[index] === "private" &&
               (!usernames[index]?.trim() || !passwords[index]?.trim())
             );
-          }
+          },
         );
 
         if (hasMissingCredentials) {
           alert(
-            "Please enter both username and password for all private servers."
+            "Please enter both username and password for all private servers.",
           );
           return;
         }
@@ -379,7 +379,7 @@ const GenotypeExplorer = () => {
                 !selectedDataset[index] ||
                 selectedDataset[index].length === 0
               );
-            }
+            },
           );
           if (missingDatasetSelection) {
             alert("Please select a dataset for each server before continuing.");
@@ -398,9 +398,8 @@ const GenotypeExplorer = () => {
 
               try {
                 await genolinkGigwaApisRef.current[server].getGigwaToken(
-                  server,
                   username,
-                  password
+                  password,
                 );
                 return { server, success: true };
               } catch (error) {
@@ -413,7 +412,7 @@ const GenotypeExplorer = () => {
                 }
                 return { server, success: false, message };
               }
-            })
+            }),
           );
 
           const failed = authResults.filter((res) => !res.success);
@@ -423,8 +422,8 @@ const GenotypeExplorer = () => {
                 (f) =>
                   `Authentication failed for ${f.server?.replace(
                     /^https?:\/\//,
-                    ""
-                  )}: ${f.message}`
+                    "",
+                  )}: ${f.message}`,
               )
               .join("\n");
 
@@ -434,16 +433,15 @@ const GenotypeExplorer = () => {
           }
 
           const Accessions = checkedResults?.map(
-            (item) => item.accessionNumber
+            (item) => item.accessionNumber,
           );
 
           const fetchRequests = Object.values(genolinkGigwaApisRef.current).map(
             (api, index) =>
               api.searchSamplesInDatasets(
-                selectedGigwaServers[index],
                 Accessions,
-                checkedAccessionNamesObject
-              )
+                checkedAccessionNamesObject,
+              ),
           );
 
           const responses = await Promise.all(fetchRequests);
@@ -472,42 +470,42 @@ const GenotypeExplorer = () => {
               combinedResults.variantSetDbIds.push(variantSetDbIds);
               combinedResults.datasetNames.push(datasetNames);
               combinedResults.numberOfGenesysAccessions.push(
-                numberOfGenesysAccessions
+                numberOfGenesysAccessions,
               );
               combinedResults.numberOfPresentAccessions.push(
-                numberOfPresentAccessions
+                numberOfPresentAccessions,
               );
               combinedResults.numberOfMappedAccessions.push(
-                numberOfMappedAccessions
+                numberOfMappedAccessions,
               );
               combinedResults.accessionPlusAccessionName.push(
-                accessionPlusAccessionName
+                accessionPlusAccessionName,
               );
-            }
+            },
           );
 
           setSearchSamplesInDatasetsResult(responses);
 
           const sampleNames = combinedResults.responseData.map((apiResponse) =>
-            apiResponse.map((sample) => sample?.sampleName)
+            apiResponse.map((sample) => sample?.sampleName),
           );
 
           const totalNumberOfGenesysAccessions =
             combinedResults.numberOfGenesysAccessions[0];
           dispatch(
             genotypeActions.setNumberOfGenesysAccessions(
-              totalNumberOfGenesysAccessions
-            )
+              totalNumberOfGenesysAccessions,
+            ),
           );
           dispatch(
             genotypeActions.setNumberOfPresentAccessions(
-              combinedResults.numberOfPresentAccessions
-            )
+              combinedResults.numberOfPresentAccessions,
+            ),
           );
           dispatch(
             genotypeActions.setNumberOfMappedAccessions(
-              combinedResults.numberOfMappedAccessions
-            )
+              combinedResults.numberOfMappedAccessions,
+            ),
           );
 
           if (combinedResults.responseData.length === 0) {
@@ -520,9 +518,9 @@ const GenotypeExplorer = () => {
             (datasetArr, index) =>
               datasetArr.filter((datasetName) =>
                 sampleNames[index].some((sampleName) =>
-                  sampleName.includes(datasetName)
-                )
-              )
+                  sampleName.includes(datasetName),
+                ),
+              ),
           );
 
           const uniqueSampleNames = combinedResults.responseData.map(
@@ -530,18 +528,18 @@ const GenotypeExplorer = () => {
               Array.from(
                 new Set(
                   apiResponse.map(
-                    (sample) => sample.germplasmDbId.split("§")[1]
-                  )
-                )
-              )
+                    (sample) => sample.germplasmDbId.split("§")[1],
+                  ),
+                ),
+              ),
           );
 
           dispatch(
-            genotypeActions.setVariantSetDbIds(combinedResults.variantSetDbIds)
+            genotypeActions.setVariantSetDbIds(combinedResults.variantSetDbIds),
           );
           dispatch(genotypeActions.setDatasets(filteredDatasetNames));
           dispatch(
-            genotypeActions.setSampleDetails(combinedResults.responseData)
+            genotypeActions.setSampleDetails(combinedResults.responseData),
           );
           dispatch(genotypeActions.setSampleNames(uniqueSampleNames));
           dispatch(genotypeActions.setIsGenomeSearchSubmit(true));
@@ -680,7 +678,7 @@ const GenotypeExplorer = () => {
             variantSetDbIds: selectedVariantSetDbId[index],
             variantDbIds: variantList.map(
               (variant) =>
-                `${selectedVariantSetDbId[index][0].split("§")[0]}§${variant}`
+                `${selectedVariantSetDbId[index][0].split("§")[0]}§${variant}`,
             ),
             dataMatrixAbbreviations: ["GT"],
             pagination: [
@@ -703,7 +701,7 @@ const GenotypeExplorer = () => {
 
         // Run allele requests
         const alleleResponses = await Promise.all(
-          alleleReqs.map((r) => r.promise)
+          alleleReqs.map((r) => r.promise),
         );
 
         // Build fetchVariants from the paired (api, idx) metadata; skip empties
@@ -726,7 +724,7 @@ const GenotypeExplorer = () => {
         if (pagesPerServer.length === 0) {
           const newPagesPerServer = alleleResponses.map((server) => {
             const varPag = server?.result?.pagination?.find(
-              (p) => (p.dimension || "").toUpperCase() === "VARIANTS"
+              (p) => (p.dimension || "").toUpperCase() === "VARIANTS",
             );
             const count = varPag?.totalCount ?? 0;
             const fullPages = Math.floor(count / 1000);
@@ -739,7 +737,7 @@ const GenotypeExplorer = () => {
 
           const globalPageCount = Math.max(
             ...newPagesPerServer.map((arr) => arr.length),
-            0
+            0,
           );
           const newGlobalPageLengths = Array.from(
             { length: globalPageCount },
@@ -749,7 +747,7 @@ const GenotypeExplorer = () => {
                   return sum + (i < pagesArr.length - 1 ? 1000 : pagesArr[i]);
                 }
                 return sum;
-              }, 0)
+              }, 0),
           );
           dispatch(genotypeActions.setPageLengths(newGlobalPageLengths));
         }
@@ -760,7 +758,7 @@ const GenotypeExplorer = () => {
           const prevPageLengths = state.genotype.pageLengths || [];
           const totalVariantsOnThisPage = variantResponses.reduce(
             (sum, r) => sum + (r?.result?.data?.length ?? 0),
-            0
+            0,
           );
           const updated = [...prevPageLengths];
           updated[page - 1] = totalVariantsOnThisPage;
@@ -779,9 +777,9 @@ const GenotypeExplorer = () => {
               accession,
               selectedGroups,
               posStart,
-              posEnd
-            )
-          )
+              posEnd,
+            ),
+          ),
         );
         const allGenomicData = responses.map((response) => response.data);
         const callsetNames = responses.map((response) => response.sample);
@@ -884,251 +882,217 @@ const GenotypeExplorer = () => {
         <h3>Genotype Data</h3>
         <br />
         {isLoading && <LoadingComponent />}
-          <div className={styles.genoSplit}>
-            {/* LEFT: FILTERS */}
-            <aside className={styles.filtersPane}>
-              <div className={styles.searchContainer}>
-                {platforms.length > 1 && (
-                  <select
-                    className={styles.platformSelector}
-                    onChange={handleOptionChange}
-                    value={selectedOption}
-                  >
-                    {platforms.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                )}
+        <div className={styles.genoSplit}>
+          {/* LEFT: FILTERS */}
+          <aside className={styles.filtersPane}>
+            <div className={styles.searchContainer}>
+              {platforms.length > 1 && (
+                <select
+                  className={styles.platformSelector}
+                  onChange={handleOptionChange}
+                  value={selectedOption}
+                >
+                  {platforms.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              )}
 
-                {!isGenomeSearchSubmit ? (
+              {!isGenomeSearchSubmit ? (
+                <button
+                  type="button"
+                  className={styles.buttonPrimary}
+                  onClick={handleSearch}
+                >
+                  Lookup Data
+                </button>
+              ) : (
+                //  {isGenomeSearchSubmit ? "Search Genotype" :
+                <div style={{ display: "flex", gap: "10px" }}>
                   <button
                     type="button"
                     className={styles.buttonPrimary}
                     onClick={handleSearch}
                   >
-                    Lookup Data
+                    Search Genotype
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.buttonSecondary}
+                    onClick={handleReset}
+                  >
+                    Reset
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {!isGenomeSearchSubmit && (
+              <div>
+                {selectedGigwaServers.length > 0 && <h4>Server found:</h4>}
+                {selectedGigwaServers.map((server, index) => (
+                  <div key={server} style={{ marginBottom: "15px" }}>
+                    <h5>{server?.replace(/^https?:\/\//, "")}</h5>
+                    {REQUIRE_GIGWA_CREDENTIALS && (
+                      <>
+                        <div className={styles.accessModeToggle}>
+                          <label>
+                            <input
+                              type="radio"
+                              value="private"
+                              checked={accessMode[index] === "private"}
+                              onChange={(e) => handleAccessModeChange(index, e)}
+                            />
+                            Private
+                          </label>
+                          <label>
+                            <input
+                              type="radio"
+                              value="public"
+                              checked={accessMode[index] === "public"}
+                              onChange={(e) => handleAccessModeChange(index, e)}
+                            />
+                            Public
+                          </label>
+                        </div>
+
+                        {accessMode[index] === "private" && (
+                          <>
+                            <div className={styles.inputGroup}>
+                              <span className={styles.inputGroupAddon}>
+                                <FontAwesomeIcon icon={faUser} />
+                              </span>
+                              <input
+                                type="text"
+                                className={styles.formControl}
+                                placeholder="Username"
+                                value={usernames[index] || ""}
+                                onChange={(e) =>
+                                  handleUsernameChange(index, e.target.value)
+                                }
+                              />
+                            </div>
+                            <div className={styles.inputGroup}>
+                              <span className={styles.inputGroupAddon}>
+                                <FontAwesomeIcon icon={faLock} />
+                              </span>
+                              <input
+                                type="password"
+                                className={styles.formControl}
+                                placeholder="Password"
+                                value={passwords[index] || ""}
+                                onChange={(e) =>
+                                  handlePasswordChange(index, e.target.value)
+                                }
+                              />
+                            </div>
+                          </>
+                        )}
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {selectedOption === "Gigwa" && showDatasetSelector && (
+              <div>
+                <h3>Search Summary</h3>
+                {selectedGigwaServers.map((server, index) => (
+                  <div key={server} className={styles.serverSummaryBox}>
+                    <h4>Server: {server?.replace(/^https?:\/\//, "")}</h4>
+                    <h5>
+                      {numberOfMappedAccessions[index]} of{" "}
+                      {numberOfGenesysAccessions} accessions have sample name
+                      mappings.
+                    </h5>
+                    <h5>
+                      {numberOfPresentAccessions[index]} of{" "}
+                      {numberOfGenesysAccessions} accessions have genotypes in
+                      Gigwa.
+                    </h5>
+                  </div>
+                ))}
+                {!copied ? (
+                  <button
+                    type="button"
+                    className={styles.copySampleButton}
+                    onClick={handleCopySampleNames}
+                  >
+                    <FontAwesomeIcon
+                      icon={faCopy}
+                      className={styles.copyIcon}
+                    />{" "}
+                    Copy Sample-Names
                   </button>
                 ) : (
-                  //  {isGenomeSearchSubmit ? "Search Genotype" :
-                  <div style={{ display: "flex", gap: "10px" }}>
-                    <button
-                      type="button"
-                      className={styles.buttonPrimary}
-                      onClick={handleSearch}
-                    >
-                      Search Genotype
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.buttonSecondary}
-                      onClick={handleReset}
-                    >
-                      Reset
-                    </button>
-                  </div>
+                  <span className={styles.copySuccessText}>Copied!</span>
                 )}
-              </div>
 
-              {!isGenomeSearchSubmit && (
-                <div>
-                  {selectedGigwaServers.length > 0 && <h4>Server found:</h4>}
-                  {selectedGigwaServers.map((server, index) => (
-                    <div key={server} style={{ marginBottom: "15px" }}>
-                      <h5>{server?.replace(/^https?:\/\//, "")}</h5>
-                      {REQUIRE_GIGWA_CREDENTIALS && (
-                        <>
-                          <div className={styles.accessModeToggle}>
-                            <label>
-                              <input
-                                type="radio"
-                                value="private"
-                                checked={accessMode[index] === "private"}
-                                onChange={(e) =>
-                                  handleAccessModeChange(index, e)
-                                }
-                              />
-                              Private
-                            </label>
-                            <label>
-                              <input
-                                type="radio"
-                                value="public"
-                                checked={accessMode[index] === "public"}
-                                onChange={(e) =>
-                                  handleAccessModeChange(index, e)
-                                }
-                              />
-                              Public
-                            </label>
-                          </div>
-
-                          {accessMode[index] === "private" && (
-                            <>
-                              <div className={styles.inputGroup}>
-                                <span className={styles.inputGroupAddon}>
-                                  <FontAwesomeIcon icon={faUser} />
-                                </span>
-                                <input
-                                  type="text"
-                                  className={styles.formControl}
-                                  placeholder="Username"
-                                  value={usernames[index] || ""}
-                                  onChange={(e) =>
-                                    handleUsernameChange(index, e.target.value)
-                                  }
-                                />
-                              </div>
-                              <div className={styles.inputGroup}>
-                                <span className={styles.inputGroupAddon}>
-                                  <FontAwesomeIcon icon={faLock} />
-                                </span>
-                                <input
-                                  type="password"
-                                  className={styles.formControl}
-                                  placeholder="Password"
-                                  value={passwords[index] || ""}
-                                  onChange={(e) =>
-                                    handlePasswordChange(index, e.target.value)
-                                  }
-                                />
-                              </div>
-                            </>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {selectedOption === "Gigwa" && showDatasetSelector && (
-                <div>
-                  <h3>Search Summary</h3>
-                  {selectedGigwaServers.map((server, index) => (
-                    <div key={server} className={styles.serverSummaryBox}>
-                      <h4>Server: {server?.replace(/^https?:\/\//, "")}</h4>
-                      <h5>
-                        {numberOfMappedAccessions[index]} of{" "}
-                        {numberOfGenesysAccessions} accessions have sample name
-                        mappings.
-                      </h5>
-                      <h5>
-                        {numberOfPresentAccessions[index]} of{" "}
-                        {numberOfGenesysAccessions} accessions have genotypes in
-                        Gigwa.
-                      </h5>
-                    </div>
-                  ))}
-                  {!copied ? (
-                    <button
-                      type="button"
-                      className={styles.copySampleButton}
-                      onClick={handleCopySampleNames}
-                    >
-                      <FontAwesomeIcon
-                        icon={faCopy}
-                        className={styles.copyIcon}
-                      />{" "}
-                      Copy Sample-Names
-                    </button>
-                  ) : (
-                    <span className={styles.copySuccessText}>Copied!</span>
-                  )}
-
-                  <br />
-                  <div className={styles.datasetSelectorContainer}>
-                    <h4>Select Dataset:</h4>
-                    {datasets &&
-                      datasets.map((datasetGroup, groupIndex) => (
-                        <fieldset
-                          key={groupIndex}
-                          className={styles.datasetGroupFieldset}
-                        >
-                          <legend>
-                            Server:{" "}
-                            {selectedGigwaServers[groupIndex]?.replace(
-                              /^https?:\/\//,
-                              ""
-                            )}
-                          </legend>
-                          {datasetGroup.map((dataset) => (
-                            <label key={dataset} className={styles.radioLabel}>
-                              <input
-                                type="radio"
-                                name={`dataset-group-${groupIndex}`}
-                                value={dataset}
-                                checked={
-                                  selectedDataset[groupIndex]?.[0] === dataset
-                                }
-                                onChange={() =>
-                                  handleDatasetDetails(groupIndex, dataset)
-                                }
-                              />
-                              {dataset}
-                            </label>
-                          ))}
-                        </fieldset>
-                      ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Filters that depend on searchType */}
-              {showDatasetSelector && (
-                <select
-                  value={searchType || ""}
-                  onChange={(e) => handleSearchTypeChange(e.target.value)}
-                  className={styles.filterTypeSelect}
-                  disabled={selectedGigwaServers.some(
-                    (_, index) =>
-                      !datasets?.[index] ||
-                      datasets[index].length === 0 ||
-                      !selectedDataset?.[index] ||
-                      selectedDataset[index].length === 0
-                  )}
-                >
-                  <option value="" disabled>
-                    Filter Type
-                  </option>
-                  <option value="PositionRange">PositionRange</option>
-                  <option value="VariantIDs">VariantIDs</option>
-                </select>
-              )}
-
-              {showDatasetSelector &&
-                (searchType === "PositionRange" ? (
-                  <>
-                    <PositionRangeFilter
-                      posStart={posStart}
-                      setPosStart={setPosStart}
-                      posEnd={posEnd}
-                      setPosEnd={setPosEnd}
-                    />
-                    <div>
-                      <select
-                        value={selectedGroups || ""}
-                        onChange={(e) => handleInputChange(e.target.value)}
+                <br />
+                <div className={styles.datasetSelectorContainer}>
+                  <h4>Select Dataset:</h4>
+                  {datasets &&
+                    datasets.map((datasetGroup, groupIndex) => (
+                      <fieldset
+                        key={groupIndex}
+                        className={styles.datasetGroupFieldset}
                       >
-                        <option value="" disabled>
-                          Select a chromosome
-                        </option>
-                        {linkageGroups.map((group) => (
-                          <option key={group} value={group}>
-                            {selectedOption === "Germinate"
-                              ? CHROMConverter(group)
-                              : group}
-                          </option>
+                        <legend>
+                          Server:{" "}
+                          {selectedGigwaServers[groupIndex]?.replace(
+                            /^https?:\/\//,
+                            "",
+                          )}
+                        </legend>
+                        {datasetGroup.map((dataset) => (
+                          <label key={dataset} className={styles.radioLabel}>
+                            <input
+                              type="radio"
+                              name={`dataset-group-${groupIndex}`}
+                              value={dataset}
+                              checked={
+                                selectedDataset[groupIndex]?.[0] === dataset
+                              }
+                              onChange={() =>
+                                handleDatasetDetails(groupIndex, dataset)
+                              }
+                            />
+                            {dataset}
+                          </label>
                         ))}
-                      </select>
-                    </div>
-                  </>
-                ) : searchType === "VariantIDs" ? (
-                  <VariantListFilter />
-                ) : null)}
+                      </fieldset>
+                    ))}
+                </div>
+              </div>
+            )}
 
-              {selectedOption === "Germinate" && !showPrivacyRadio && (
+            {/* Filters that depend on searchType */}
+            {showDatasetSelector && (
+              <select
+                value={searchType || ""}
+                onChange={(e) => handleSearchTypeChange(e.target.value)}
+                className={styles.filterTypeSelect}
+                disabled={selectedGigwaServers.some(
+                  (_, index) =>
+                    !datasets?.[index] ||
+                    datasets[index].length === 0 ||
+                    !selectedDataset?.[index] ||
+                    selectedDataset[index].length === 0,
+                )}
+              >
+                <option value="" disabled>
+                  Filter Type
+                </option>
+                <option value="PositionRange">PositionRange</option>
+                <option value="VariantIDs">VariantIDs</option>
+              </select>
+            )}
+
+            {showDatasetSelector &&
+              (searchType === "PositionRange" ? (
                 <>
                   <PositionRangeFilter
                     posStart={posStart}
@@ -1138,8 +1102,6 @@ const GenotypeExplorer = () => {
                   />
                   <div>
                     <select
-                      id="linkageGroupSelect"
-                      className={styles.formControl}
                       value={selectedGroups || ""}
                       onChange={(e) => handleInputChange(e.target.value)}
                     >
@@ -1156,58 +1118,90 @@ const GenotypeExplorer = () => {
                     </select>
                   </div>
                 </>
-              )}
-            </aside>
+              ) : searchType === "VariantIDs" ? (
+                <VariantListFilter />
+              ) : null)}
 
-            {/* RIGHT: RESULTS */}
-            <main className={styles.resultsPane}>
-              {isGenomDataLoading && <LoadingComponent />}
+            {selectedOption === "Germinate" && !showPrivacyRadio && (
+              <>
+                <PositionRangeFilter
+                  posStart={posStart}
+                  setPosStart={setPosStart}
+                  posEnd={posEnd}
+                  setPosEnd={setPosEnd}
+                />
+                <div>
+                  <select
+                    id="linkageGroupSelect"
+                    className={styles.formControl}
+                    value={selectedGroups || ""}
+                    onChange={(e) => handleInputChange(e.target.value)}
+                  >
+                    <option value="" disabled>
+                      Select a chromosome
+                    </option>
+                    {linkageGroups.map((group) => (
+                      <option key={group} value={group}>
+                        {selectedOption === "Germinate"
+                          ? CHROMConverter(group)
+                          : group}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
+          </aside>
 
-              {genomData.length > 0 &&
-              alleleData &&
-              !isGenomDataLoading &&
-              selectedOption === "Gigwa" ? (
-                <>
-                  <div className={styles.resultsArea}>
-                    <div className={styles.tableScroll}>
-                      <GenotypeSearchResultsTable />
-                    </div>
+          {/* RIGHT: RESULTS */}
+          <main className={styles.resultsPane}>
+            {isGenomDataLoading && <LoadingComponent />}
+
+            {genomData.length > 0 &&
+            alleleData &&
+            !isGenomDataLoading &&
+            selectedOption === "Gigwa" ? (
+              <>
+                <div className={styles.resultsArea}>
+                  <div className={styles.tableScroll}>
+                    <GenotypeSearchResultsTable />
                   </div>
+                </div>
 
-                  {isExportGenomDataLoading && <LoadingComponent />}
-                  {!isExportGenomDataLoading && (
-                    <div className={styles.exportBar}>
-                      <select
-                        id="exportServerSelect"
-                        value={exportServer}
-                        onChange={(e) => setExportServer(e.target.value)}
-                      >
-                        <option value="" disabled>
-                          Select server
+                {isExportGenomDataLoading && <LoadingComponent />}
+                {!isExportGenomDataLoading && (
+                  <div className={styles.exportBar}>
+                    <select
+                      id="exportServerSelect"
+                      value={exportServer}
+                      onChange={(e) => setExportServer(e.target.value)}
+                    >
+                      <option value="" disabled>
+                        Select server
+                      </option>
+                      {selectedGigwaServers.map((server) => (
+                        <option key={server} value={server}>
+                          {server}
                         </option>
-                        {selectedGigwaServers.map((server) => (
-                          <option key={server} value={server}>
-                            {server}
-                          </option>
-                        ))}
-                      </select>
-                      <button
-                        onClick={handleExportVCF}
-                        style={{ marginLeft: "10px", padding: "3px 10px" }}
-                        className={styles.buttonPrimary}
-                      >
-                        Export VCF
-                      </button>
-                    </div>
-                  )}
-                </>
-              ) : selectedOption === "Germinate" &&
-                genomData &&
-                !isGenomDataLoading ? (
-                <GenotypeSearchResultsTable />
-              ) : null}
-            </main>
-          </div>
+                      ))}
+                    </select>
+                    <button
+                      onClick={handleExportVCF}
+                      style={{ marginLeft: "10px", padding: "3px 10px" }}
+                      className={styles.buttonPrimary}
+                    >
+                      Export VCF
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : selectedOption === "Germinate" &&
+              genomData &&
+              !isGenomDataLoading ? (
+              <GenotypeSearchResultsTable />
+            ) : null}
+          </main>
+        </div>
       </div>
     )
   );

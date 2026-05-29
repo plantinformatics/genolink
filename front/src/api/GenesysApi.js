@@ -1,6 +1,6 @@
 import BaseApi from "./BaseApi";
-import { genesysServer } from "../config/apiConfig";
-import oidcConfig from "../config/oidcConfig";
+import { genolinkServer } from "../config/apiConfig";
+import { BASE_PATH } from "../config/basePath";
 import { genolinkInternalApi } from "../pages/Home";
 import country2Region from "shared-data/Country2Region.json";
 
@@ -27,9 +27,11 @@ import {
 import { buildGenesysSelect } from "../components/metadata/MetadataColumns";
 import { germplasmStorageMapping } from "../components/metadata/filters/MultiSelectFilter";
 
+const GENESYS_API_BASE = `${BASE_PATH}/api/genesys`;
+
 class GenesysApi extends BaseApi {
   constructor() {
-    super(genesysServer);
+    super(genolinkServer);
     this.genotypedAccessions = [];
     this.genotypedSamples = [];
     this.genotypeStatus = [];
@@ -89,37 +91,18 @@ class GenesysApi extends BaseApi {
     return sampStatMapping[key] || "Unknown status";
   }
 
-  async fetchAndSetToken() {
-    try {
-      const endpoint = "/oauth/token";
-      const body = {
-        grant_type: "client_credentials",
-        client_id: oidcConfig.client_id,
-        client_secret: oidcConfig.client_secret,
-      };
-      const response = await this.post(endpoint, body, {
-        "Content-Type": "application/x-www-form-urlencoded",
-      });
-
-      const { access_token } = response;
-      this.setToken(access_token);
-    } catch (error) {
-      console.error("Error fetching token:", error);
-      throw new Error("Failed to fetch access token");
-    }
-  }
-
   async getDonorInstituteFullName(donorList) {
-    let endpoint = "/api/v2/vocabulary/wiews/decode";
     if (!donorList || donorList.length === 0) {
       return;
     }
+
+    const endpoint = `${GENESYS_API_BASE}/wiews/decode`;
     const instituteFullNames = await this.post(endpoint, donorList);
     return instituteFullNames;
   }
 
   async getGenesysSubsets(body) {
-    const endpoint = "/api/v2/subset/filter";
+    const endpoint = `${GENESYS_API_BASE}/subset/filter`;
     const limit = 200;
     const allSubsets = [];
 
@@ -196,8 +179,9 @@ class GenesysApi extends BaseApi {
           _text: userInput,
         };
       }
+
       const limit = 100;
-      const endpoint = `/api/v1/acn/overview?limit=${limit}`;
+      const endpoint = `${GENESYS_API_BASE}/overview?l=${limit}`;
       const searchData = await this.post(endpoint, body);
 
       const codes = this.extractSuggestions(searchData, "institute.code");
@@ -247,6 +231,7 @@ class GenesysApi extends BaseApi {
       const urlParams = new URLSearchParams(window.location.search);
       const filterMode = urlParams.get("filterMode");
       const genotypeIds = urlParams.get("genotypeIds");
+
       let body;
       if (!isReset && !filterMode && !genotypeIds) {
         body = {
@@ -278,7 +263,9 @@ class GenesysApi extends BaseApi {
 
       const pageSize = 500;
       const select = buildGenesysSelect(selectedColumnIds);
-      const endpoint = `/api/v1/acn/query?p=0&l=${pageSize}&select=${encodeURIComponent(select)}`;
+      const endpoint =
+        `${GENESYS_API_BASE}/accession/query` +
+        `?p=0&l=${pageSize}&select=${encodeURIComponent(select)}`;
       const searchData = await this.post(endpoint, body);
 
       dispatch(setSearchResults(searchData.content));
@@ -300,9 +287,12 @@ class GenesysApi extends BaseApi {
     try {
       const pageSize = 500;
       const select = buildGenesysSelect(selectedColumnIds);
-      const endpointQuery = `/api/v1/acn/query?p=0&l=${pageSize}&select=${encodeURIComponent(select)}`;
+      const endpointQuery =
+        `${GENESYS_API_BASE}/accession/query` +
+        `?p=0&l=${pageSize}&select=${encodeURIComponent(select)}`;
       const limit = 100;
-      const endpointOverview = `/api/v1/acn/overview?limit=${limit}`;
+      const endpointOverview = `${GENESYS_API_BASE}/overview?l=${limit}`;
+
       if (hasGenotype) {
         const requestBody = JSON.parse(JSON.stringify(filterData));
 
@@ -409,6 +399,7 @@ class GenesysApi extends BaseApi {
           this.post(endpointQuery, filterData),
           this.post(endpointOverview, filterData),
         ]);
+
         dispatch(setSearchResults(queryData.content));
         dispatch(setTotalAccessions(queryData.totalElements));
         dispatch(
@@ -468,6 +459,7 @@ class GenesysApi extends BaseApi {
           ),
         );
         dispatch(setPassportCurrentPage(0));
+
         return queryData.filterCode;
       }
     } catch (error) {
@@ -516,39 +508,21 @@ class GenesysApi extends BaseApi {
       const select = buildGenesysSelect(selectedColumnIds);
 
       const endpoint = filterCode
-        ? `/api/v1/acn/query?f=${filterCode}&p=${passportCurrentPage + 1}&l=${pageSize}&select=${encodeURIComponent(select)}`
-        : `/api/v1/acn/query?p=${passportCurrentPage + 1}&l=${pageSize}&select=${encodeURIComponent(select)}`;
+        ? `${GENESYS_API_BASE}/accession/query?f=${filterCode}&p=${
+            passportCurrentPage + 1
+          }&l=${pageSize}&select=${encodeURIComponent(select)}`
+        : `${GENESYS_API_BASE}/accession/query?p=${
+            passportCurrentPage + 1
+          }&l=${pageSize}&select=${encodeURIComponent(select)}`;
 
-      const response = await this.post(endpoint, null);
+      const response = await this.post(endpoint, {});
 
       if (hasGenotype) {
-        const genesysAccessions = response.content.map(
-          (item) => item.accessionNumber,
-        );
-        let genotypedResult = [];
-
-        const matchedAccessions = this.genotypedAccessions.filter((accession) =>
-          genesysAccessions.includes(accession),
-        );
-
-        genotypedResult = genotypedResult.concat(
-          response.content.filter((item) =>
-            matchedAccessions.includes(item.accessionNumber),
-          ),
-        );
-        dispatch(setSearchResults([...searchResults, ...genotypedResult]));
+        dispatch(setSearchResults([...searchResults, ...response.content]));
       } else {
-        const endpoint = filterCode
-          ? `/api/v1/acn/query?f=${filterCode}&p=${
-              passportCurrentPage + 1
-            }&l=${pageSize}&select=${select}`
-          : `/api/v1/acn/query?p=${
-              passportCurrentPage + 1
-            }&l=${pageSize}&select=${select}`;
-
-        const response = await this.post(endpoint, null);
         dispatch(setSearchResults([...searchResults, ...response.content]));
       }
+
       dispatch(setPassportCurrentPage(passportCurrentPage + 1));
     } catch (error) {
       console.error("Error fetching more data:", error);
@@ -563,11 +537,16 @@ class GenesysApi extends BaseApi {
       const select = Object.keys(selectedMappings)
         .map((field) => selectedMappings[field].apiParam)
         .join(",");
-      const firstGenesysEndpoint = `/api/v1/acn/query?p=0&l=${pageSize}&select=${select}`;
+
+      const firstGenesysEndpoint =
+        `${GENESYS_API_BASE}/accession/query` +
+        `?p=0&l=${pageSize}&select=${encodeURIComponent(select)}`;
+
       const firstGenesysResult = await this.post(
         firstGenesysEndpoint,
         filterData,
       );
+
       let allResults = firstGenesysResult.content || [];
       const filterCode = firstGenesysResult.filterCode;
 
@@ -580,9 +559,12 @@ class GenesysApi extends BaseApi {
 
       const genesysRequests = [];
       for (let genesysPage = 1; genesysPage < totalPages; genesysPage++) {
-        const endpoint = `/api/v1/acn/query?f=${filterCode}&p=${genesysPage}&l=${pageSize}&select=${select}`;
+        const endpoint =
+          `${GENESYS_API_BASE}/accession/query` +
+          `?f=${filterCode}&p=${genesysPage}&l=${pageSize}&select=${encodeURIComponent(select)}`;
+
         genesysRequests.push(async () => {
-          const response = await this.post(endpoint, null);
+          const response = await this.post(endpoint, {});
           return response;
         });
       }
@@ -738,6 +720,7 @@ class GenesysApi extends BaseApi {
             }
             return dateStr || "";
           }
+
           if (fieldPath === "donorName") {
             const name = item["donorName"] || "";
             const code = item["donorCode"] || "";
@@ -746,6 +729,7 @@ class GenesysApi extends BaseApi {
             if (code) return code;
             return "";
           }
+
           if (fieldPath === "pdci.score") {
             return item["pdci.score"] || "";
           }

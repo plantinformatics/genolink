@@ -3,26 +3,26 @@ const fetchLinkageGroups = async (
   genolinkGigwaApi,
   genolinkGerminateApi,
   selectedStudyDbId,
-  selectedGigwaServer,
-  checkedAccessionsObject
+  checkedAccessionsObject,
 ) => {
   try {
     if (platform === "Gigwa") {
-      return await genolinkGigwaApi.fetchGigwaLinkageGroups(
-        selectedGigwaServer,
-        selectedStudyDbId
-      );
-    } else if (platform === "Germinate") {
+      return await genolinkGigwaApi.fetchGigwaLinkageGroups(selectedStudyDbId);
+    }
+
+    if (platform === "Germinate") {
       const accession = Object.keys(checkedAccessionsObject)[0];
+
       return await genolinkGerminateApi.fetchGerminateLinkageGroups(
         germinateUsername,
         germinatePassword,
-        accession
+        accession,
       );
     }
   } catch (error) {
     console.error("Error fetching linkage groups:", error);
   }
+
   return [];
 };
 
@@ -30,7 +30,6 @@ export const linkageGroupFilter = ({
   selectedStudyDbId,
   genolinkGigwaApi,
   genolinkGerminateApi,
-  selectedGigwaServer,
   platform,
   checkedAccessionsObject,
 }) => {
@@ -39,7 +38,6 @@ export const linkageGroupFilter = ({
     genolinkGigwaApi,
     genolinkGerminateApi,
     selectedStudyDbId,
-    selectedGigwaServer,
-    checkedAccessionsObject
+    checkedAccessionsObject,
   );
 };

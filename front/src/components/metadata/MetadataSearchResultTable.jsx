@@ -290,16 +290,16 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
   const fetchMore = async () => {
     try {
       setIsPaginating(true);
+
       await genesysApi.fetchMoreResults({
         filterCode,
         passportCurrentPage,
-        // pageSize: hasGenotype ? 10000 : 500,
         pageSize: 500,
         dispatch,
         searchResults,
-        hasGenotype,
         selectedColumnIds: visibleColumnIds,
       });
+
       setRemainingPages((prev) => Math.max(prev - 1, 0));
     } catch (error) {
       console.error("Error fetching more results:", error);
@@ -355,14 +355,14 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
             />
 
             {visibleColumnIds.map((id) => (
-                <col
-                  key={id}
+              <col
+                key={id}
                 style={{
-                          width: `${getColumnWidth(id)}px`,
-                          minWidth: `${getColumnWidth(id)}px`,
-                          maxWidth: `${getColumnWidth(id)}px`,
+                  width: `${getColumnWidth(id)}px`,
+                  minWidth: `${getColumnWidth(id)}px`,
+                  maxWidth: `${getColumnWidth(id)}px`,
                 }}
-                />
+              />
             ))}
           </colgroup>
           <thead className={styles.tableHead}>
@@ -380,7 +380,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
                 return (
                   <th key={id} scope="col" className={styles.resizableHeader}>
                     <span className={styles.headerLabel}>
-                    {col?.label || id}
+                      {col?.label || id}
                     </span>
 
                     <div
