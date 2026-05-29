@@ -42,6 +42,7 @@ services:
     restart: always
     volumes:
       - ./back/uploads:/app/uploads
+      - ./back/logs:/app/logs
 
   db:
     image: mysql:5.7
