@@ -14,11 +14,12 @@ const BASE_PATH = rawBase.replace(/\/+$/, "");
 app.use(cors());
 app.use(express.json({ limit: "500mb" }));
 app.use(trackRequests);
-app.use(`${BASE_PATH}/api`, routes);
 
 app.get(`${BASE_PATH}/api/ping`, (_req, res) =>
   res.json({ ok: true, base: BASE_PATH }),
 );
+
+app.use(`${BASE_PATH}/api`, routes);
 
 app.use(
   BASE_PATH || "/",
