@@ -3,6 +3,35 @@
 
 **Note:** The following are example requests demonstrating how to use the Genolink API endpoints to retrieve genotype data.
 
+## Prerequisite: Generate Gigwa Session ID
+
+Before sending any request to genotype-related endpoints that contain `/gigwa/` in the URL, first generate a Gigwa session ID.
+
+#### Request
+
+```bash
+POST https://genolink.plantinformatics.io/api/gigwa/generateGigwaToken
+```
+
+#### Request Body
+
+```json
+{
+    "selectedGigwaServer": "https://gigwa.plantinformatics.io"
+}
+```
+
+#### Response
+
+```json
+{
+    "gigwaSessionId": "fe9b59cc-34aa-43b7-b1e7-0d92cd414782"
+}
+```
+
+The returned `gigwaSessionId` must be included in the request body of all subsequent `/gigwa/` endpoint requests.
+
+
 There are two main scenarios for retrieving genotype data for samples. The process involves sending a series of requests to specific API endpoints. Here’s an overview of how to proceed with each scenario. 
 
 ## Scenario 1: Users Know the Sample Names:
