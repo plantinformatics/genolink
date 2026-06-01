@@ -1,4 +1,5 @@
 const logger = require("./logger");
+const isSuspiciousPath = require("../utils/isSuspiciousPath");
 
 const getCleanPath = (req) => {
   return (req.originalUrl || req.url || req.path).split("?")[0];
@@ -47,6 +48,10 @@ const isStaticAsset = (path) => {
 
 const getUsageCategory = (req) => {
   const path = getCleanPath(req);
+
+  if (isSuspiciousPath(req.originalUrl || path)) {
+    return "suspicious_probe";
+  }
 
   if (path.includes("/api/ping")) {
     return "health_check";
