@@ -533,9 +533,14 @@ class GenesysApi extends BaseApi {
   async downloadFilteredData(filterData, selectedMappings, hasGenotype) {
     try {
       const pageSize = 10000;
+
       const batchSize = 50;
-      const select = Object.keys(selectedMappings)
-        .map((field) => selectedMappings[field].apiParam)
+      const shouldDownloadFigsSet = Boolean(selectedMappings["FIGs Set"]);
+
+      const genesysSelectedMappings = { ...selectedMappings };
+      delete genesysSelectedMappings["FIGs Set"];
+      const select = Object.keys(genesysSelectedMappings)
+        .map((field) => genesysSelectedMappings[field].apiParam)
         .join(",");
 
       const firstGenesysEndpoint =
@@ -587,9 +592,14 @@ class GenesysApi extends BaseApi {
           );
         }
 
-        const accessionIds = allResults.map((item) => item.accessionNumber);
-        const figMapping =
-          await genolinkInternalApi.getFigsByAccessions(accessionIds);
+        let figMapping = {};
+
+        if (shouldDownloadFigsSet) {
+          const accessionIds = allResults.map((item) => item.accessionNumber);
+
+          figMapping =
+            await genolinkInternalApi.getFigsByAccessions(accessionIds);
+        }
 
         const selectedMappingsForTSV = { ...selectedMappings };
         delete selectedMappingsForTSV["Country Code"];
