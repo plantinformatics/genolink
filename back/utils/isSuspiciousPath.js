@@ -2,7 +2,15 @@ const suspiciousPatterns = [
   ".env",
   ".git/",
   ".git\\",
+  ".gitlab-ci",
   ".metrics",
+  ".aws/",
+  "database.yml",
+  "wp-config",
+  "backup.zip",
+  "server-status",
+  "actuator/",
+  "api-docs",
   "phpunit",
   "eval-stdin.php",
   "wp-admin",
@@ -20,6 +28,10 @@ const suspiciousPatterns = [
   "think%5capp",
   "invokefunction",
   "containers/json",
+  "hnap1",
+  "psia/",
+  "onvif/",
+  "nsepa_setup.exe",
   "hello.world",
   "owa/auth",
 ];
@@ -32,6 +44,7 @@ const suspiciousExtensions = [
   ".asp",
   ".jsp",
   ".cgi",
+  ".exe",
 ];
 
 const isSuspiciousPath = (url = "") => {
