@@ -37,7 +37,7 @@ RUN npm run build
 FROM node:20-alpine
 
 # Set the working directory
-WORKDIR /app
+WORKDIR /app/back
 
 # Copy package.json and package-lock.json from backend
 COPY back/package*.json ./
@@ -48,7 +48,7 @@ RUN npm install
 # Copy the rest of the backend application code, excluding node_modules
 COPY back/ .
 
-COPY shared-data ./shared-data
+COPY shared-data ../shared-data
 
 # Copy the frontend build files from the previous stage
 COPY --from=frontend-build /app/dist ./dist

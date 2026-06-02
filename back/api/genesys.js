@@ -6,7 +6,7 @@ const https = require("https");
 const config = require("../config/appConfig");
 const logger = require("../middlewares/logger");
 const sampleNameToAccession = require("../utils/sampleNameToAccession");
-const country2Region = require("../shared-data/Country2Region.json");
+const country2Region = require("../../shared-data/Country2Region.json");
 const { Op } = require("sequelize");
 const db = require("../models");
 
