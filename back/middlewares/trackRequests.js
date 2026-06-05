@@ -1,5 +1,7 @@
 const logger = require("./logger");
-const isSuspiciousPath = require("../utils/isSuspiciousPath");
+
+const rawBase = process.env.BASE_PATH || "";
+const BASE_PATH = rawBase.replace(/\/+$/, "");
 
 const getCleanPath = (req) => {
   return (req.originalUrl || req.url || req.path).split("?")[0];
@@ -47,12 +49,24 @@ const isStaticAsset = (path) => {
   );
 };
 
-const getUsageCategory = (req) => {
-  const path = getCleanPath(req);
-
-  if (isSuspiciousPath(req.originalUrl || path)) {
-    return "suspicious_probe";
+const isFrontendEntryPage = (req, path) => {
+  if (req.method !== "GET") {
+    return false;
   }
+
+  if (!BASE_PATH) {
+    return path === "/";
+  }
+
+  return path === BASE_PATH || path === `${BASE_PATH}/`;
+};
+
+const getUsageCategory = (req) => {
+  if (req.usageCategoryOverride) {
+    return req.usageCategoryOverride;
+  }
+
+  const path = getCleanPath(req);
 
   if (path.includes("/api/ping")) {
     return "health_check";
@@ -74,7 +88,7 @@ const getUsageCategory = (req) => {
     return "api_other";
   }
 
-  if (req.method === "GET") {
+  if (isFrontendEntryPage(req, path)) {
     return "frontend_page_view";
   }
 
