@@ -9,14 +9,12 @@ class GenolinkGigwaApi extends BaseApi {
     this.gigwaSessionId = null;
   }
 
-  getSelectedGigwaServer(selectedGigwaServer = "") {
-    const server = selectedGigwaServer || this.selectedGigwaServer;
-
-    if (!server) {
+  getSelectedGigwaServer() {
+    if (!this.selectedGigwaServer) {
       throw new Error("Gigwa server is not available.");
     }
 
-    return server;
+    return this.selectedGigwaServer;
   }
 
   ensureAuthenticated() {
@@ -27,9 +25,9 @@ class GenolinkGigwaApi extends BaseApi {
     }
   }
 
-  async getGigwaToken(username = "", password = "", selectedGigwaServer = "") {
+  async getGigwaToken(username = "", password = "") {
     try {
-      const server = this.getSelectedGigwaServer(selectedGigwaServer);
+      const server = this.getSelectedGigwaServer();
 
       const body = {
         selectedGigwaServer: server,
@@ -58,31 +56,23 @@ class GenolinkGigwaApi extends BaseApi {
     }
   }
 
-  async getGigwaServers() {
-    try {
-      return await this.get(`${BASE_PATH}/api/gigwa/gigwaServers`);
-    } catch (error) {
-      console.error("Error fetching Gigwa servers:", error);
-      throw error;
-    }
-  }
-
-  async searchSamplesInDatasets(
+  async searchSamplesInDatasets({
     accessions,
-    accessionNames,
+    accessionNames = {},
+    accessionDoiPairs = [],
     onlyAccessions = false,
-    selectedGigwaServer = "",
-  ) {
+  }) {
     try {
       this.ensureAuthenticated();
 
-      const server = this.getSelectedGigwaServer(selectedGigwaServer);
+      const server = this.getSelectedGigwaServer();
 
       const body = {
         selectedGigwaServer: server,
         gigwaSessionId: this.gigwaSessionId,
         accessions,
         accessionNames,
+        accessionDoiPairs,
         onlyAccessions,
       };
 
@@ -102,9 +92,7 @@ class GenolinkGigwaApi extends BaseApi {
 
       const requestBody = {
         ...body,
-        selectedGigwaServer: this.getSelectedGigwaServer(
-          body.selectedGigwaServer,
-        ),
+        selectedGigwaServer: this.getSelectedGigwaServer(),
         gigwaSessionId: this.gigwaSessionId,
       };
 
@@ -124,9 +112,7 @@ class GenolinkGigwaApi extends BaseApi {
 
       const requestBody = {
         ...body,
-        selectedGigwaServer: this.getSelectedGigwaServer(
-          body.selectedGigwaServer,
-        ),
+        selectedGigwaServer: this.getSelectedGigwaServer(),
         gigwaSessionId: this.gigwaSessionId,
       };
 
@@ -146,9 +132,7 @@ class GenolinkGigwaApi extends BaseApi {
 
       const requestBody = {
         ...body,
-        selectedGigwaServer: this.getSelectedGigwaServer(
-          body.selectedGigwaServer,
-        ),
+        selectedGigwaServer: this.getSelectedGigwaServer(),
         gigwaSessionId: this.gigwaSessionId,
       };
 
@@ -160,7 +144,7 @@ class GenolinkGigwaApi extends BaseApi {
       );
 
       const fileName =
-        requestBody.selectedSamplesDetails?.[0]?.studyDbId?.split("§")?.[0] ||
+        requestBody.selectedCallSetDetails?.[0]?.studyDbId?.split("§")?.[0] ||
         "gigwa-export";
 
       const url = window.URL.createObjectURL(
@@ -182,11 +166,11 @@ class GenolinkGigwaApi extends BaseApi {
     }
   }
 
-  async fetchGigwaLinkageGroups(selectedStudyDbId, selectedGigwaServer = "") {
+  async fetchGigwaLinkageGroups(selectedStudyDbId) {
     try {
       this.ensureAuthenticated();
 
-      const server = this.getSelectedGigwaServer(selectedGigwaServer);
+      const server = this.getSelectedGigwaServer();
 
       const referenceSetDbIdsResponse = await this.get(
         `${BASE_PATH}/api/gigwa/brapi/v2/referencesets`,

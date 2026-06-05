@@ -1,14 +1,12 @@
 import { useEffect, useState } from "react";
 import GenesysApi from "../api/GenesysApi";
 import SearchFilters from "../components/metadata/filters/SearchFilters";
-import GenolinkGigwaApi from "../api/GenolinkGigwaApi";
 import GenolinkInternalApi from "../api/GenolinkInternalApi";
 import { useDispatch } from "react-redux";
 import { setMetadataSelectedColumns } from "../redux/passport/passportActions";
 import { loadSelectedColumnsFromStorage } from "../components/metadata/MetadataColumns";
 
 export const genesysApi = new GenesysApi();
-export const genolinkGigwaApi = new GenolinkGigwaApi();
 export const genolinkInternalApi = new GenolinkInternalApi();
 
 const Home = () => {

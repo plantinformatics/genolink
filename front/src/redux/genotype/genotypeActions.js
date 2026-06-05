@@ -28,14 +28,14 @@ export const setSelectedVariantSetDbId = (variantSetDbId) => ({
   payload: variantSetDbId,
 });
 
-export const setSampleDbIds = (sampleDbIds) => ({
-  type: "SET_SAMPLE_DB_IDS",
-  payload: sampleDbIds,
+export const setCallSetDbIds = (callSetDbIds) => ({
+  type: "SET_CALL_SET_DB_IDS",
+  payload: callSetDbIds,
 });
 
-export const setSampleNames = (sampleNames) => ({
-  type: "SET_SAMPLE_NAMES",
-  payload: sampleNames,
+export const setGermplasms = (germplasms) => ({
+  type: "SET_GERMPLASMS",
+  payload: germplasms,
 });
 
 export const setCompleteNames = (names) => ({
@@ -43,8 +43,8 @@ export const setCompleteNames = (names) => ({
   payload: names,
 });
 
-export const setSelectedSamplesDetails = (details) => ({
-  type: "SET_SELECTED_SAMPLES_DETAILS",
+export const setSelectedCallSetDetails = (details) => ({
+  type: "SET_SELECTED_CALL_SET_DETAILS",
   payload: details,
 });
 
@@ -88,8 +88,8 @@ export const setDatasets = (datasets) => ({
   payload: datasets,
 });
 
-export const setSampleDetails = (details) => ({
-  type: "SET_SAMPLE_DETAILS",
+export const setCallSetDetails = (details) => ({
+  type: "SET_CALL_SET_DETAILS",
   payload: details,
 });
 
@@ -122,3 +122,7 @@ export const resetGenotype = () => ({
   type: "RESET_GENOTYPE",
 });
 
+export const setSampleSourceData = (data) => ({
+  type: "SET_SAMPLE_SOURCE_DATA",
+  payload: data,
+});

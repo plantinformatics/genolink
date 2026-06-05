@@ -1,0 +1,90 @@
+.tableWrapper {
+  display: inline-block;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 70vh;
+  width: 100%;
+  position: relative;
+}
+
+.table {
+  width: 100%;
+  margin-bottom: 1rem;
+  color: #212529;
+  border-collapse: collapse;
+  min-width: max-content;
+}
+
+.table th,
+.table td {
+  padding: 0.75rem;
+  vertical-align: top;
+  border: 1px solid #dee2e6;
+}
+
+.table thead th {
+  font-family: Roboto, sans-serif;
+  position: sticky;
+  top: 0;
+  background-color: #add8e6;
+  z-index: 10;
+  white-space: nowrap;
+}
+
+.table tbody tr:nth-of-type(odd) {
+  background-color: rgba(0, 0, 0, 0.075);
+}
+
+.headerCell {
+  height: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bodyCell {
+  white-space: nowrap;
+}
+
+.tickCell {
+  white-space: nowrap;
+  text-align: left;
+  padding-right: 15px;
+}
+
+.tickBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background-color: #28a745;
+  color: white;
+  font-weight: bold;
+  text-decoration: none;
+  box-sizing: border-box;
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
+}
+
+.headerLink {
+  color: #0056b3;
+  text-decoration: underline;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-block;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.headerLink:hover {
+  color: #003d80;
+  background-color: rgba(0, 123, 255, 0.08);
+  text-decoration: underline;
+}
+
+.headerLink:focus {
+  outline: 2px solid #80bdff;
+  outline-offset: 2px;
+}
