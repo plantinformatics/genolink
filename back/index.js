@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const express = require("express");
 const app = express();
 const cors = require("cors");
@@ -7,8 +9,6 @@ const appConfig = require("./config/appConfig");
 const trackRequests = require("./middlewares/trackRequests");
 const errorHandler = require("./middlewares/errorHandler");
 const path = require("path");
-
-require("dotenv").config();
 
 const rawBase = process.env.BASE_PATH || "";
 const BASE_PATH = rawBase.replace(/\/+$/, "");
@@ -23,6 +23,14 @@ app.get(`${BASE_PATH}/api/ping`, (_req, res) =>
 );
 
 app.use(`${BASE_PATH}/api`, routes);
+
+app.use(`${BASE_PATH}/api`, (req, res) => {
+  req.usageCategoryOverride = "api_not_found";
+
+  return res.status(404).json({
+    error: "API endpoint not found",
+  });
+});
 
 app.use(
   BASE_PATH || "/",
