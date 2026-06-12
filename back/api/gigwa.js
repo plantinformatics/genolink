@@ -3,6 +3,9 @@ const router = express.Router();
 const axios = require("axios");
 const logger = require("../middlewares/logger");
 const config = require("../config/appConfig");
+const {
+  getGenotypeMappingsByAccessions,
+} = require("../utils/genotypeMappingResolver");
 const rawBase = process.env.BASE_PATH || "";
 const BASE_PATH = rawBase.replace(/\/+$/, "");
 
@@ -438,33 +441,29 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
     const token = getGigwaTokenFromBody(req.body);
 
     const samplesObj = await runApiStep(
-      "Map Genesys accessions to genotype IDs",
+      "Map accessions to genotype IDs",
       async () => {
-        const response = await axios.post(
-          `${config.genolinkServer}${BASE_PATH}/api/internalApi/mapAccessionToGenotypeId`,
-          {
-            Accessions: accessions,
-          },
-        );
-
-        return response.data;
+        return await getGenotypeMappingsByAccessions(accessions);
       },
     );
 
     if (!samplesObj?.Samples || !Array.isArray(samplesObj.Samples)) {
-      logger.error("Invalid response from mapAccessionToGenotypeId API", {
+      logger.error("Invalid response from genotype mapping resolver", {
         samplesObj,
       });
 
       return res.status(500).send({
         message:
-          "Invalid response from mapAccessionToGenotypeId API. Expected Samples array.",
-        step: "Map Genesys accessions to genotype IDs",
+          "Invalid response from genotype mapping resolver. Expected Samples array.",
+        step: "Map accessions to genotype IDs",
       });
     }
-
-    const genotypeIds = samplesObj.Samples.map((obj) => obj.Sample || []);
-    const Accessions = samplesObj.Samples.map((obj) => obj.Accession || []);
+    const genotypeIds = samplesObj.Samples.map((obj) => obj.Sample).filter(
+      Boolean,
+    );
+    const Accessions = samplesObj.Samples.map((obj) => obj.Accession).filter(
+      Boolean,
+    );
 
     const accessionByGenotypeId = new Map(
       samplesObj.Samples.map((item) => [item.Sample, item.Accession]),

@@ -17,6 +17,7 @@ import {
 } from "../../redux/passport/passportActions";
 import { genesysApi } from "../../pages/Home";
 import { genolinkInternalApi } from "../../pages/Home";
+import { genotypeMappingSource } from "../../config/apiConfig";
 import country2Region from "shared-data/Country2Region.json";
 
 import { batch } from "react-redux";
@@ -90,6 +91,9 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
     ),
   );
   const [figMapping, setFigMapping] = useState({});
+  const [genesysGenotypeByAccession, setGenesysGenotypeByAccession] = useState(
+    {},
+  );
   const [isPending, startTransition] = useTransition();
   const [columnWidths, setColumnWidths] = useState({});
   const resizeStateRef = useRef(null);
@@ -137,6 +141,14 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
 
   const genotypedSamples = genesysApi.genotypedSamples || [];
 
+  const shouldFetchGenesysGenotypeIds = useMemo(() => {
+    return (
+      genotypeMappingSource === "genesys" ||
+      genotypeMappingSource === "hybrid_internal_first" ||
+      genotypeMappingSource === "hybrid_genesys_first"
+    );
+  }, []);
+
   useEffect(() => {
     if (!searchResults || searchResults.length === 0) {
       setSelectAll(false);
@@ -164,6 +176,60 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
 
     fetchFigs();
   }, [searchResults]);
+
+  useEffect(() => {
+    if (!shouldFetchGenesysGenotypeIds) return;
+    if (!searchResults || searchResults.length === 0) return;
+
+    let cancelled = false;
+
+    const fetchGenesysGenotypeIdsForVisibleRows = async () => {
+      try {
+        const accessionsToCheck = searchResults
+          .map((item) => item.accessionNumber)
+          .filter(Boolean)
+          .filter((acc) => !genotypedIndexByAcc.has(acc))
+          .filter((acc) => !genesysGenotypeByAccession[acc]);
+
+        const uniqueAccessionsToCheck = [...new Set(accessionsToCheck)];
+
+        if (uniqueAccessionsToCheck.length === 0) return;
+
+        const response = await genesysApi.genotypeInfo(uniqueAccessionsToCheck);
+
+        const samples = Array.isArray(response?.Samples)
+          ? response.Samples
+          : [];
+
+        if (cancelled || samples.length === 0) return;
+
+        setGenesysGenotypeByAccession((prev) => {
+          const next = { ...prev };
+
+          samples.forEach((sample) => {
+            if (sample.Accession && sample.Sample) {
+              next[sample.Accession] = sample.Sample;
+            }
+          });
+
+          return next;
+        });
+      } catch (error) {
+        console.error("Failed to fetch Genesys genotype IDs:", error);
+      }
+    };
+
+    fetchGenesysGenotypeIdsForVisibleRows();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    searchResults,
+    shouldFetchGenesysGenotypeIds,
+    genotypedIndexByAcc,
+    genesysGenotypeByAccession,
+  ]);
 
   const getColumnWidth = useCallback(
     (id) => {
@@ -398,14 +464,28 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
           <tbody>
             {searchResults?.map((item, index) => {
               const acc = item.accessionNumber;
-              const status =
-                statusByAcc.get(acc) ??
-                (acc?.startsWith("AGG") ? "TBC" : "N/A");
               const gIdx = genotypedIndexByAcc.get(acc) ?? -1;
-              const genotypeID =
+
+              const internalGenotypeID =
                 gIdx !== -1 && Array.isArray(genotypedSamples)
                   ? genotypedSamples[gIdx]
-                  : "N/A";
+                  : null;
+
+              const genesysGenotypeID = genesysGenotypeByAccession[acc] || null;
+
+              const genotypeID =
+                genotypeMappingSource === "genesys" ||
+                genotypeMappingSource === "hybrid_genesys_first"
+                  ? genesysGenotypeID || internalGenotypeID || "N/A"
+                  : internalGenotypeID || genesysGenotypeID || "N/A";
+
+              const status =
+                statusByAcc.get(acc) ??
+                (genesysGenotypeID
+                  ? "Completed"
+                  : acc?.startsWith("AGG")
+                    ? "TBC"
+                    : "N/A");
               const isExpanded = expandedRow === index;
 
               return (

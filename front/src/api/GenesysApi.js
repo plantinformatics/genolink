@@ -1,5 +1,5 @@
 import BaseApi from "./BaseApi";
-import { genolinkServer } from "../config/apiConfig";
+import { genolinkServer, genotypeMappingSource } from "../config/apiConfig";
 import { BASE_PATH } from "../config/basePath";
 import { genolinkInternalApi } from "../pages/Home";
 import country2Region from "shared-data/Country2Region.json";
@@ -140,6 +140,41 @@ class GenesysApi extends BaseApi {
     return allSubsets;
   }
 
+  async genotypeInfo(accessionNumbers) {
+    if (!Array.isArray(accessionNumbers) || accessionNumbers.length === 0) {
+      return {
+        Samples: [],
+        totalRequestedAccessions: 0,
+        totalMappedAccessions: 0,
+        source: "genesys",
+      };
+    }
+
+    const cleanedAccessions = [
+      ...new Set(
+        accessionNumbers
+          .filter((item) => typeof item === "string")
+          .map((item) => item.trim())
+          .filter(Boolean),
+      ),
+    ];
+
+    if (cleanedAccessions.length === 0) {
+      return {
+        Samples: [],
+        totalRequestedAccessions: 0,
+        totalMappedAccessions: 0,
+        source: "genesys",
+      };
+    }
+
+    const endpoint = `${GENESYS_API_BASE}/genotype-ids`;
+
+    return await this.post(endpoint, {
+      accessionNumbers: cleanedAccessions,
+    });
+  }
+
   async fetchInitialFilterData(
     dispatch,
     userInput = " ",
@@ -278,6 +313,162 @@ class GenesysApi extends BaseApi {
     }
   }
 
+  normaliseAccessionNumber(accession) {
+    return String(accession || "")
+      .replace(/"/g, "")
+      .trim()
+      .toUpperCase();
+  }
+
+  addUniqueAccessions(targetMap, accessions = []) {
+    if (!Array.isArray(accessions)) {
+      return;
+    }
+
+    accessions.forEach((accession) => {
+      const cleaned = String(accession || "")
+        .replace(/"/g, "")
+        .trim();
+      const normalised = this.normaliseAccessionNumber(cleaned);
+
+      if (cleaned && normalised && !targetMap.has(normalised)) {
+        targetMap.set(normalised, cleaned);
+      }
+    });
+  }
+
+  getInternalGenotypedAccessionsForRequest(requestBody = {}) {
+    const internalGenotypedAccessions = Array.isArray(this.genotypedAccessions)
+      ? this.genotypedAccessions
+      : [];
+
+    const internalMap = new Map();
+    this.addUniqueAccessions(internalMap, internalGenotypedAccessions);
+
+    const requestedAccessions = Array.isArray(requestBody.accessionNumbers)
+      ? requestBody.accessionNumbers
+      : [];
+
+    if (requestedAccessions.length > 0) {
+      return requestedAccessions
+        .map((accession) =>
+          String(accession || "")
+            .replace(/"/g, "")
+            .trim(),
+        )
+        .filter((accession) =>
+          internalMap.has(this.normaliseAccessionNumber(accession)),
+        );
+    }
+
+    return Array.from(internalMap.values());
+  }
+
+  async fetchAllGenesysGenotypedAccessions(filterData = {}) {
+    const pageSize = 10000;
+    const select = "accessionNumber";
+
+    const requestBody = JSON.parse(JSON.stringify(filterData || {}));
+    requestBody.genotyped = true;
+
+    const firstEndpoint =
+      `${GENESYS_API_BASE}/accession/query` +
+      `?p=0&l=${pageSize}&select=${encodeURIComponent(select)}`;
+
+    const firstResponse = await this.post(firstEndpoint, requestBody);
+
+    const accessionMap = new Map();
+
+    this.addUniqueAccessions(
+      accessionMap,
+      (firstResponse.content || []).map((item) => item.accessionNumber),
+    );
+
+    const totalPages =
+      firstResponse.totalPages ||
+      Math.ceil((firstResponse.totalElements || 0) / pageSize) ||
+      1;
+
+    const filterCode = firstResponse.filterCode;
+
+    for (let page = 1; page < totalPages; page++) {
+      const endpoint = filterCode
+        ? `${GENESYS_API_BASE}/accession/query?f=${filterCode}&p=${page}&l=${pageSize}&select=${encodeURIComponent(select)}`
+        : `${GENESYS_API_BASE}/accession/query?p=${page}&l=${pageSize}&select=${encodeURIComponent(select)}`;
+
+      const response = await this.post(endpoint, filterCode ? {} : requestBody);
+
+      this.addUniqueAccessions(
+        accessionMap,
+        (response.content || []).map((item) => item.accessionNumber),
+      );
+    }
+
+    return Array.from(accessionMap.values());
+  }
+
+  async buildGenotypedRequestBody(filterData = {}) {
+    const requestBody = JSON.parse(JSON.stringify(filterData || {}));
+
+    const internalGenotypedAccessions =
+      this.getInternalGenotypedAccessionsForRequest(requestBody);
+
+    if (genotypeMappingSource === "internal") {
+      requestBody.accessionNumbers =
+        internalGenotypedAccessions.length > 0
+          ? internalGenotypedAccessions
+          : ["__INVALID__"];
+
+      delete requestBody.genotyped;
+
+      return requestBody;
+    }
+
+    if (genotypeMappingSource === "genesys") {
+      requestBody.genotyped = true;
+      delete requestBody.accessionNumbers;
+
+      return requestBody;
+    }
+
+    if (
+      genotypeMappingSource === "hybrid_internal_first" ||
+      genotypeMappingSource === "hybrid_genesys_first"
+    ) {
+      if (internalGenotypedAccessions.length === 0) {
+        requestBody.genotyped = true;
+        delete requestBody.accessionNumbers;
+
+        return requestBody;
+      }
+
+      const genesysGenotypedAccessions =
+        await this.fetchAllGenesysGenotypedAccessions(requestBody);
+
+      const mergedAccessionsMap = new Map();
+
+      this.addUniqueAccessions(
+        mergedAccessionsMap,
+        internalGenotypedAccessions,
+      );
+      this.addUniqueAccessions(mergedAccessionsMap, genesysGenotypedAccessions);
+
+      const mergedAccessions = Array.from(mergedAccessionsMap.values());
+
+      requestBody.accessionNumbers =
+        mergedAccessions.length > 0 ? mergedAccessions : ["__INVALID__"];
+
+      delete requestBody.genotyped;
+
+      return requestBody;
+    }
+
+    requestBody.genotyped = true;
+    delete requestBody.accessionNumbers;
+
+    return requestBody;
+  }
+
   async applyFilter(
     filterData,
     dispatch,
@@ -294,31 +485,7 @@ class GenesysApi extends BaseApi {
       const endpointOverview = `${GENESYS_API_BASE}/overview?l=${limit}`;
 
       if (hasGenotype) {
-        const requestBody = JSON.parse(JSON.stringify(filterData));
-
-        const genotypedAccessionSet = new Set(
-          this.genotypedAccessions.map((acc) =>
-            String(acc).replace(/"/g, "").trim().toUpperCase(),
-          ),
-        );
-
-        if (
-          Array.isArray(requestBody.accessionNumbers) &&
-          requestBody.accessionNumbers.length > 0
-        ) {
-          const existingAccessions = requestBody.accessionNumbers.map((acc) =>
-            String(acc).replace(/"/g, "").trim().toUpperCase(),
-          );
-
-          const matchedAccessions = existingAccessions.filter((acc) =>
-            genotypedAccessionSet.has(acc),
-          );
-
-          requestBody.accessionNumbers =
-            matchedAccessions.length > 0 ? matchedAccessions : ["__INVALID__"];
-        } else {
-          requestBody.accessionNumbers = Array.from(genotypedAccessionSet);
-        }
+        const requestBody = await this.buildGenotypedRequestBody(filterData);
 
         const [queryData, filterDataResponse] = await Promise.all([
           this.post(endpointQuery, requestBody),
@@ -501,7 +668,6 @@ class GenesysApi extends BaseApi {
     pageSize,
     dispatch,
     searchResults,
-    hasGenotype,
     selectedColumnIds = null,
   }) {
     try {
@@ -516,18 +682,51 @@ class GenesysApi extends BaseApi {
           }&l=${pageSize}&select=${encodeURIComponent(select)}`;
 
       const response = await this.post(endpoint, {});
-
-      if (hasGenotype) {
-        dispatch(setSearchResults([...searchResults, ...response.content]));
-      } else {
-        dispatch(setSearchResults([...searchResults, ...response.content]));
-      }
+      dispatch(setSearchResults([...searchResults, ...response.content]));
 
       dispatch(setPassportCurrentPage(passportCurrentPage + 1));
     } catch (error) {
       console.error("Error fetching more data:", error);
       throw error;
     }
+  }
+
+  async fetchGenesysGenotypeIdMapByAccessions(accessions = []) {
+    const accessionMap = new Map();
+    this.addUniqueAccessions(accessionMap, accessions);
+
+    const cleanedAccessions = Array.from(accessionMap.values());
+
+    if (cleanedAccessions.length === 0) {
+      return {};
+    }
+
+    const batchSize = 500;
+    const genotypeIdMap = {};
+
+    for (let i = 0; i < cleanedAccessions.length; i += batchSize) {
+      const chunk = cleanedAccessions.slice(i, i + batchSize);
+
+      try {
+        const response = await this.genotypeInfo(chunk);
+        const samples = Array.isArray(response?.Samples)
+          ? response.Samples
+          : [];
+
+        samples.forEach((sample) => {
+          if (sample.Accession && sample.Sample) {
+            genotypeIdMap[sample.Accession] = sample.Sample;
+          }
+        });
+      } catch (error) {
+        console.error(
+          "Failed to fetch Genesys genotype IDs for export:",
+          error,
+        );
+      }
+    }
+
+    return genotypeIdMap;
   }
 
   async downloadFilteredData(filterData, selectedMappings, hasGenotype) {
@@ -547,9 +746,13 @@ class GenesysApi extends BaseApi {
         `${GENESYS_API_BASE}/accession/query` +
         `?p=0&l=${pageSize}&select=${encodeURIComponent(select)}`;
 
+      const requestBody = hasGenotype
+        ? await this.buildGenotypedRequestBody(filterData)
+        : filterData;
+
       const firstGenesysResult = await this.post(
         firstGenesysEndpoint,
-        filterData,
+        requestBody,
       );
 
       let allResults = firstGenesysResult.content || [];
@@ -569,7 +772,10 @@ class GenesysApi extends BaseApi {
           `?f=${filterCode}&p=${genesysPage}&l=${pageSize}&select=${encodeURIComponent(select)}`;
 
         genesysRequests.push(async () => {
-          const response = await this.post(endpoint, {});
+          const response = await this.post(
+            endpoint,
+            filterCode ? {} : requestBody,
+          );
           return response;
         });
       }
@@ -586,19 +792,30 @@ class GenesysApi extends BaseApi {
       }
 
       if (allResults.length > 0) {
-        if (hasGenotype) {
-          allResults = allResults.filter((result) =>
-            this.genotypedAccessions.includes(result.accessionNumber),
-          );
-        }
-
         let figMapping = {};
+        let genesysGenotypeIdMap = {};
+
+        const accessionIds = allResults
+          .map((item) => item.accessionNumber)
+          .filter(Boolean);
+
+        const shouldExportGenotypeId = Object.values(selectedMappings).some(
+          (mapping) => mapping.apiParam === "GenotypeID",
+        );
 
         if (shouldDownloadFigsSet) {
-          const accessionIds = allResults.map((item) => item.accessionNumber);
-
           figMapping =
             await genolinkInternalApi.getFigsByAccessions(accessionIds);
+        }
+
+        if (
+          shouldExportGenotypeId &&
+          (genotypeMappingSource === "genesys" ||
+            genotypeMappingSource === "hybrid_internal_first" ||
+            genotypeMappingSource === "hybrid_genesys_first")
+        ) {
+          genesysGenotypeIdMap =
+            await this.fetchGenesysGenotypeIdMapByAccessions(accessionIds);
         }
 
         const selectedMappingsForTSV = { ...selectedMappings };
@@ -608,6 +825,7 @@ class GenesysApi extends BaseApi {
           allResults,
           selectedMappingsForTSV,
           figMapping,
+          genesysGenotypeIdMap,
         );
 
         this.downloadFile(
@@ -623,7 +841,7 @@ class GenesysApi extends BaseApi {
     }
   }
 
-  generateTSV(data, selectedMappings, figMapping) {
+  generateTSV(data, selectedMappings, figMapping, genesysGenotypeIdMap = {}) {
     const header = Object.keys(selectedMappings)
       .map((field) => selectedMappings[field].tsvHeader)
       .join("\t");
@@ -644,7 +862,21 @@ class GenesysApi extends BaseApi {
             const index = this.genotypedAccessions.indexOf(
               item.accessionNumber,
             );
-            return index !== -1 ? this.genotypedSamples[index] : "N/A";
+
+            const internalGenotypeId =
+              index !== -1 ? this.genotypedSamples[index] : null;
+
+            const genesysGenotypeId =
+              genesysGenotypeIdMap[item.accessionNumber] || null;
+
+            if (
+              genotypeMappingSource === "genesys" ||
+              genotypeMappingSource === "hybrid_genesys_first"
+            ) {
+              return genesysGenotypeId || internalGenotypeId || "N/A";
+            }
+
+            return internalGenotypeId || genesysGenotypeId || "N/A";
           }
 
           if (fieldPath === "figsSet") {
