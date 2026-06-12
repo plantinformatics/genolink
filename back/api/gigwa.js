@@ -458,7 +458,6 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
         step: "Map accessions to genotype IDs",
       });
     }
-    logger.info(JSON.stringify(samplesObj));
     const genotypeIds = samplesObj.Samples.map((obj) => obj.Sample).filter(
       Boolean,
     );
