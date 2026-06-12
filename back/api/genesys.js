@@ -192,7 +192,7 @@ const transformInitialToFinal = (initialbody) => {
 };
 
 async function fetchAllAccessionNumbers(finalbody) {
-  const baseUrl = `${config.genesysServer}/api/v1/acn/query`;
+  const baseUrl = `${config.genesysServer}/api/v2/acn/query`;
   const limit = 10000;
   const allAccessionNumbers = [];
 
@@ -230,7 +230,7 @@ async function fetchAllAccessionNumbers(finalbody) {
 }
 
 router.get("/passportFilter/possibleValues", async (req, res) => {
-  const url = `${config.genesysServer}/api/v1/acn/filter`;
+  const url = `${config.genesysServer}/api/v2/acn/filter`;
 
   try {
     const result = await postToGenesysWithRetry(url, { _text: " " });
@@ -274,7 +274,7 @@ router.post("/accession/filters", async (req, res) => {
     f: req.query.f,
   });
 
-  const url = `${config.genesysServer}/api/v1/acn/filter${queryString}`;
+  const url = `${config.genesysServer}/api/v2/acn/filter${queryString}`;
 
   try {
     const response = await postToGenesysWithRetry(url, req.body);
@@ -386,7 +386,7 @@ router.post("/accession/query", async (req, res) => {
     }
 
     const queryString = queryParams.toString();
-    let url = `${config.genesysServer}/api/v1/acn/query`;
+    let url = `${config.genesysServer}/api/v2/acn/query`;
 
     if (queryString) {
       url += `?${queryString}`;
@@ -581,7 +581,7 @@ router.post("/wiews/filter", async (req, res) => {
 
 router.post("/wiews/decode", async (req, res) => {
   const body = req.body;
-  const url = `${config.genesysServer}/api/v1/vocabulary/wiews/decode`;
+  const url = `${config.genesysServer}/api/v2/vocabulary/wiews/decode`;
 
   try {
     const response = await postToGenesysWithRetry(url, body);
@@ -626,6 +626,75 @@ router.post("/subset/filter", async (req, res) => {
 
     res.status(error.response?.status || 500).send({
       message: "Genesys subset filter request failed",
+      error: getErrorDetails(error),
+    });
+  }
+});
+
+router.post("/genotype-ids", async (req, res) => {
+  try {
+    const { accessionNumbers } = req.body || {};
+
+    if (!Array.isArray(accessionNumbers) || accessionNumbers.length === 0) {
+      return res.status(400).send({
+        message: "Body must include a non-empty 'accessionNumbers' array.",
+      });
+    }
+
+    const cleanedAccessions = [
+      ...new Set(
+        accessionNumbers
+          .filter((item) => typeof item === "string")
+          .map((item) => item.trim())
+          .filter(Boolean),
+      ),
+    ];
+
+    if (cleanedAccessions.length === 0) {
+      return res.status(400).send({
+        message: "No valid accession numbers provided.",
+      });
+    }
+
+    const url = `${config.genesysServer}/api/v2/acn/genotype-ids?l=500`;
+
+    const response = await postToGenesysWithRetry(url, {
+      accessionNumbers: cleanedAccessions,
+    });
+
+    const content = Array.isArray(response.data?.content)
+      ? response.data.content
+      : [];
+
+    const Samples = content
+      .filter((item) => item?.acceNumb && item?.genotypeId)
+      .map((item) => ({
+        Accession: item.acceNumb,
+        Sample: item.genotypeId,
+        Status: "Completed",
+        doi: item.doi || item.accession?.doi || null,
+        serverUrl: item.serverUrl || null,
+        source: "genesys",
+      }));
+
+    return res.status(200).send({
+      Samples,
+      totalRequestedAccessions: cleanedAccessions.length,
+      totalMappedAccessions: new Set(Samples.map((item) => item.Accession))
+        .size,
+      source: "genesys",
+    });
+  } catch (error) {
+    logger.error(
+      `API Error in /genotype-ids: ${JSON.stringify(
+        getErrorDetails(error),
+        null,
+        2,
+      )}`,
+    );
+
+    return res.status(error.response?.status || 500).send({
+      message: "Genesys genotype IDs request failed",
       error: getErrorDetails(error),
     });
   }

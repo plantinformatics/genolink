@@ -46,6 +46,7 @@ import MetadataSearchResultTable from "../MetadataSearchResultTable";
 import DateRangeFilter from "./DateRangeFilter";
 import GenotypeExplorer from "../../genotype/GenotypeExplorer";
 import { genesysApi, genolinkInternalApi } from "../../../pages/Home";
+import { genotypeMappingSource } from "../../../config/apiConfig";
 import { Autocomplete, TextField, Chip, Box } from "@mui/material";
 
 const SearchFilters = ({ initialDataReady }) => {
@@ -126,6 +127,59 @@ const SearchFilters = ({ initialDataReady }) => {
   const wheatImage = "Wheat.PNG";
   const selectedUUIDs = selectedSubsets.map((item) => item.uuid);
 
+  const cleanGenotypeIds = (ids = []) => {
+    if (!Array.isArray(ids)) {
+      return [];
+    }
+
+    return [
+      ...new Set(
+        ids
+          .filter((id) => typeof id === "string")
+          .map((id) => id.replace(/"/g, "").trim())
+          .filter(Boolean),
+      ),
+    ];
+  };
+
+  const mapGenotypeIdsUsingInternalDb = async (ids = []) => {
+    const cleanedIds = cleanGenotypeIds(ids);
+
+    if (cleanedIds.length === 0) {
+      return [];
+    }
+
+    try {
+      const mappedAccessions =
+        await genolinkInternalApi.genotypeIdMapping(cleanedIds);
+
+      return Array.isArray(mappedAccessions)
+        ? mappedAccessions.map((acc) =>
+            acc.replace(/"/g, "").trim().toUpperCase(),
+          )
+        : [];
+    } catch (error) {
+      console.warn("Internal genotypeId mapping failed:", error);
+      return [];
+    }
+  };
+
+  const shouldUseInternalGenotypeIdMapping = () => {
+    return (
+      genotypeMappingSource === "internal" ||
+      genotypeMappingSource === "hybrid_internal_first" ||
+      genotypeMappingSource === "hybrid_genesys_first"
+    );
+  };
+
+  const shouldPassGenotypeIdsToGenesys = () => {
+    return (
+      genotypeMappingSource === "genesys" ||
+      genotypeMappingSource === "hybrid_internal_first" ||
+      genotypeMappingSource === "hybrid_genesys_first"
+    );
+  };
+
   useEffect(() => {
     const fetchFigs = async () => {
       try {
@@ -178,17 +232,21 @@ const SearchFilters = ({ initialDataReady }) => {
         let accessionNums = [];
 
         if (filterMode === "GenotypeId Filter" && genotypeIdsParam) {
-          const genotypeIdList = genotypeIdsParam
-            .split(",")
-            .map((id) => id.trim());
+          const genotypeIdList = cleanGenotypeIds(genotypeIdsParam.split(","));
+
           setFilterMode(filterMode);
-          try {
-            accessionNums =
-              await genolinkInternalApi.genotypeIdMapping(genotypeIdList);
-            setMappingFailed(accessionNums.length === 0);
-          } catch (e) {
-            console.warn("Genotype mapping failed, possibly 404:", e);
+
+          if (shouldUseInternalGenotypeIdMapping()) {
+            accessionNums = await mapGenotypeIdsUsingInternalDb(genotypeIdList);
+          }
+
+          if (
+            genotypeMappingSource === "internal" &&
+            (!accessionNums || accessionNums.length === 0)
+          ) {
             setMappingFailed(true);
+          } else {
+            setMappingFailed(false);
           }
         }
 
@@ -395,11 +453,10 @@ const SearchFilters = ({ initialDataReady }) => {
     let accessionNums1;
     let accessionNums2;
 
-    if (genotypeIds && genotypeIds.length > 0) {
-      accessionNums1 = await genolinkInternalApi.genotypeIdMapping(genotypeIds);
-      accessionNums1 = accessionNums1.map((acc) =>
-        acc.replace(/"/g, "").trim().toUpperCase(),
-      );
+    const cleanedGenotypeIds = cleanGenotypeIds(genotypeIds);
+
+    if (cleanedGenotypeIds.length > 0 && shouldUseInternalGenotypeIdMapping()) {
+      accessionNums1 = await mapGenotypeIdsUsingInternalDb(cleanedGenotypeIds);
     }
 
     if (selectedFig) {

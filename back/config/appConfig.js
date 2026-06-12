@@ -1,11 +1,33 @@
 require("dotenv").config();
 
+const allowedGenotypeMappingSources = [
+  "internal",
+  "genesys",
+  "hybrid_internal_first",
+  "hybrid_genesys_first",
+];
+
+const defaultGenotypeMappingSource = "hybrid_internal_first";
+
+const genotypeMappingSource =
+  process.env.GENOTYPE_MAPPING_SOURCE || defaultGenotypeMappingSource;
+
+if (!allowedGenotypeMappingSources.includes(genotypeMappingSource)) {
+  throw new Error(
+    `Invalid GENOTYPE_MAPPING_SOURCE "${genotypeMappingSource}". ` +
+      `Allowed values are: ${allowedGenotypeMappingSources.join(", ")}`,
+  );
+}
+
 module.exports = {
   gigwaServers: JSON.parse(process.env.GIGWA_SERVERS || "{}"),
   germinateServer: process.env.GERMINATE_SERVER,
   genolinkServer: process.env.GENOLINK_SERVER,
   genesysServer: process.env.GENESYS_SERVER,
   genolinkServerPort: process.env.GENOLINK_SERVER_PORT || 4000,
+
+  genotypeMappingSource,
+
   sampStatMapping: {
     100: "Wild",
     110: "Natural",
