@@ -39,13 +39,14 @@ services:
 
     depends_on:
       - db
-    restart: always
+    restart: unless-stopped
     volumes:
       - ./back/uploads:/app/back/uploads
       - ./back/logs:/app/back/logs
 
   db:
     image: mysql:5.7
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       MYSQL_DATABASE: ${DB_NAME}
