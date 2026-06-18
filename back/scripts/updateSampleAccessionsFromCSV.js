@@ -9,7 +9,7 @@ const isDryRun = process.argv.includes("--dry");
 if (!csvFilePath) {
   console.error("Please provide the path to the CSV file.");
   console.error(
-    "Usage: node scripts/updateSampleAccessionsFromCSV.js <path-to-csv> [--dry]"
+    "Usage: node scripts/updateSampleAccessionsFromCSV.js <path-to-csv> [--dry]",
   );
   process.exit(1);
 }
@@ -42,18 +42,31 @@ function parseCSV(filePath) {
         const sample = normalize(raw.sample);
         const status = normalizeStatus(raw.status);
 
+        const hasServerUrl = Object.prototype.hasOwnProperty.call(
+          raw,
+          "serverUrl",
+        );
+
+        const serverUrl = hasServerUrl ? normalize(raw.serverUrl) : undefined;
+
         if (!accession) {
           console.warn("Skipped row with missing accession:", raw);
           return;
         }
         if (!status || !VALID_STATUSES.includes(status)) {
           console.warn(
-            `Invalid status "${raw.status}" for accession ${accession}. Skipped.`
+            `Invalid status "${raw.status}" for accession ${accession}. Skipped.`,
           );
           return;
         }
 
-        rows.push({ Accession: accession, Sample: sample, Status: status });
+        rows.push({
+          Accession: accession,
+          Sample: sample,
+          Status: status,
+          hasServerUrl,
+          ServerUrl: serverUrl,
+        });
       })
       .on("end", () => resolve(rows))
       .on("error", reject);
@@ -107,7 +120,7 @@ function parseCSV(filePath) {
 
       // Try exact (Accession, Sample) match first (normalized compare)
       const exact = rows.find(
-        (r) => normalize(r.Sample) === normalize(incoming.Sample)
+        (r) => normalize(r.Sample) === normalize(incoming.Sample),
       );
 
       let target = exact || rows.find((r) => r.Sample == null) || rows[0];
@@ -118,8 +131,19 @@ function parseCSV(filePath) {
       const oldStatusN = normalize(target.Status);
       const newStatusN = normalize(incoming.Status);
 
+      const oldServerUrlN = normalize(target.ServerUrl);
+
+      const newServerUrlN = normalize(incoming.ServerUrl);
+
+      const serverUrlChanged =
+        incoming.hasServerUrl && oldServerUrlN !== newServerUrlN;
+
       // Only enqueue if something actually changes
-      if (oldSampleN !== newSampleN || oldStatusN !== newStatusN) {
+      if (
+        oldSampleN !== newSampleN ||
+        oldStatusN !== newStatusN ||
+        serverUrlChanged
+      ) {
         plan.push({
           target,
           incoming,
@@ -130,6 +154,9 @@ function parseCSV(filePath) {
             toSample: incoming.Sample,
             fromStatus: target.Status,
             toStatus: incoming.Status,
+            hasServerUrl: incoming.hasServerUrl,
+            fromServerUrl: target.ServerUrl,
+            toServerUrl: incoming.ServerUrl,
           },
         });
       }
@@ -144,10 +171,19 @@ function parseCSV(filePath) {
     console.log(`Planned updates: ${plan.length}`);
     plan.slice(0, 15).forEach((p, i) => {
       const m = p.meta;
+
+      const serverUrlPreview = m.hasServerUrl
+        ? ` | ServerUrl: ${m.fromServerUrl ?? "NULL"} -> ${
+            m.toServerUrl ?? "NULL"
+          }`
+        : "";
+
       console.log(
         `${i + 1}. [${m.Accession}] id=${m.id} Sample: ${
           m.fromSample ?? "NULL"
-        } -> ${m.toSample ?? "NULL"} | Status: ${m.fromStatus} -> ${m.toStatus}`
+        } -> ${m.toSample ?? "NULL"} | Status: ${m.fromStatus} -> ${
+          m.toStatus
+        }${serverUrlPreview}`,
       );
     });
     if (plan.length > 15) console.log(`...and ${plan.length - 15} more`);
@@ -180,13 +216,22 @@ function parseCSV(filePath) {
 
           if (clash) {
             // Another row already has this (Accession, Sample).
-            // Update ONLY its Status; leave the current target's Sample as-is to avoid unique violation.
-            const clashStatusN = normalize(clash.Status);
-            if (clashStatusN !== normalize(incoming.Status)) {
-              await clash.update(
-                { Status: incoming.Status },
-                { transaction: t }
-              );
+            // Update ONLY the matching row's fields; leave the current target's Sample as-is to avoid unique violation.
+            const clashChanges = {};
+
+            if (normalize(clash.Status) !== normalize(incoming.Status)) {
+              clashChanges.Status = incoming.Status;
+            }
+
+            if (
+              incoming.hasServerUrl &&
+              normalize(clash.ServerUrl) !== normalize(incoming.ServerUrl)
+            ) {
+              clashChanges.ServerUrl = incoming.ServerUrl;
+            }
+
+            if (Object.keys(clashChanges).length > 0) {
+              await clash.update(clashChanges, { transaction: t });
             }
             // Skip changing the target in this case.
             continue;
@@ -198,6 +243,12 @@ function parseCSV(filePath) {
 
       if (normalize(target.Status) !== normalize(incoming.Status)) {
         changes.Status = incoming.Status;
+      }
+      if (
+        incoming.hasServerUrl &&
+        normalize(target.ServerUrl) !== normalize(incoming.ServerUrl)
+      ) {
+        changes.ServerUrl = incoming.ServerUrl;
       }
 
       if (Object.keys(changes).length === 0) continue; // safety

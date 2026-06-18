@@ -21,7 +21,7 @@ const normaliseGenotypeStatusRows = (rows = []) => {
       Sample: row.Sample ?? row.sample ?? row.genotypeId ?? null,
       Status: row.Status ?? row.status ?? null,
       doi: row.doi ?? null,
-      serverUrl: row.serverUrl ?? null,
+      serverUrl: row.ServerUrl ?? row.serverUrl ?? null,
       source: row.source ?? "internal",
     }))
     .filter((row) => row.Accession);

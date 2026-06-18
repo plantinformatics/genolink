@@ -6,14 +6,21 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING(255),
         allowNull: false,
       },
+
       Sample: {
         type: DataTypes.STRING(255),
         allowNull: true,
       },
+
       Status: {
         type: DataTypes.ENUM("Completed", "Pending", "Excluded", "TBC"),
         allowNull: false,
         defaultValue: "TBC",
+      },
+
+      ServerUrl: {
+        type: DataTypes.STRING(2048),
+        allowNull: true,
       },
     },
     {
