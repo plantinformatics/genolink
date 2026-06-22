@@ -71,13 +71,15 @@ router.post("/mapFigToAccession", mapFigToAccessionHandler);
 router.get("/getGenotypeStatus", async (req, res) => {
   try {
     const rows = await db.SampleAccession.findAll({
-      attributes: ["Accession", "Sample", "Status"],
+      attributes: ["Accession", "Sample", "Status", "ServerUrl"],
       raw: true,
     });
 
     res.status(200).json({ rows });
 
-    logger.info("Fetched all accessions, samples, and statuses successfully.");
+    logger.info(
+      "Fetched all accessions, samples, statuses, and server URLs successfully.",
+    );
   } catch (error) {
     logger.error("Error fetching accessions:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -167,7 +169,7 @@ router.post("/getGenotypeStatusByAccessions", async (req, res) => {
         accessions
           .filter((x) => typeof x === "string")
           .map((s) => s.trim())
-          .filter(Boolean)
+          .filter(Boolean),
       ),
     ];
 
@@ -194,7 +196,7 @@ router.post("/getGenotypeStatusByAccessions", async (req, res) => {
     }
 
     const statusByAccession = new Map(
-      results.map((r) => [r.Accession, r.Status])
+      results.map((r) => [r.Accession, r.Status]),
     );
     const rows = cleaned.map((acc) => ({
       accession: acc,
@@ -203,7 +205,7 @@ router.post("/getGenotypeStatusByAccessions", async (req, res) => {
 
     res.status(200).json({ rows });
     logger.info(
-      `Fetched statuses for ${cleaned.length} accessions (found ${results.length}).`
+      `Fetched statuses for ${cleaned.length} accessions (found ${results.length}).`,
     );
   } catch (error) {
     logger.error("Error fetching genotype statuses by accessions:", error);

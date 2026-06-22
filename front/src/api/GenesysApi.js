@@ -35,14 +35,44 @@ class GenesysApi extends BaseApi {
     this.genotypedAccessions = [];
     this.genotypedSamples = [];
     this.genotypeStatus = [];
+    this.serverUrls = [];
+    this.serverUrlSet = new Set();
+    this.accessionServerUrlMap = new Map();
   }
 
-  setGenotypeStatus(genotypeStatus) {
-    this.genotypeStatus = genotypeStatus;
+  setGenotypeStatus(genotypeStatus = []) {
+    this.genotypeStatus = Array.isArray(genotypeStatus) ? genotypeStatus : [];
+
+    this.addServerUrlsFromRows(this.genotypeStatus);
   }
 
   getGenotypeStatus() {
     return this.genotypeStatus;
+  }
+
+  getServerUrls() {
+    return this.serverUrls;
+  }
+
+  getServerUrlsForAccessions(accessions = []) {
+    if (!Array.isArray(accessions)) {
+      return [];
+    }
+
+    const selectedServerUrls = new Set();
+
+    accessions.forEach((accession) => {
+      const accessionKey = this.normaliseAccessionNumber(accession);
+      const serverUrls = this.accessionServerUrlMap.get(accessionKey);
+
+      if (!serverUrls) {
+        return;
+      }
+
+      serverUrls.forEach((serverUrl) => selectedServerUrls.add(serverUrl));
+    });
+
+    return Array.from(selectedServerUrls);
   }
 
   setGenotypedAccessions(genotypedAccessions) {
@@ -55,6 +85,14 @@ class GenesysApi extends BaseApi {
 
   setGenotypedSamples(genotypedSamples) {
     this.genotypedSamples = genotypedSamples;
+  }
+
+  setServerUrls(rows = []) {
+    this.serverUrlSet = new Set();
+    this.serverUrls = [];
+    this.accessionServerUrlMap = new Map();
+
+    this.addServerUrlsFromRows(rows);
   }
 
   getGenotypedSamples() {
@@ -170,9 +208,13 @@ class GenesysApi extends BaseApi {
 
     const endpoint = `${GENESYS_API_BASE}/genotype-ids`;
 
-    return await this.post(endpoint, {
+    const genotypeInfo = await this.post(endpoint, {
       accessionNumbers: cleanedAccessions,
     });
+
+    this.addServerUrlsFromRows(genotypeInfo?.Samples);
+
+    return genotypeInfo;
   }
 
   async fetchInitialFilterData(
@@ -311,6 +353,60 @@ class GenesysApi extends BaseApi {
       console.error("Error fetching initial data:", error);
       throw error;
     }
+  }
+
+  normaliseServerUrl(serverUrl) {
+    if (!serverUrl || typeof serverUrl !== "string") {
+      return null;
+    }
+
+    const trimmed = serverUrl.trim();
+
+    if (!trimmed) {
+      return null;
+    }
+
+    return trimmed.replace(/\/+$/, "");
+  }
+
+  addAccessionServerUrl(accession, serverUrl) {
+    const accessionKey = this.normaliseAccessionNumber(accession);
+    const normalisedServerUrl = this.normaliseServerUrl(serverUrl);
+
+    if (!accessionKey || !normalisedServerUrl) {
+      return;
+    }
+
+    this.serverUrlSet.add(normalisedServerUrl);
+
+    if (!this.accessionServerUrlMap.has(accessionKey)) {
+      this.accessionServerUrlMap.set(accessionKey, new Set());
+    }
+
+    this.accessionServerUrlMap.get(accessionKey).add(normalisedServerUrl);
+
+    this.serverUrls = Array.from(this.serverUrlSet);
+  }
+
+  addServerUrlsFromRows(rows = []) {
+    if (!Array.isArray(rows)) {
+      return;
+    }
+
+    rows.forEach((row) => {
+      const accession =
+        row.Accession ??
+        row.accession ??
+        row.accessionNumber ??
+        row.acceNumb ??
+        null;
+
+      const serverUrl = row.serverUrl ?? row.ServerUrl ?? null;
+
+      this.addAccessionServerUrl(accession, serverUrl);
+    });
+
+    this.serverUrls = Array.from(this.serverUrlSet);
   }
 
   normaliseAccessionNumber(accession) {

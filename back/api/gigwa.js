@@ -9,6 +9,24 @@ const {
 const rawBase = process.env.BASE_PATH || "";
 const BASE_PATH = rawBase.replace(/\/+$/, "");
 
+const normaliseGigwaBaseUrl = (selectedGigwaServer) => {
+  if (!selectedGigwaServer || typeof selectedGigwaServer !== "string") {
+    return "";
+  }
+
+  return selectedGigwaServer
+    .trim()
+    .replace(/\/+$/, "")
+    .replace(/\/gigwa$/i, "");
+};
+
+const buildGigwaRestUrl = (selectedGigwaServer, path) => {
+  const baseUrl = normaliseGigwaBaseUrl(selectedGigwaServer);
+  const cleanPath = String(path || "").replace(/^\/+/, "");
+
+  return `${baseUrl}/gigwa/rest/${cleanPath}`;
+};
+
 const crypto = require("crypto");
 
 const gigwaSessions = new Map();
@@ -18,7 +36,7 @@ const createGigwaSession = ({ selectedGigwaServer, token }) => {
   const gigwaSessionId = crypto.randomUUID();
 
   gigwaSessions.set(gigwaSessionId, {
-    selectedGigwaServer,
+    selectedGigwaServer: normaliseGigwaBaseUrl(selectedGigwaServer),
     token,
     createdAt: Date.now(),
   });
@@ -42,7 +60,10 @@ const getGigwaSessionToken = ({ gigwaSessionId, selectedGigwaServer }) => {
     throw new Error("Gigwa session expired.");
   }
 
-  if (session.selectedGigwaServer !== selectedGigwaServer) {
+  const normalisedSelectedGigwaServer =
+    normaliseGigwaBaseUrl(selectedGigwaServer);
+
+  if (session.selectedGigwaServer !== normalisedSelectedGigwaServer) {
     throw new Error("Gigwa session does not match selected Gigwa server.");
   }
 
@@ -57,7 +78,7 @@ const generateGigwaToken = async ({
   const requestBody = username && password ? { username, password } : undefined;
 
   const tokenResponse = await axios.post(
-    `${selectedGigwaServer}/gigwa/rest/gigwa/generateToken`,
+    buildGigwaRestUrl(selectedGigwaServer, "gigwa/generateToken"),
     requestBody,
     {
       headers: {
@@ -103,11 +124,6 @@ const getGigwaTokenFromQuery = (query) => {
   });
 };
 
-// Get Gigwa Servers
-///////////////////////////////////////////////////////////////////////////////////////////////////
-router.get("/gigwaServers", (req, res) => {
-  res.json(config.gigwaServers);
-});
 // Generate Gigwa Token
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 router.post("/generateGigwaToken", async (req, res) => {
@@ -161,7 +177,7 @@ router.post("/brapi/v2/programs", async (req, res) => {
     const params = req.body;
 
     const response = await axios.get(
-      `${selectedGigwaServer}/gigwa/rest/brapi/v2/programs`,
+      buildGigwaRestUrl(selectedGigwaServer, "brapi/v2/programs"),
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -190,7 +206,7 @@ router.post("/brapi/v2/search/variantsets", async (req, res) => {
     const token = getGigwaTokenFromBody(req.body);
 
     const response = await axios.post(
-      `${selectedGigwaServer}/gigwa/rest/brapi/v2/search/variantsets`,
+      buildGigwaRestUrl(selectedGigwaServer, "brapi/v2/search/variantsets"),
       req.body,
       {
         headers: {
@@ -218,7 +234,7 @@ router.post("/brapi/v2/search/variants", async (req, res) => {
     }
     const token = getGigwaTokenFromBody(req.body);
     const response = await axios.post(
-      `${selectedGigwaServer}/gigwa/rest/brapi/v2/search/variants`,
+      buildGigwaRestUrl(selectedGigwaServer, "brapi/v2/search/variants"),
       req.body,
       {
         headers: {
@@ -269,7 +285,7 @@ router.post("/brapi/v2/search/samples", async (req, res) => {
     }
     const token = getGigwaTokenFromBody(req.body);
     const response = await axios.post(
-      `${selectedGigwaServer}/gigwa/rest/brapi/v2/search/samples`,
+      buildGigwaRestUrl(selectedGigwaServer, "brapi/v2/search/samples"),
       req.body,
       {
         headers: {
@@ -323,7 +339,7 @@ router.get("/brapi/v2/references", async (req, res) => {
     const token = getGigwaTokenFromQuery(req.query);
 
     const response = await axios.get(
-      `${selectedGigwaServer}/gigwa/rest/brapi/v2/references`,
+      buildGigwaRestUrl(selectedGigwaServer, "brapi/v2/references"),
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -373,7 +389,7 @@ router.get("/brapi/v2/referencesets", async (req, res) => {
 
     const token = getGigwaTokenFromQuery(req.query);
     const response = await axios.get(
-      `${selectedGigwaServer}/gigwa/rest/brapi/v2/referencesets`,
+      buildGigwaRestUrl(selectedGigwaServer, "brapi/v2/referencesets"),
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -425,8 +441,6 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
     logger.error("No accessions provided");
     return res.status(400).send({ message: "No accessions provided" });
   }
-
-  const normalisedGigwaServer = selectedGigwaServer.replace(/\/$/, "");
 
   const runApiStep = async (stepName, apiCall) => {
     try {
@@ -491,7 +505,7 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
       "Fetch variant sets from Gigwa",
       async () => {
         return await axios.get(
-          `${selectedGigwaServer}/gigwa/rest/brapi/v2/variantsets`,
+          buildGigwaRestUrl(selectedGigwaServer, "brapi/v2/variantsets"),
           {
             headers: { Authorization: `Bearer ${token}` },
           },
@@ -528,7 +542,7 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
       "Search callsets in Gigwa",
       async () => {
         return await axios.post(
-          `${normalisedGigwaServer}/gigwa/rest/brapi/v2/search/callsets`,
+          buildGigwaRestUrl(selectedGigwaServer, "brapi/v2/search/callsets"),
           { germplasmDbIds },
           {
             headers: { Authorization: `Bearer ${token}` },
@@ -556,7 +570,7 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
       "Search samples in Gigwa",
       async () => {
         return await axios.post(
-          `${normalisedGigwaServer}/gigwa/rest/brapi/v2/search/samples`,
+          buildGigwaRestUrl(selectedGigwaServer, "brapi/v2/search/samples"),
           { sampleDbIds },
           {
             headers: { Authorization: `Bearer ${token}` },
@@ -599,7 +613,7 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
         "Search studies in Gigwa",
         async () => {
           return await axios.post(
-            `${normalisedGigwaServer}/gigwa/rest/brapi/v2/search/studies`,
+            buildGigwaRestUrl(selectedGigwaServer, "brapi/v2/search/studies"),
             { studyDbIds },
             {
               headers: { Authorization: `Bearer ${token}` },
@@ -653,7 +667,7 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
           studyDbId != null
             ? (studyNamesByStudyDbId.get(studyDbId) ?? null)
             : null,
-        selectedGigwaServer,
+        selectedGigwaServer: normaliseGigwaBaseUrl(selectedGigwaServer),
       };
     });
 
@@ -768,7 +782,7 @@ router.post("/brapi/v2/search/allelematrix", async (req, res) => {
       }
     }
     const response = await axios.post(
-      `${selectedGigwaServer}/gigwa/rest/brapi/v2/search/allelematrix`,
+      buildGigwaRestUrl(selectedGigwaServer, "brapi/v2/search/allelematrix"),
       req.body,
       {
         headers: {
@@ -920,16 +934,15 @@ router.post("/exportData", async (req, res) => {
         .status(400)
         .json({ error: "Please specify Gigwa server in your payload" });
     }
-
-    const baseUrl = selectedGigwaServer.replace(/\/$/, "");
+    const baseUrl = normaliseGigwaBaseUrl(selectedGigwaServer);
     const assemblyHeader = "0";
 
-    const token = getGigwaTokenFromBody(req.body);
+    let token = getGigwaTokenFromBody(req.body);
     let cookieHeader = "";
 
     if (!token) {
       const gen = await axios.post(
-        `${baseUrl}/gigwa/rest/gigwa/generateToken`,
+        buildGigwaRestUrl(selectedGigwaServer, "gigwa/generateToken"),
         username && password ? { username, password } : undefined,
         {
           headers: {
@@ -949,7 +962,8 @@ router.post("/exportData", async (req, res) => {
       cookieHeader = extractJSessionId(setCookie) || "";
     } else {
       const probe = await axios.post(
-        `${baseUrl}/gigwa/rest/gigwa/generateToken`,
+        buildGigwaRestUrl(selectedGigwaServer, "gigwa/generateToken"),
+
         undefined,
         { headers: { Accept: "application/json" }, validateStatus: () => true },
       );
@@ -1001,7 +1015,7 @@ router.post("/exportData", async (req, res) => {
       metadataFields: [],
     };
     const postResp = await axios.post(
-      `${baseUrl}/gigwa/rest/gigwa/exportData`,
+      buildGigwaRestUrl(selectedGigwaServer, "gigwa/exportData"),
       body,
       {
         headers: {
@@ -1141,7 +1155,7 @@ router.post("/samplesDatasetInfo", async (req, res) => {
     }
 
     const variantSetsResponse = await axios.get(
-      `${selectedGigwaServer}/gigwa/rest/brapi/v2/variantsets`,
+      buildGigwaRestUrl(selectedGigwaServer, "brapi/v2/variantsets"),
       {
         headers: { Authorization: `Bearer ${token}` },
       },
@@ -1158,7 +1172,7 @@ router.post("/samplesDatasetInfo", async (req, res) => {
       }
     }
     const searchResponse = await axios.post(
-      `${selectedGigwaServer}/gigwa/rest/brapi/v2/search/samples`,
+      buildGigwaRestUrl(selectedGigwaServer, "brapi/v2/search/samples"),
       {
         sampleNames,
         studyDbIds,

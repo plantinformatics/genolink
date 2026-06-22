@@ -18,11 +18,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import GenolinkGigwaApi from "../../api/GenolinkGigwaApi";
 import GenolinkGerminateApi from "../../api/GenolinkGerminateApi";
-import {
-  platforms,
-  genolinkServer,
-  REQUIRE_GIGWA_CREDENTIALS,
-} from "../../config/apiConfig";
+import { genesysApi } from "../../pages/Home";
+import { platforms, REQUIRE_GIGWA_CREDENTIALS } from "../../config/apiConfig";
 import styles from "./GenotypeExplorer.module.css";
 import SampleSourceTable from "./SampleSourceTable";
 
@@ -42,7 +39,6 @@ const GenotypeExplorer = () => {
   const [accessMode, setAccessMode] = useState([]);
   const [showDatasetSelector, setShowDatasetSelector] = useState(false);
   const [searchType, setSearchType] = useState("");
-  const [gigwaServers, setGigwaServers] = useState({});
   const [selectedGigwaServers, setSelectedGigwaServers] = useState([]);
   const [accessionPlusAccessionNames, setAccessionPlusAccessionNames] =
     useState([]);
@@ -141,20 +137,6 @@ const GenotypeExplorer = () => {
   }, [resetTrigger]);
 
   useEffect(() => {
-    const fetchGigwaServers = async () => {
-      try {
-        const response = await axios.get(
-          `${genolinkServer}/api/gigwa/gigwaServers`,
-        );
-        setGigwaServers(response.data);
-      } catch (error) {
-        console.error("Error fetching Gigwa servers:", error);
-      }
-    };
-    fetchGigwaServers();
-  }, []);
-
-  useEffect(() => {
     if (selectedStudyDbId.length === 0 || resetTrigger) return;
 
     const fetchAllLinkageGroups = async () => {
@@ -210,12 +192,12 @@ const GenotypeExplorer = () => {
 
   useEffect(() => {
     if (checkedResults.length > 0) {
-      const instituteCodes = [
-        ...new Set(checkedResults.map((item) => item.instituteCode)),
-      ];
-      const matchedServers = instituteCodes
-        .map((code) => gigwaServers[code])
+      const selectedAccessions = checkedResults
+        .map((item) => item.accessionNumber)
         .filter(Boolean);
+
+      const matchedServers =
+        genesysApi.getServerUrlsForAccessions(selectedAccessions);
 
       if (
         JSON.stringify(selectedGigwaServers) !== JSON.stringify(matchedServers)
@@ -236,22 +218,26 @@ const GenotypeExplorer = () => {
             newInstances[server] = new GenolinkGigwaApi(server);
           }
         }
+
         if (
           JSON.stringify(genolinkGigwaApisRef.current) !==
           JSON.stringify(newInstances)
         ) {
           genolinkGigwaApisRef.current = newInstances;
         }
+      } else if (Object.keys(genolinkGigwaApisRef.current).length !== 0) {
+        genolinkGigwaApisRef.current = {};
       }
     } else {
       if (Object.keys(genolinkGigwaApisRef.current).length !== 0) {
         genolinkGigwaApisRef.current = {};
       }
+
       if (selectedGigwaServers.length !== 0) {
         setSelectedGigwaServers([]);
       }
     }
-  }, [checkedResults, gigwaServers]);
+  }, [checkedResults, selectedGigwaServers]);
 
   const handleDatasetDetails = useCallback(
     (groupIndex, selectedValue) => {
@@ -825,8 +811,6 @@ const GenotypeExplorer = () => {
           ),
         );
         const allGenomicData = responses.map((response) => response.data);
-        const callsetNames = responses.map((response) => response.sample);
-        dispatch(genotypeActions.setSampleNames(callsetNames));
         dispatch(genotypeActions.setGenomData(allGenomicData));
       }
     } catch (error) {

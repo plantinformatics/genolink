@@ -1,5 +1,7 @@
 const fs = require("fs");
+
 const csvParser = require("csv-parser");
+
 const db = require("../models");
 
 const csvFilePath = process.argv[2];
@@ -15,12 +17,14 @@ const VALID_STATUSES = ["Completed", "Pending", "Excluded", "TBC"];
 const parseCSV = (filePath) => {
   return new Promise((resolve, reject) => {
     const sampleAccessions = [];
+
     fs.createReadStream(filePath)
       .pipe(csvParser())
       .on("data", (data) => {
         const accession = data.accession?.trim();
         const sample = data.sample?.trim() || null;
         const status = data.status?.trim();
+        const serverUrl = data.serverUrl?.trim() || null;
 
         if (!accession) {
           console.warn("Skipped row with missing accession:", data);
@@ -29,7 +33,7 @@ const parseCSV = (filePath) => {
 
         if (!VALID_STATUSES.includes(status)) {
           console.warn(
-            `Invalid status "${status}" for accession ${accession}. Skipped.`
+            `Invalid status "${status}" for accession ${accession}. Skipped.`,
           );
           return;
         }
@@ -38,6 +42,7 @@ const parseCSV = (filePath) => {
           Accession: accession,
           Sample: sample,
           Status: status,
+          ServerUrl: serverUrl,
         });
       })
       .on("end", () => resolve(sampleAccessions))
