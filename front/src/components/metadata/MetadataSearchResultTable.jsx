@@ -64,6 +64,33 @@ function formatDate(dateStr) {
   return dateStr || "";
 }
 
+function combineGenotypeIds(internalIds = [], genesysIds = []) {
+  let orderedIds;
+
+  switch (genotypeMappingSource) {
+    case "internal":
+      orderedIds = internalIds;
+      break;
+
+    case "genesys":
+      orderedIds = genesysIds;
+      break;
+
+    case "hybrid_genesys_first":
+      orderedIds = [...genesysIds, ...internalIds];
+      break;
+
+    case "hybrid_internal_first":
+    default:
+      orderedIds = [...internalIds, ...genesysIds];
+      break;
+  }
+
+  return [
+    ...new Set(orderedIds.map((id) => String(id ?? "").trim()).filter(Boolean)),
+  ];
+}
+
 const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
   const searchResults = useSelector((state) => state.passport.searchResults);
   const totalAccessions = useSelector(
@@ -91,9 +118,9 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
     ),
   );
   const [figMapping, setFigMapping] = useState({});
-  const [genesysGenotypeByAccession, setGenesysGenotypeByAccession] = useState(
-    {},
-  );
+  const [genesysGenotypeIdsByAccession, setGenesysGenotypeIdsByAccession] =
+    useState({});
+
   const [isPending, startTransition] = useTransition();
   const [columnWidths, setColumnWidths] = useState({});
   const resizeStateRef = useRef(null);
@@ -114,14 +141,35 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
     return m;
   }, [genesysApi.genotypeStatus]);
 
-  const genotypedIndexByAcc = useMemo(() => {
-    const accs = Array.isArray(genesysApi.genotypedAccessions)
+  const internalGenotypeIdsByAcc = useMemo(() => {
+    const accessions = Array.isArray(genesysApi.genotypedAccessions)
       ? genesysApi.genotypedAccessions
       : [];
-    const m = new Map();
-    accs.forEach((acc, i) => m.set(acc, i));
-    return m;
-  }, [genesysApi.genotypedAccessions]);
+
+    const samples = Array.isArray(genesysApi.genotypedSamples)
+      ? genesysApi.genotypedSamples
+      : [];
+
+    const map = new Map();
+
+    accessions.forEach((accession, index) => {
+      const genotypeId = samples[index];
+
+      if (!accession || !genotypeId) {
+        return;
+      }
+
+      const currentIds = map.get(accession) || [];
+
+      if (!currentIds.includes(genotypeId)) {
+        currentIds.push(genotypeId);
+      }
+
+      map.set(accession, currentIds);
+    });
+
+    return map;
+  }, [genesysApi.genotypedAccessions, genesysApi.genotypedSamples]);
 
   const countryByCode = useMemo(() => {
     const m = new Map();
@@ -138,8 +186,6 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
     const ids = sanitizeSelectedColumns(selectedColumnIds);
     return ids;
   }, [selectedColumnIds]);
-
-  const genotypedSamples = genesysApi.genotypedSamples || [];
 
   const shouldFetchGenesysGenotypeIds = useMemo(() => {
     return (
@@ -188,8 +234,13 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
         const accessionsToCheck = searchResults
           .map((item) => item.accessionNumber)
           .filter(Boolean)
-          .filter((acc) => !genotypedIndexByAcc.has(acc))
-          .filter((acc) => !genesysGenotypeByAccession[acc]);
+          .filter(
+            (accession) =>
+              !Object.prototype.hasOwnProperty.call(
+                genesysGenotypeIdsByAccession,
+                accession,
+              ),
+          );
 
         const uniqueAccessionsToCheck = [...new Set(accessionsToCheck)];
 
@@ -201,14 +252,34 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
           ? response.Samples
           : [];
 
-        if (cancelled || samples.length === 0) return;
+        if (cancelled) return;
 
-        setGenesysGenotypeByAccession((prev) => {
-          const next = { ...prev };
+        setGenesysGenotypeIdsByAccession((previous) => {
+          const next = { ...previous };
+
+          // Mark all requested accessions as checked, including those
+          // for which Genesys returned no genotype IDs.
+          uniqueAccessionsToCheck.forEach((accession) => {
+            if (!Object.prototype.hasOwnProperty.call(next, accession)) {
+              next[accession] = [];
+            }
+          });
 
           samples.forEach((sample) => {
-            if (sample.Accession && sample.Sample) {
-              next[sample.Accession] = sample.Sample;
+            if (!sample.Accession || !sample.Sample) {
+              return;
+            }
+
+            const genotypeId = String(sample.Sample).trim();
+
+            if (!genotypeId) {
+              return;
+            }
+
+            const currentIds = next[sample.Accession] || [];
+
+            if (!currentIds.includes(genotypeId)) {
+              next[sample.Accession] = [...currentIds, genotypeId];
             }
           });
 
@@ -227,8 +298,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
   }, [
     searchResults,
     shouldFetchGenesysGenotypeIds,
-    genotypedIndexByAcc,
-    genesysGenotypeByAccession,
+    genesysGenotypeIdsByAccession,
   ]);
 
   const getColumnWidth = useCallback(
@@ -464,24 +534,26 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
           <tbody>
             {searchResults?.map((item, index) => {
               const acc = item.accessionNumber;
-              const gIdx = genotypedIndexByAcc.get(acc) ?? -1;
 
-              const internalGenotypeID =
-                gIdx !== -1 && Array.isArray(genotypedSamples)
-                  ? genotypedSamples[gIdx]
-                  : null;
+              const internalGenotypeIds =
+                internalGenotypeIdsByAcc.get(acc) || [];
 
-              const genesysGenotypeID = genesysGenotypeByAccession[acc] || null;
+              const genesysGenotypeIds =
+                genesysGenotypeIdsByAccession[acc] || [];
+
+              const combinedGenotypeIds = combineGenotypeIds(
+                internalGenotypeIds,
+                genesysGenotypeIds,
+              );
 
               const genotypeID =
-                genotypeMappingSource === "genesys" ||
-                genotypeMappingSource === "hybrid_genesys_first"
-                  ? genesysGenotypeID || internalGenotypeID || "N/A"
-                  : internalGenotypeID || genesysGenotypeID || "N/A";
+                combinedGenotypeIds.length > 0
+                  ? combinedGenotypeIds.join(", ")
+                  : "N/A";
 
               const status =
                 statusByAcc.get(acc) ??
-                (genesysGenotypeID
+                (genesysGenotypeIds.length > 0
                   ? "Completed"
                   : acc?.startsWith("AGG")
                     ? "TBC"

@@ -810,8 +810,17 @@ class GenesysApi extends BaseApi {
           : [];
 
         samples.forEach((sample) => {
-          if (sample.Accession && sample.Sample) {
-            genotypeIdMap[sample.Accession] = sample.Sample;
+          const accession = sample.Accession;
+          const genotypeId = String(sample.Sample ?? "").trim();
+
+          if (!accession || !genotypeId) {
+            return;
+          }
+
+          const currentIds = genotypeIdMap[accession] || [];
+
+          if (!currentIds.includes(genotypeId)) {
+            genotypeIdMap[accession] = [...currentIds, genotypeId];
           }
         });
       } catch (error) {
@@ -941,6 +950,29 @@ class GenesysApi extends BaseApi {
     const header = Object.keys(selectedMappings)
       .map((field) => selectedMappings[field].tsvHeader)
       .join("\t");
+    const internalGenotypeIdsByAccession = {};
+
+    const internalAccessions = Array.isArray(this.genotypedAccessions)
+      ? this.genotypedAccessions
+      : [];
+
+    const internalSamples = Array.isArray(this.genotypedSamples)
+      ? this.genotypedSamples
+      : [];
+
+    internalAccessions.forEach((accession, index) => {
+      const genotypeId = String(internalSamples[index] ?? "").trim();
+
+      if (!accession || !genotypeId) {
+        return;
+      }
+
+      const currentIds = internalGenotypeIdsByAccession[accession] || [];
+
+      if (!currentIds.includes(genotypeId)) {
+        internalGenotypeIdsByAccession[accession] = [...currentIds, genotypeId];
+      }
+    });
     const rows = data.map((item) => {
       return Object.keys(selectedMappings)
         .map((field) => {
@@ -955,24 +987,40 @@ class GenesysApi extends BaseApi {
           }
 
           if (fieldPath === "GenotypeID") {
-            const index = this.genotypedAccessions.indexOf(
-              item.accessionNumber,
-            );
+            const internalGenotypeIds =
+              internalGenotypeIdsByAccession[item.accessionNumber] || [];
 
-            const internalGenotypeId =
-              index !== -1 ? this.genotypedSamples[index] : null;
+            const genesysGenotypeIds =
+              genesysGenotypeIdMap[item.accessionNumber] || [];
 
-            const genesysGenotypeId =
-              genesysGenotypeIdMap[item.accessionNumber] || null;
+            let orderedIds;
 
-            if (
-              genotypeMappingSource === "genesys" ||
-              genotypeMappingSource === "hybrid_genesys_first"
-            ) {
-              return genesysGenotypeId || internalGenotypeId || "N/A";
+            switch (genotypeMappingSource) {
+              case "internal":
+                orderedIds = internalGenotypeIds;
+                break;
+
+              case "genesys":
+                orderedIds = genesysGenotypeIds;
+                break;
+
+              case "hybrid_genesys_first":
+                orderedIds = [...genesysGenotypeIds, ...internalGenotypeIds];
+                break;
+
+              case "hybrid_internal_first":
+              default:
+                orderedIds = [...internalGenotypeIds, ...genesysGenotypeIds];
+                break;
             }
 
-            return internalGenotypeId || genesysGenotypeId || "N/A";
+            const uniqueIds = [
+              ...new Set(
+                orderedIds.map((id) => String(id ?? "").trim()).filter(Boolean),
+              ),
+            ];
+
+            return uniqueIds.length > 0 ? uniqueIds.join(", ") : "N/A";
           }
 
           if (fieldPath === "figsSet") {
