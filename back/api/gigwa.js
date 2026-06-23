@@ -705,8 +705,13 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
       ),
     ];
 
-    const numberOfPresentAccessions = uniqueGermplasmPresence.length;
+    const presentAccessions = [
+      ...new Set(
+        combinedResult.map((item) => item.accessionNumber).filter(Boolean),
+      ),
+    ];
 
+    const numberOfPresentAccessions = presentAccessions.length;
     return res.send({
       combinedResult,
       uniqueGermplasmPresence,
