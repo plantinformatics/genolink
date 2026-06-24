@@ -1,29 +1,66 @@
 import { useState } from "react";
-import { setVariantList } from "../../../redux/genotype/genotypeActions";
 import { useDispatch } from "react-redux";
+
+import { setVariantList } from "../../../redux/genotype/genotypeActions";
 import styles from "./VariantListFilter.module.css";
 
-const VariantListFilter = () => {
-  const [inputValue, setInputValue] = useState("");
+const parseVariantList = (rawValue) =>
+  rawValue
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
 
+const VariantListFilter = ({
+  value,
+  onVariantListChange,
+  id = "variantIds",
+  disabled = false,
+  placeholder = "Enter variants, separated by commas",
+}) => {
   const dispatch = useDispatch();
-  const handleInputChange = (e) => {
-    const newValue = e.target.value;
-    setInputValue(newValue);
 
-    const variantArray = newValue.split(",").map((item) => item.trim());
+  const [internalValue, setInternalValue] = useState("");
 
-    dispatch(setVariantList(variantArray.filter((item) => item)));
+  const isControlled = value !== undefined;
+  const inputValue = isControlled ? value : internalValue;
+
+  const handleInputChange = (event) => {
+    const rawValue = event.target.value;
+    const variants = parseVariantList(rawValue);
+
+    if (!isControlled) {
+      setInternalValue(rawValue);
+    }
+
+    /*
+     * Separate-server mode:
+     * GenotypeExplorer controls the value for the individual server.
+     */
+    if (typeof onVariantListChange === "function") {
+      onVariantListChange({
+        rawValue,
+        variants,
+      });
+
+      return;
+    }
+
+    /*
+     * Existing combined-server mode:
+     * Continue storing the list in Redux.
+     */
+    dispatch(setVariantList(variants));
   };
 
   return (
     <input
-      id="variantIds"
+      id={id}
       type="text"
       className={`${styles.formControl} ${styles.variantInput}`}
-      value={inputValue}
+      value={inputValue ?? ""}
       onChange={handleInputChange}
-      placeholder="Enter variants, separated by commas"
+      placeholder={placeholder}
+      disabled={disabled}
     />
   );
 };
