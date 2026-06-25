@@ -145,7 +145,28 @@ const GenotypeExplorer = () => {
     (state) => state.genotype.sampleSourceData,
   );
 
+  const checkedAccessionsKey = useMemo(
+    () =>
+      Object.keys(checkedAccessionsObject || {})
+        .sort()
+        .join("|"),
+    [checkedAccessionsObject],
+  );
+
   const genolinkGigwaApisRef = useRef({});
+  const previousCheckedAccessionsKey = useRef(checkedAccessionsKey);
+
+  useEffect(() => {
+    if (previousCheckedAccessionsKey.current === checkedAccessionsKey) {
+      return;
+    }
+
+    previousCheckedAccessionsKey.current = checkedAccessionsKey;
+
+    if (isGenomeSearchSubmit) {
+      handleReset();
+    }
+  }, [checkedAccessionsKey, isGenomeSearchSubmit]);
   const checkedAccessions = Object.keys(checkedAccessionsObject);
   const checkedResults = useMemo(() => {
     return Array.isArray(searchResults)
@@ -156,19 +177,19 @@ const GenotypeExplorer = () => {
   }, [searchResults, checkedAccessions]);
   const dispatch = useDispatch();
   useEffect(() => {
+    const hasCombinedDatasetSelection =
+      selectedCallSetDetails.length > 0 && selectedVariantSetDbId.length > 0;
     if (
-      selectedOption === "Gigwa" &&
-      isGenomeSearchSubmit &&
-      combineServerResults
+      selectedOption !== "Gigwa" ||
+      !combineServerResults ||
+      !isGenomeSearchSubmit ||
+      !hasCombinedDatasetSelection
     ) {
-      fetchData(genotypeCurrentPage);
+      return;
     }
-  }, [
-    genotypeCurrentPage,
-    selectedOption,
-    isGenomeSearchSubmit,
-    combineServerResults,
-  ]);
+
+    fetchData(genotypeCurrentPage);
+  }, [genotypeCurrentPage]);
 
   useEffect(() => {
     dispatch(genotypeActions.setGenomData([]));
@@ -908,7 +929,6 @@ const GenotypeExplorer = () => {
     dispatch(genotypeActions.resetGenotype());
     dispatch(genotypeActions.setSampleSourceData([]));
     setServerStates({});
-    setCombineServerResults(false);
   };
 
   const handleOptionChange = (event) => {
@@ -1215,32 +1235,6 @@ const GenotypeExplorer = () => {
     fetchServerData(server, page);
   };
 
-  const handleServerReset = (server) => {
-    updateServerState(server, {
-      selectedDataset: "",
-      selectedVariantSetDbId: [],
-      selectedStudyDbId: [],
-      selectedCallSetDetails: [],
-      callSetDbIds: [],
-      completeNames: [],
-
-      linkageGroups: [],
-      selectedGroup: "",
-      posStart: "",
-      posEnd: "",
-
-      searchType: "",
-      variantListInput: "",
-      variantList: [],
-
-      genomData: null,
-      alleleData: null,
-      currentPage: 1,
-      isSearching: false,
-      isExporting: false,
-    });
-  };
-
   const handleCopyServerGermplasms = async (server) => {
     const serverState = serverStates[server];
 
@@ -1337,6 +1331,25 @@ const GenotypeExplorer = () => {
         <h3>Genotype Data</h3>
         <br />
         {isLoading && <LoadingComponent />}
+        {selectedOption === "Gigwa" && (
+          <label
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={combineServerResults}
+              onChange={(event) =>
+                setCombineServerResults(event.target.checked)
+              }
+            />
+            Combine server results
+          </label>
+        )}
         <div className={styles.genoSplit}>
           {/* LEFT: FILTERS */}
           <aside className={styles.filtersPane}>
@@ -1354,25 +1367,6 @@ const GenotypeExplorer = () => {
                   ))}
                 </select>
               )}
-              {selectedOption === "Gigwa" && (
-                <label
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={combineServerResults}
-                    onChange={(event) =>
-                      setCombineServerResults(event.target.checked)
-                    }
-                  />
-                  Combine server results
-                </label>
-              )}
               {!isGenomeSearchSubmit ? (
                 <button
                   type="button"
@@ -1389,14 +1383,6 @@ const GenotypeExplorer = () => {
                     onClick={handleSearch}
                   >
                     Search Genotype
-                  </button>
-
-                  <button
-                    type="button"
-                    className={styles.buttonSecondary}
-                    onClick={handleReset}
-                  >
-                    Reset
                   </button>
                 </div>
               ) : null}
@@ -1816,15 +1802,6 @@ const GenotypeExplorer = () => {
                               >
                                 Search Genotype
                               </button>
-
-                              <button
-                                type="button"
-                                className={styles.buttonSecondary}
-                                onClick={() => handleServerReset(server)}
-                              >
-                                Reset
-                              </button>
-
                               {serverState.genomData &&
                                 serverState.alleleData && (
                                   <button
