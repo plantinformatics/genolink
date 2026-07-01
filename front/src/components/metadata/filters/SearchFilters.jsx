@@ -46,7 +46,10 @@ import MetadataSearchResultTable from "../MetadataSearchResultTable";
 import DateRangeFilter from "./DateRangeFilter";
 import GenotypeExplorer from "../../genotype/GenotypeExplorer";
 import { genesysApi, genolinkInternalApi } from "../../../pages/Home";
-import { genotypeMappingSource } from "../../../config/apiConfig";
+import {
+  defaultInstituteCode,
+  genotypeMappingSource,
+} from "../../../config/apiConfig";
 import { Autocomplete, TextField, Chip, Box } from "@mui/material";
 
 const SearchFilters = ({ initialDataReady }) => {
@@ -201,7 +204,7 @@ const SearchFilters = ({ initialDataReady }) => {
           institute:
             !isInitialMount || instituteCheckedBoxesRef.current.length > 0
               ? { code: instituteCheckedBoxesRef.current }
-              : { code: ["AUS165"] },
+              : { code: [defaultInstituteCode] },
           crops:
             cropCheckedBoxesRef.current.length > 0
               ? cropCheckedBoxesRef.current
