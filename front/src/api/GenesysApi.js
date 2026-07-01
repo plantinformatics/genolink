@@ -1,5 +1,9 @@
 import BaseApi from "./BaseApi";
-import { genolinkServer, genotypeMappingSource } from "../config/apiConfig";
+import {
+  defaultInstituteCode,
+  genolinkServer,
+  genotypeMappingSource,
+} from "../config/apiConfig";
 import { BASE_PATH } from "../config/basePath";
 import { genolinkInternalApi } from "../pages/Home";
 import country2Region from "shared-data/Country2Region.json";
@@ -233,12 +237,14 @@ class GenesysApi extends BaseApi {
         body = {
           _text: userInput,
           institute: {
-            code: ["AUS165"],
+            code: [defaultInstituteCode],
           },
         };
-        dispatch(setInstituteCheckedBoxes(["AUS165"]));
+        dispatch(setInstituteCheckedBoxes([defaultInstituteCode]));
         dispatch(
-          setActiveFilters([{ type: "Institute Code", value: ["AUS165"] }]),
+          setActiveFilters([
+            { type: "Institute Code", value: [defaultInstituteCode] },
+          ]),
         );
       } else if (!isReset && filterMode && genotypeIds) {
         body = {
@@ -314,12 +320,14 @@ class GenesysApi extends BaseApi {
         body = {
           _text: userInput,
           institute: {
-            code: ["AUS165"],
+            code: [defaultInstituteCode],
           },
         };
-        dispatch(setInstituteCheckedBoxes(["AUS165"]));
+        dispatch(setInstituteCheckedBoxes([defaultInstituteCode]));
         dispatch(
-          setActiveFilters([{ type: "Institute Code", value: ["AUS165"] }]),
+          setActiveFilters([
+            { type: "Institute Code", value: [defaultInstituteCode] },
+          ]),
         );
       } else if (!isReset && filterMode && genotypeIds) {
         body = {
