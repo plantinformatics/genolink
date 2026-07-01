@@ -14,6 +14,11 @@ export default defineConfig(({ mode }) => {
 
   const rawBase = env.BASE_PATH || env.VITE_BASE_PATH || "";
   const BASE_PATH = rawBase.replace(/\/+$/, "");
+  const allowedHosts = env.VITE_FRONTEND_ALLOWED_HOSTS
+    ? env.VITE_FRONTEND_ALLOWED_HOSTS.split(",")
+        .map((host) => host.trim())
+        .filter(Boolean)
+    : [];
 
   const VITE_BASE_FOR_BUILD = BASE_PATH ? `${BASE_PATH}/` : "/";
 
@@ -35,6 +40,7 @@ export default defineConfig(({ mode }) => {
     server: {
       host: env.VITE_FRONTEND_DEV_HOST || "127.0.0.1",
       port: parseInt(env.VITE_FRONTEND_DEV_PORT, 10) || 3001,
+      allowedHosts,
       fs: {
         allow: [ROOT_DIR, SHARED_DATA_DIR],
       },
