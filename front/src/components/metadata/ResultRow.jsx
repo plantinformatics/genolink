@@ -13,7 +13,6 @@ const ResultRow = React.memo(function ResultRow({
   genotypeID,
   figsForAcc,
   formatDate,
-  getSampleStatus,
   countryByCode,
 }) {
   const checked = useSelector(
@@ -32,7 +31,6 @@ const ResultRow = React.memo(function ResultRow({
     genotypeID,
     figsForAcc,
     formatDate,
-    getSampleStatus,
     countryByCode,
   };
 

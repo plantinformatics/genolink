@@ -103,36 +103,6 @@ class GenesysApi extends BaseApi {
     return this.genotypedSamples;
   }
 
-  getSampleStatus(number) {
-    const sampStatMapping = {
-      100: "Wild",
-      110: "Natural",
-      120: "Semi-natural/wild",
-      130: "Semi-natural/sown",
-      200: "Weedy",
-      300: "Traditional cultivar/Landrace",
-      400: "Breeding/Research Material",
-      410: "Breeders Line",
-      411: "Synthetic population",
-      412: "Hybrid",
-      413: "Founder stock/base population",
-      414: "Inbred line",
-      415: "Segregating population",
-      416: "Clonal selection",
-      420: "Genetic stock",
-      421: "Mutant",
-      422: "Cytogenetic stocks",
-      423: "Other genetic stocks",
-      500: "Advanced/improved cultivar",
-      600: "GMO",
-      999: "Other",
-    };
-
-    const key = String(number);
-
-    return sampStatMapping[key] || "Unknown status";
-  }
-
   async getDonorInstituteFullName(donorList) {
     if (!donorList || donorList.length === 0) {
       return;
@@ -1086,7 +1056,7 @@ class GenesysApi extends BaseApi {
             return item["taxonomy.taxonName"] || "";
           }
           if (fieldPath === "sampStat") {
-            return this.getSampleStatus(item["sampStat"]) || "";
+            return item["sampStat"] || "";
           }
           if (fieldPath === "aliases") {
             return item.aliases && item.aliases.length > 0

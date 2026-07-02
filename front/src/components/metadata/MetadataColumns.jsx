@@ -203,7 +203,7 @@ export function renderMetadataCell(colId, item, ctx) {
     }
 
     case "sampStat":
-      return ctx.getSampleStatus(item.sampStat) || "N/A";
+      return item.sampStat || "N/A";
 
     case "donorInstitute": {
       const name = item.donorName || "";
