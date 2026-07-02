@@ -25,35 +25,6 @@ import ExportFieldsModal from "./ExportFieldsModal";
 import { METADATA_COLUMNS, sanitizeSelectedColumns } from "./MetadataColumns";
 import styles from "./MetadataSearchResultTable.module.css";
 
-const sampStatMapping = {
-  100: "Wild",
-  110: "Natural",
-  120: "Semi-natural/wild",
-  130: "Semi-natural/sown",
-  200: "Weedy",
-  300: "Traditional cultivar/Landrace",
-  400: "Breeding/Research Material",
-  410: "Breeders Line",
-  411: "Synthetic population",
-  412: "Hybrid",
-  413: "Founder stock/base population",
-  414: "Inbred line",
-  415: "Segregating population",
-  416: "Clonal selection",
-  420: "Genetic stock",
-  421: "Mutant",
-  422: "Cytogenetic stocks",
-  423: "Other genetic stocks",
-  500: "Advanced/improved cultivar",
-  600: "GMO",
-  999: "Other",
-};
-
-function getSampleStatus(number) {
-  const key = String(number);
-  return sampStatMapping[key] || "Unknown status";
-}
-
 function formatDate(dateStr) {
   if (dateStr && dateStr.length === 8) {
     const year = dateStr.substring(0, 4);
@@ -573,7 +544,6 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
                   figsForAcc={figMapping[acc]}
                   visibleColumnIds={visibleColumnIds}
                   formatDate={formatDate}
-                  getSampleStatus={getSampleStatus}
                   countryByCode={countryByCode}
                 />
               );
