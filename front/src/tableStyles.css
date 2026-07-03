@@ -12,3 +12,20 @@
   text-overflow: ellipsis;
   max-width: 150px;
 }
+
+.metadata-table-link {
+  color: #005ea8;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: rgba(0, 94, 168, 0.45);
+  text-underline-offset: 2px;
+  transition:
+    color 0.15s ease,
+    text-decoration-color 0.15s ease;
+}
+
+.metadata-table-link:hover,
+.metadata-table-link:focus-visible {
+  color: #b42318;
+  text-decoration-color: currentColor;
+}

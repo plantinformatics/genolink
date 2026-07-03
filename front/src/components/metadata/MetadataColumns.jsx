@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { genesysServer } from "../../config/apiConfig";
 import { germplasmStorageMapping } from "./filters/MultiSelectFilter";
 
@@ -67,6 +68,7 @@ export const METADATA_COLUMNS = [
     apiParams: ["acquisitionDate"],
   },
   { id: "doi", label: "DOI", apiParams: ["doi"] },
+  { id: "datasetDoi", label: "Dataset DOI", apiParams: [] },
   {
     id: "available",
     label: "Available for Distribution",
@@ -153,6 +155,7 @@ export function renderMetadataCell(colId, item, ctx) {
     case "accessionNumber":
       return (
         <a
+          className="metadata-table-link"
           href={`${genesysBaseUrl.origin}/a/${item.uuid}`}
           target="_blank"
           rel="noopener noreferrer"
@@ -234,6 +237,32 @@ export function renderMetadataCell(colId, item, ctx) {
 
     case "doi":
       return item.doi || "N/A";
+
+    case "datasetDoi": {
+      const datasetInfo = ctx.datasetInfoForAcc;
+      if (!Array.isArray(datasetInfo) || datasetInfo.length === 0) {
+        return "N/A";
+      }
+
+      return (
+        <span>
+          {datasetInfo.map((entry, index) => (
+            <Fragment key={`${entry.doi || entry.url}-${index}`}>
+              {index > 0 ? ", " : null}
+              <a
+                className="metadata-table-link"
+                href={entry.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(event) => event.stopPropagation()}
+              >
+                {entry.doi || entry.url}
+              </a>
+            </Fragment>
+          ))}
+        </span>
+      );
+    }
 
     case "available":
       return item.available === true

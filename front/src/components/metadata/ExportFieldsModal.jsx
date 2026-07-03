@@ -45,6 +45,7 @@ const fieldsMapping = {
     tsvHeader: "Acquisition Date",
   },
   DOI: { apiParam: "doi", tsvHeader: "DOI" },
+  "Dataset DOI": { apiParam: "datasetDoi", tsvHeader: "Dataset DOI" },
   "Last Updated": { apiParam: "lastModifiedDate", tsvHeader: "Last Updated" },
   "Genotype Status": { apiParam: "status", tsvHeader: "Genotype Status" },
   GenotypeID: { apiParam: "GenotypeID", tsvHeader: "GenotypeID" },
