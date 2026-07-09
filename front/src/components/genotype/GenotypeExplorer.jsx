@@ -23,6 +23,51 @@ import { platforms, REQUIRE_GIGWA_CREDENTIALS } from "../../config/apiConfig";
 import styles from "./GenotypeExplorer.module.css";
 import SampleSourceTable from "./SampleSourceTable";
 
+const getGenotypeIdFromCallset = (callset) =>
+  callset?.germplasmDbId?.split("§")?.[1] ?? "";
+
+const getCompleteNameParts = (completeName) => {
+  const [accessionName, accessionNumber, genotypeId] = String(
+    completeName ?? "",
+  ).split("§");
+
+  return { accessionName, accessionNumber, genotypeId };
+};
+
+const resolveCompleteNameForCallset = ({
+  callset,
+  namesForServer,
+  accessionNames,
+}) => {
+  const genotypeId = getGenotypeIdFromCallset(callset);
+  const accessionNumber = callset?.accessionNumber ?? "";
+
+  const exactMatch = namesForServer.find((completeName) => {
+    const parts = getCompleteNameParts(completeName);
+
+    return (
+      parts.genotypeId === genotypeId &&
+      (!accessionNumber || parts.accessionNumber === accessionNumber)
+    );
+  });
+
+  if (exactMatch) return exactMatch;
+
+  const genotypeMatch = namesForServer.find(
+    (completeName) =>
+      getCompleteNameParts(completeName).genotypeId === genotypeId,
+  );
+
+  if (genotypeMatch) return genotypeMatch;
+
+  const accessionName = accessionNames?.[accessionNumber];
+  if (accessionName && accessionNumber && genotypeId) {
+    return `${accessionName}§${accessionNumber}§${genotypeId}`;
+  }
+
+  return genotypeId || callset?.callSetDbId || "";
+};
+
 const GenotypeExplorer = () => {
   const [genolinkGerminateApi, setGenolinkGerminateApi] = useState(
     new GenolinkGerminateApi(),
@@ -269,15 +314,13 @@ const GenotypeExplorer = () => {
         (matchedCallsets, gIdx) => {
           if (!matchedCallsets?.length) return [];
 
-          const ids = [
-            ...new Set(
-              matchedCallsets.map((s) => s.germplasmDbId.split("§")[1]),
-            ),
-          ];
-
           const namesForServer = accessionPlusAccessionNames[gIdx] ?? [];
-          return namesForServer.filter((item) =>
-            ids.some((gid) => item.includes(gid)),
+          return matchedCallsets.map((callset) =>
+            resolveCompleteNameForCallset({
+              callset,
+              namesForServer,
+              accessionNames: checkedAccessionNamesObject,
+            }),
           );
         },
       );
@@ -310,6 +353,7 @@ const GenotypeExplorer = () => {
       callSetDetails,
       selectedDataset,
       accessionPlusAccessionNames,
+      checkedAccessionNamesObject,
     ],
   );
   const handleExportVCF = async () => {
