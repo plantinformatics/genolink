@@ -62,3 +62,6 @@ migrations/
  
 # Uploaded files directory
 uploads/
+
+# Usage Reports
+reports/
