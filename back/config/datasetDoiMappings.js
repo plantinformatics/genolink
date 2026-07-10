@@ -4,10 +4,6 @@ const DATASET_DOI_MAPPINGS = [
     cropCode: "BARL",
     datasetInfo: [
       {
-        doi: "10.7910/DVN/H6SNVM",
-        url: "https://doi.org/10.7910/DVN/H6SNVM",
-      },
-      {
         doi: "10.7910/DVN/LXU0WD",
         url: "https://doi.org/10.7910/DVN/LXU0WD",
       },
@@ -18,10 +14,6 @@ const DATASET_DOI_MAPPINGS = [
     cropCode: "WHEA",
     datasetInfo: [
       {
-        doi: "10.7910/DVN/CRSI0B",
-        url: "https://doi.org/10.7910/DVN/CRSI0B",
-      },
-      {
         doi: "10.7910/DVN/MOBTA8",
         url: "https://doi.org/10.7910/DVN/MOBTA8",
       },
@@ -31,10 +23,6 @@ const DATASET_DOI_MAPPINGS = [
     crop: "chickpea",
     cropCode: "CHIC",
     datasetInfo: [
-      {
-        doi: "10.7910/DVN/SQFKJW",
-        url: "https://doi.org/10.7910/DVN/SQFKJW",
-      },
       {
         doi: "10.7910/DVN/ECQ4NC",
         url: "https://doi.org/10.7910/DVN/ECQ4NC",
