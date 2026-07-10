@@ -112,6 +112,43 @@ class GenolinkInternalApi extends BaseApi {
       throw error;
     }
   }
+
+  async fetchDatasetInfoForAccessions(accessions) {
+    try {
+      const cleanedAccessions = [
+        ...new Set(
+          (Array.isArray(accessions) ? accessions : [])
+            .filter((accession) => typeof accession === "string")
+            .map((accession) => accession.trim())
+            .filter(Boolean),
+        ),
+      ];
+
+      if (cleanedAccessions.length === 0) {
+        return {};
+      }
+
+      const batchSize = 5000;
+      const datasetInfoMapping = {};
+
+      for (let i = 0; i < cleanedAccessions.length; i += batchSize) {
+        const chunk = cleanedAccessions.slice(i, i + batchSize);
+        const response = await this.post(
+          `${BASE_PATH}/api/internalApi/accession-dataset-info`,
+          {
+            accessions: chunk,
+          },
+        );
+
+        Object.assign(datasetInfoMapping, response);
+      }
+
+      return datasetInfoMapping;
+    } catch (error) {
+      console.error("Error fetching dataset DOI metadata:", error);
+      return {};
+    }
+  }
 }
 
 export default GenolinkInternalApi;

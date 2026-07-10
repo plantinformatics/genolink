@@ -818,9 +818,13 @@ class GenesysApi extends BaseApi {
 
       const batchSize = 50;
       const shouldDownloadFigsSet = Boolean(selectedMappings["FIGs Set"]);
+      const shouldDownloadDatasetDoi = Boolean(
+        selectedMappings["Dataset DOI"],
+      );
 
       const genesysSelectedMappings = { ...selectedMappings };
       delete genesysSelectedMappings["FIGs Set"];
+      delete genesysSelectedMappings["Dataset DOI"];
       const select = Object.keys(genesysSelectedMappings)
         .map((field) => genesysSelectedMappings[field].apiParam)
         .join(",");
@@ -876,6 +880,7 @@ class GenesysApi extends BaseApi {
 
       if (allResults.length > 0) {
         let figMapping = {};
+        let datasetInfoMapping = {};
         let genesysGenotypeIdMap = {};
 
         const accessionIds = allResults
@@ -889,6 +894,13 @@ class GenesysApi extends BaseApi {
         if (shouldDownloadFigsSet) {
           figMapping =
             await genolinkInternalApi.getFigsByAccessions(accessionIds);
+        }
+
+        if (shouldDownloadDatasetDoi) {
+          datasetInfoMapping =
+            await genolinkInternalApi.fetchDatasetInfoForAccessions(
+              accessionIds,
+            );
         }
 
         if (
@@ -909,6 +921,7 @@ class GenesysApi extends BaseApi {
           selectedMappingsForTSV,
           figMapping,
           genesysGenotypeIdMap,
+          datasetInfoMapping,
         );
 
         this.downloadFile(
@@ -924,7 +937,13 @@ class GenesysApi extends BaseApi {
     }
   }
 
-  generateTSV(data, selectedMappings, figMapping, genesysGenotypeIdMap = {}) {
+  generateTSV(
+    data,
+    selectedMappings,
+    figMapping,
+    genesysGenotypeIdMap = {},
+    datasetInfoMapping = {},
+  ) {
     const header = Object.keys(selectedMappings)
       .map((field) => selectedMappings[field].tsvHeader)
       .join("\t");
@@ -1005,6 +1024,21 @@ class GenesysApi extends BaseApi {
             return figMapping[item.accessionNumber]
               ? figMapping[item.accessionNumber].join(", ")
               : "";
+          }
+
+          if (fieldPath === "datasetDoi") {
+            const datasetInfo = datasetInfoMapping[item.accessionNumber];
+
+            if (!Array.isArray(datasetInfo) || datasetInfo.length === 0) {
+              return "N/A";
+            }
+
+            return (
+              datasetInfo
+                .map((entry) => entry?.doi || entry?.url)
+                .filter(Boolean)
+                .join(", ") || "N/A"
+            );
           }
 
           if (fieldPath === "institute.fullName") {

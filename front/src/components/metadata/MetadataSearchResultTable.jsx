@@ -89,6 +89,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
     ),
   );
   const [figMapping, setFigMapping] = useState({});
+  const [datasetInfoByAccession, setDatasetInfoByAccession] = useState({});
   const [genesysGenotypeIdsByAccession, setGenesysGenotypeIdsByAccession] =
     useState({});
 
@@ -166,6 +167,42 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
     );
   }, []);
 
+  const visibleCompletedAccessions = useMemo(() => {
+    if (!visibleColumnIds.includes("datasetDoi")) {
+      return [];
+    }
+
+    const accessions = (searchResults || [])
+      .filter((item) => {
+        const acc = item.accessionNumber;
+        const internalGenotypeIds = internalGenotypeIdsByAcc.get(acc) || [];
+        const genesysGenotypeIds = genesysGenotypeIdsByAccession[acc] || [];
+        const combinedGenotypeIds = combineGenotypeIds(
+          internalGenotypeIds,
+          genesysGenotypeIds,
+        );
+        const status =
+          statusByAcc.get(acc) ??
+          (genesysGenotypeIds.length > 0
+            ? "Completed"
+            : acc?.startsWith("AGG")
+              ? "TBC"
+              : "N/A");
+
+        return status === "Completed" || combinedGenotypeIds.length > 0;
+      })
+      .map((item) => item.accessionNumber)
+      .filter(Boolean);
+
+    return [...new Set(accessions)];
+  }, [
+    searchResults,
+    visibleColumnIds,
+    internalGenotypeIdsByAcc,
+    genesysGenotypeIdsByAccession,
+    statusByAcc,
+  ]);
+
   useEffect(() => {
     if (!searchResults || searchResults.length === 0) {
       setSelectAll(false);
@@ -193,6 +230,32 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
 
     fetchFigs();
   }, [searchResults]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchDatasetInfoForVisibleRows = async () => {
+      if (visibleCompletedAccessions.length === 0) {
+        setDatasetInfoByAccession({});
+        return;
+      }
+
+      const mapping =
+        await genolinkInternalApi.fetchDatasetInfoForAccessions(
+          visibleCompletedAccessions,
+        );
+
+      if (!cancelled) {
+        setDatasetInfoByAccession(mapping);
+      }
+    };
+
+    fetchDatasetInfoForVisibleRows();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [visibleCompletedAccessions]);
 
   useEffect(() => {
     if (!shouldFetchGenesysGenotypeIds) return;
@@ -542,6 +605,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
                   status={status}
                   genotypeID={genotypeID}
                   figsForAcc={figMapping[acc]}
+                  datasetInfoForAcc={datasetInfoByAccession[acc]}
                   visibleColumnIds={visibleColumnIds}
                   formatDate={formatDate}
                   countryByCode={countryByCode}
