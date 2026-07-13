@@ -663,6 +663,7 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
         germplasmDbId,
         accessionNumber,
         doi,
+        studyDbId,
         studyName:
           studyDbId != null
             ? (studyNamesByStudyDbId.get(studyDbId) ?? null)
@@ -988,7 +989,7 @@ router.post("/exportData", async (req, res) => {
     const body = {
       variantSetId,
       searchMode: 3,
-      getGT: true,
+      getGT: false,
       referenceName: linkagegroups || "",
       selectedVariantTypes: "",
       alleleCount: "",
