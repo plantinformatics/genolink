@@ -984,7 +984,13 @@ router.post("/exportData", async (req, res) => {
     const joinedVariantList = Array.isArray(variantList)
       ? variantList.join(";")
       : String(variantList || "").trim();
-    const variantSetId = selectedCallSetDetails[0]?.studyDbId || "AGG_BARLEY§1";
+    const variantSetId = selectedCallSetDetails[0]?.studyDbId;
+
+    if (!variantSetId) {
+      return res.status(400).json({
+        error: "Unable to determine the Gigwa variant set for this export",
+      });
+    }
 
     const body = {
       variantSetId,
