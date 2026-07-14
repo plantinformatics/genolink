@@ -701,25 +701,37 @@ const SearchFilters = ({ initialDataReady }) => {
     convertDonorCodes();
   }, [donorCodeList]);
 
-  const handleResetFilter = async () => {
+  const resetFilters = async () => {
     setIsResetLoading(true);
 
     try {
       const filterCode = await genesysApi.resetFilter(dispatch);
       setFilterCode(filterCode);
-      setIsResetLoading(false);
       dispatch(setActiveFilters([]));
       dispatch(setResetTrigger(true));
       dispatch(setWildSearchValue(""));
+      setHasGenotype(false);
       if (instituteCheckedBoxesRef.current.length > 0)
         instituteCheckedBoxesRef.current = [];
       if (cropCheckedBoxesRef.current.length > 0)
         cropCheckedBoxesRef.current = [];
       setSubsetsTick((t) => t + 1);
     } catch (error) {
-      setIsResetLoading(false);
       console.error("Error handling reset filter:", error);
+    } finally {
+      setIsResetLoading(false);
     }
+  };
+
+  const handleResetFilter = () => resetFilters();
+
+  const handleFilterModeChange = (event) => {
+    const nextFilterMode = event.target.value;
+
+    if (nextFilterMode === filterMode) return;
+
+    setFilterMode(nextFilterMode);
+    resetFilters();
   };
 
   return (
@@ -787,7 +799,13 @@ const SearchFilters = ({ initialDataReady }) => {
           <TabPanel>
             <div className={styles.passportContentRow}>
               <div className={styles.genesysFilterContainer}>
-                <div className={styles.stickyTitles}>
+                {isResetLoading ? (
+                  <div className={styles.filterPanelLoading}>
+                    <LoadingComponent />
+                  </div>
+                ) : (
+                  <>
+                    <div className={styles.stickyTitles}>
                   <h4>Filters</h4>
                   {initialRequestSent &&
                     (!isLoading ? (
@@ -812,18 +830,20 @@ const SearchFilters = ({ initialDataReady }) => {
                       Reset Filter
                     </button>
                   </div>
-                </div>
-                <div className={styles.filterModeContainer}>
-                  <h5>Filter Mode:</h5>
-                  <select
-                    value={filterMode}
-                    onChange={(e) => setFilterMode(e.target.value)}
-                    className={styles.filterModeSelect}
-                  >
-                    <option value="Passport Filter">Passport Filter</option>
-                    <option value="Accession Filter">Accession Filter</option>
-                    <option value="GenotypeId Filter">GenotypeId Filter</option>
-                  </select>
+                  <div className={styles.filterModeContainer}>
+                    <h5>Filter Mode:</h5>
+                    <select
+                      value={filterMode}
+                      onChange={handleFilterModeChange}
+                      className={styles.filterModeSelect}
+                    >
+                      <option value="Passport Filter">Passport Filter</option>
+                      <option value="Accession Filter">Accession Filter</option>
+                      <option value="GenotypeId Filter">
+                        GenotypeId Filter
+                      </option>
+                    </select>
+                  </div>
                 </div>
                 <div>
                   <h5
@@ -1266,24 +1286,28 @@ const SearchFilters = ({ initialDataReady }) => {
                     </div>
                   </>
                 )}
-                <div>
-                  <label
-                    style={{
-                      fontWeight: 500,
-                      color: wildSearchValue ? "#888" : "inherit",
-                      cursor: wildSearchValue ? "not-allowed" : "pointer",
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={hasGenotype}
-                      onChange={handleChange}
-                      className={styles.mR8}
-                      disabled={wildSearchValue}
-                    />
-                    Check for genotype
-                  </label>
-                </div>
+                    {filterMode === "Passport Filter" && (
+                      <div>
+                        <label
+                          style={{
+                            fontWeight: 500,
+                            color: wildSearchValue ? "#888" : "inherit",
+                            cursor: wildSearchValue ? "not-allowed" : "pointer",
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={hasGenotype}
+                            onChange={handleChange}
+                            className={styles.mR8}
+                            disabled={wildSearchValue}
+                          />
+                          Check for genotype
+                        </label>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
               <div
                 className={styles.genesysResultContainer}

@@ -149,6 +149,12 @@
   overflow-x: hidden;
 }
 
+.filterPanelLoading {
+  display: flex;
+  justify-content: center;
+  padding-top: 48px;
+}
+
 .fileInput {
   width: 210px;
   margin-left: 5px;
@@ -165,16 +171,27 @@
   top: 0;
   z-index: 10;
   background-color: #eff2f3;
+  margin-right: -10px;
+  padding-right: 10px;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #c8ced1;
+  box-shadow: 0 3px 4px rgba(0, 0, 0, 0.08);
 }
 
 .filterModeSelect {
-  margin-left: 15px;
   width: 180px;
 }
 
 .filterModeContainer {
   display: flex;
-  margin: 20px 0 40px 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.filterModeContainer h5 {
+  margin: 0;
 }
 
 .activeFiltersList {
