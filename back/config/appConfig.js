@@ -1,5 +1,7 @@
 require("dotenv").config();
 
+const { parseGigwaServers } = require("../utils/gigwaServerAllowlist");
+
 const allowedGenotypeMappingSources = [
   "internal",
   "genesys",
@@ -20,6 +22,10 @@ if (!allowedGenotypeMappingSources.includes(genotypeMappingSource)) {
 }
 
 module.exports = {
+  gigwaServers: parseGigwaServers(
+    process.env.GIGWA_SERVERS,
+    process.env.GIGWA_SERVER,
+  ),
   germinateServer: process.env.GERMINATE_SERVER,
   genolinkServer: process.env.GENOLINK_SERVER,
   genesysServer: process.env.GENESYS_SERVER,
