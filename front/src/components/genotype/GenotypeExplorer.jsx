@@ -26,6 +26,27 @@ import SampleSourceTable from "./SampleSourceTable";
 const getGenotypeIdFromCallset = (callset) =>
   callset?.germplasmDbId?.split("§")?.[1] ?? "";
 
+const getApiErrorMessage = (error) => {
+  const responseData = error?.response?.data;
+
+  if (typeof responseData === "string" && responseData.trim()) {
+    return responseData;
+  }
+
+  if (typeof responseData?.error === "string" && responseData.error.trim()) {
+    return responseData.error;
+  }
+
+  if (
+    typeof responseData?.message === "string" &&
+    responseData.message.trim()
+  ) {
+    return responseData.message;
+  }
+
+  return error?.message || "Unknown error";
+};
+
 const getCompleteNameParts = (completeName) => {
   const [accessionName, accessionNumber, genotypeId] = String(
     completeName ?? "",
@@ -457,13 +478,16 @@ const GenotypeExplorer = () => {
                 return { server, success: true };
               } catch (error) {
                 const status = error.response?.status;
-                let message = "Unknown error";
-                if (status === 401 || status === 403) {
-                  message = "Invalid username or password.";
-                } else if (error.message) {
-                  message = error.message;
-                }
-                return { server, success: false, message };
+                const message = getApiErrorMessage(error);
+                const isAuthenticationError =
+                  status === 401 || /invalid username or password/i.test(message);
+
+                return {
+                  server,
+                  success: false,
+                  message,
+                  isAuthenticationError,
+                };
               }
             }),
           );
@@ -471,13 +495,14 @@ const GenotypeExplorer = () => {
           const failed = authResults.filter((res) => !res.success);
           if (failed.length > 0) {
             const messages = failed
-              .map(
-                (f) =>
-                  `Authentication failed for ${f.server?.replace(
-                    /^https?:\/\//,
-                    "",
-                  )}: ${f.message}`,
-              )
+              .map((failure) => {
+                if (!failure.isAuthenticationError) return failure.message;
+
+                return `Authentication failed for ${failure.server?.replace(
+                  /^https?:\/\//,
+                  "",
+                )}: ${failure.message}`;
+              })
               .join("\n");
 
             alert(messages);
@@ -612,20 +637,19 @@ const GenotypeExplorer = () => {
       let message = "An unexpected error occurred.";
       if (axios.isAxiosError(error)) {
         const status = error.response ? error.response.status : null;
+        const backendMessage = getApiErrorMessage(error);
         switch (status) {
           case 401:
-            message = "Authentication failed: Incorrect username or password.";
+            message = `Authentication failed: ${backendMessage}`;
             break;
           case 403:
-            message =
-              "Access denied: You do not have permission to access these resources.";
+            message = backendMessage;
             break;
           case 404:
             message = "No genotype data found in the Database!";
             break;
           default:
-            message =
-              "An error occurred: " + (error.message || "Unknown error");
+            message = "An error occurred: " + backendMessage;
             break;
         }
       }
