@@ -1,6 +1,7 @@
 require("dotenv").config();
 
 const { parseGigwaServers } = require("../utils/gigwaServerAllowlist");
+const logger = require("../middlewares/logger");
 
 const allowedGenotypeMappingSources = [
   "internal",
@@ -14,6 +15,19 @@ const defaultGenotypeMappingSource = "hybrid_internal_first";
 const genotypeMappingSource =
   process.env.GENOTYPE_MAPPING_SOURCE || defaultGenotypeMappingSource;
 
+let gigwaServers = [];
+try {
+  gigwaServers = parseGigwaServers(
+    process.env.GIGWA_SERVERS,
+    process.env.GIGWA_SERVER,
+    (message) => logger.info(message),
+  );
+} catch (error) {
+  logger.info(
+    `Invalid Gigwa allowlist configuration; Gigwa access is disabled. ${error.message}`,
+  );
+}
+
 if (!allowedGenotypeMappingSources.includes(genotypeMappingSource)) {
   throw new Error(
     `Invalid GENOTYPE_MAPPING_SOURCE "${genotypeMappingSource}". ` +
@@ -22,10 +36,7 @@ if (!allowedGenotypeMappingSources.includes(genotypeMappingSource)) {
 }
 
 module.exports = {
-  gigwaServers: parseGigwaServers(
-    process.env.GIGWA_SERVERS,
-    process.env.GIGWA_SERVER,
-  ),
+  gigwaServers,
   germinateServer: process.env.GERMINATE_SERVER,
   genolinkServer: process.env.GENOLINK_SERVER,
   genesysServer: process.env.GENESYS_SERVER,

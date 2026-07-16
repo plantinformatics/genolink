@@ -14,6 +14,25 @@ describe("gigwaServerAllowlist", () => {
     ).toEqual(["https://one.example", "http://localhost:8080"]);
   });
 
+  test("keeps valid servers when another configured server is invalid", () => {
+    const onInvalidServer = jest.fn();
+
+    expect(
+      parseGigwaServers(
+        JSON.stringify([
+          "https://gigwa.plantinformatics.io",
+          "htts://gigwa.cgiar.org",
+        ]),
+        undefined,
+        onInvalidServer,
+      ),
+    ).toEqual(["https://gigwa.plantinformatics.io"]);
+    expect(onInvalidServer).toHaveBeenCalledWith(
+      "Ignoring invalid GIGWA_SERVERS entry 2. " +
+        "Gigwa server URL must use HTTP or HTTPS.",
+    );
+  });
+
   test("normalises only the optional trailing Gigwa application path", () => {
     expect(normaliseGigwaBaseUrl("https://example.org/base/gigwa/ ")).toBe(
       "https://example.org/base",

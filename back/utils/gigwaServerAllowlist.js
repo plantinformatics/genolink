@@ -26,7 +26,7 @@ const normaliseGigwaBaseUrl = (value) => {
   return url.toString().replace(/\/$/, "");
 };
 
-const parseGigwaServers = (rawServers, legacyServer) => {
+const parseGigwaServers = (rawServers, legacyServer, onInvalidServer) => {
   let configuredServers = [];
 
   if (rawServers) {
@@ -48,9 +48,27 @@ const parseGigwaServers = (rawServers, legacyServer) => {
     }
   }
 
-  if (legacyServer) configuredServers.push(legacyServer);
+  const entries = configuredServers.map((value, index) => ({
+    value,
+    source: `GIGWA_SERVERS entry ${index + 1}`,
+  }));
 
-  return [...new Set(configuredServers.map(normaliseGigwaBaseUrl))];
+  if (legacyServer) {
+    entries.push({ value: legacyServer, source: "GIGWA_SERVER" });
+  }
+
+  const normalisedServers = entries.flatMap(({ value, source }) => {
+    try {
+      return [normaliseGigwaBaseUrl(value)];
+    } catch (error) {
+      onInvalidServer?.(
+        `Ignoring invalid ${source}. ${error.message}`,
+      );
+      return [];
+    }
+  });
+
+  return [...new Set(normalisedServers)];
 };
 
 const requireAllowedGigwaServer = (selectedServer, allowedServers) => {
