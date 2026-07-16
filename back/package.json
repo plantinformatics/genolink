@@ -20,7 +20,6 @@
     "json2csv": "^6.0.0-alpha.2",
     "mysql2": "^3.9.1",
     "sequelize": "^6.37.0",
-    "uuid": "^9.0.0",
     "winston": "^3.13.0"
   },
   "devDependencies": {
