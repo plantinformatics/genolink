@@ -5,11 +5,13 @@ const {
 } = require("../../../utils/gigwaServerAllowlist");
 
 describe("gigwaServerAllowlist", () => {
-  test("parses arrays, object values, and the legacy singular setting", () => {
+  test("parses arrays and object values", () => {
     expect(
       parseGigwaServers(
-        JSON.stringify({ first: "https://one.example/gigwa/" }),
-        "http://localhost:8080/",
+        JSON.stringify({
+          first: "https://one.example/gigwa/",
+          second: "http://localhost:8080/",
+        }),
       ),
     ).toEqual(["https://one.example", "http://localhost:8080"]);
   });
@@ -23,7 +25,6 @@ describe("gigwaServerAllowlist", () => {
           "https://gigwa.plantinformatics.io",
           "htts://gigwa.cgiar.org",
         ]),
-        undefined,
         onInvalidServer,
       ),
     ).toEqual(["https://gigwa.plantinformatics.io"]);

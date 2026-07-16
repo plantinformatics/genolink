@@ -19,7 +19,6 @@ let gigwaServers = [];
 try {
   gigwaServers = parseGigwaServers(
     process.env.GIGWA_SERVERS,
-    process.env.GIGWA_SERVER,
     (message) => logger.info(message),
   );
 } catch (error) {

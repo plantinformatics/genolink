@@ -180,10 +180,6 @@ the system administrator. For example:
 GIGWA_SERVERS='["https://gigwa-one.example", "https://gigwa-two.example"]'
 ```
 
-The legacy singular `GIGWA_SERVER` setting is also accepted during migration.
-
-
-
 #### 3. Start Docker Containers
 Navigate to the directory containing the docker-compose.yml file and run the following command to start the containers:
 

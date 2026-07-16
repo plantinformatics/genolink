@@ -26,7 +26,7 @@ const normaliseGigwaBaseUrl = (value) => {
   return url.toString().replace(/\/$/, "");
 };
 
-const parseGigwaServers = (rawServers, legacyServer, onInvalidServer) => {
+const parseGigwaServers = (rawServers, onInvalidServer) => {
   let configuredServers = [];
 
   if (rawServers) {
@@ -52,10 +52,6 @@ const parseGigwaServers = (rawServers, legacyServer, onInvalidServer) => {
     value,
     source: `GIGWA_SERVERS entry ${index + 1}`,
   }));
-
-  if (legacyServer) {
-    entries.push({ value: legacyServer, source: "GIGWA_SERVER" });
-  }
 
   const normalisedServers = entries.flatMap(({ value, source }) => {
     try {
