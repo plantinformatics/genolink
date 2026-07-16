@@ -4,20 +4,16 @@ const axios = require("axios");
 const logger = require("../middlewares/logger");
 const config = require("../config/appConfig");
 const {
+  requireAllowedGigwaServer,
+} = require("../utils/gigwaServerAllowlist");
+const {
   getGenotypeMappingsByAccessions,
 } = require("../utils/genotypeMappingResolver");
 const rawBase = process.env.BASE_PATH || "";
 const BASE_PATH = rawBase.replace(/\/+$/, "");
 
 const normaliseGigwaBaseUrl = (selectedGigwaServer) => {
-  if (!selectedGigwaServer || typeof selectedGigwaServer !== "string") {
-    return "";
-  }
-
-  return selectedGigwaServer
-    .trim()
-    .replace(/\/+$/, "")
-    .replace(/\/gigwa$/i, "");
+  return requireAllowedGigwaServer(selectedGigwaServer, config.gigwaServers);
 };
 
 const buildGigwaRestUrl = (selectedGigwaServer, path) => {
@@ -28,6 +24,20 @@ const buildGigwaRestUrl = (selectedGigwaServer, path) => {
 };
 
 const crypto = require("crypto");
+
+router.use((req, res, next) => {
+  const selectedGigwaServer =
+    req.body?.selectedGigwaServer ?? req.query?.selectedGigwaServer;
+
+  if (!selectedGigwaServer) return next();
+
+  try {
+    normaliseGigwaBaseUrl(selectedGigwaServer);
+    return next();
+  } catch (error) {
+    return res.status(error.statusCode || 400).json({ error: error.message });
+  }
+});
 
 const gigwaSessions = new Map();
 const GIGWA_SESSION_TTL_MS = 4 * 60 * 60 * 1000; // 4 hours
