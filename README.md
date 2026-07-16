@@ -23,6 +23,26 @@ https://agriculture.vic.gov.au/crops-and-horticulture/the-australian-grains-gene
 
 > **Note:** For any placeholder values (e.g., `<your_db_username>`, `<your_db_password>`, etc.), please replace them with the correct data that you need to use.
 
+## Gigwa Server Allowlist
+
+`GIGWA_SERVERS` is required for Gigwa API access in both manual and Docker
+setups. Set it in `back/.env` for a manual installation or in the project-root
+`.env` file for Docker. It accepts either a JSON array of server URLs or a JSON
+object whose values are server URLs. Requests for any other server are rejected
+by the backend with instructions to contact the system administrator.
+
+For one server:
+
+```bash
+GIGWA_SERVERS='["https://gigwa.example"]'
+```
+
+For multiple servers:
+
+```bash
+GIGWA_SERVERS='["https://gigwa-one.example", "https://gigwa-two.example"]'
+```
+
 ## Manual Setup (Without Docker)
 
 ### Prerequisites
@@ -106,7 +126,6 @@ DB_DIALECT=mysql
 GIGWA_SERVERS='["https://your-gigwa-server.example"]'
 GENOLINK_SERVER=<your_Genolink_server_address>   # e.g. https://genolink.plantinformatics.io OR http://127.0.0.1:3000
 GENESYS_SERVER=https://api.sandbox.genesys-pgr.org
-GIGWA_SERVERS='["https://your-gigwa-server.example"]'
 APP_PORT=<PORT> # e.g. 3000
 ```
 
@@ -146,6 +165,7 @@ DB_PASSWORD=<your_db_password>
 DB_NAME=<your_db_name>
 DB_HOST=db
 DB_DIALECT=mysql
+GIGWA_SERVERS='["https://your-gigwa-server.example"]'
 GENOLINK_SERVER=<your_Genolink_server_address>   # e.g. https://genolink.plantinformatics.io OR http://127.0.0.1:3000
 GENESYS_SERVER=https://api.sandbox.genesys-pgr.org
 APP_PORT=<PORT> # e.g. 3000
@@ -168,17 +188,6 @@ BASE_PATH=<optional_base_path> # e.g. /test OR leave empty for root
 
 > **Note:** To obtain the correct Genesys OIDC Client ID and Secret for your Genolink server address (e.g. your domain or local 127.0.0.1:3000), please contact the [Genesys support team](https://www.genesys-pgr.org/content/about/contact).
 > Sandbox and production have **different** Client IDs and Secrets. Make sure the URL and credentials belong to the same Genesys environment.
-
-**Gigwa server allowlist**
-
-`GIGWA_SERVERS` is required for Gigwa API access. It accepts either a JSON
-array of server URLs or a JSON object whose values are server URLs. Requests
-for any other server are rejected by the backend with instructions to contact
-the system administrator. For example:
-
-```bash
-GIGWA_SERVERS='["https://gigwa-one.example", "https://gigwa-two.example"]'
-```
 
 #### 3. Start Docker Containers
 Navigate to the directory containing the docker-compose.yml file and run the following command to start the containers:
