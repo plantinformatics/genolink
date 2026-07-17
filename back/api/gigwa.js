@@ -1083,8 +1083,10 @@ router.post("/exportData", async (req, res) => {
 
   let exportSlotAcquired = false;
   let exportTimedOut = false;
+  let clientDisconnected = false;
   let overallTimeoutId;
   let exportAbortController;
+  let handleClientDisconnect;
 
   try {
     const validation = validateExportDataBody(req.body);
@@ -1103,6 +1105,15 @@ router.post("/exportData", async (req, res) => {
     exportSlotAcquired = true;
 
     exportAbortController = new AbortController();
+    handleClientDisconnect = () => {
+      if (!res.writableEnded) {
+        clientDisconnected = true;
+        exportAbortController.abort();
+      }
+    };
+    res.once("close", handleClientDisconnect);
+    if (res.destroyed && !res.writableEnded) handleClientDisconnect();
+
     const exportDeadline = Date.now() + config.exportTotalTimeoutMs;
     overallTimeoutId = setTimeout(() => {
       exportTimedOut = true;
@@ -1305,6 +1316,8 @@ router.post("/exportData", async (req, res) => {
       res.setHeader("Content-Length", zipResp.headers["content-length"]);
     return res.status(200).end(buf);
   } catch (error) {
+    if (clientDisconnected) return;
+
     if (
       exportTimedOut ||
       error?.code === "ECONNABORTED" ||
@@ -1326,6 +1339,9 @@ router.post("/exportData", async (req, res) => {
       .send("API request failed: " + (error?.message || "Unknown error"));
   } finally {
     if (overallTimeoutId) clearTimeout(overallTimeoutId);
+    if (handleClientDisconnect) {
+      res.removeListener("close", handleClientDisconnect);
+    }
 
     if (exportSlotAcquired) {
       activeExportCount -= 1;
