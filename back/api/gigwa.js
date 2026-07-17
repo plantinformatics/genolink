@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const axios = require("axios");
+const { pipeline } = require("node:stream/promises");
 const logger = require("../middlewares/logger");
 const config = require("../config/appConfig");
 const {
@@ -133,6 +134,128 @@ const getGigwaTokenFromQuery = (query) => {
     gigwaSessionId,
   });
 };
+
+const validateExportDataBody = (body) => {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return { error: "Request body must be a JSON object." };
+  }
+
+  const {
+    variantList = [],
+    selectedCallSetDetails,
+    linkagegroups = "",
+    start = -1,
+    end = -1,
+    selectedGigwaServer,
+    gigwaSessionId,
+  } = body;
+
+  if (
+    typeof selectedGigwaServer !== "string" ||
+    !selectedGigwaServer.trim()
+  ) {
+    return { error: "selectedGigwaServer must be a non-empty string." };
+  }
+
+  if (typeof gigwaSessionId !== "string" || !gigwaSessionId.trim()) {
+    return { error: "gigwaSessionId must be a non-empty string." };
+  }
+
+  if (!Array.isArray(variantList)) {
+    return { error: "variantList must be an array of strings." };
+  }
+
+  if (variantList.some((variant) => typeof variant !== "string")) {
+    return { error: "Every variantList entry must be a string." };
+  }
+
+  if (
+    !Array.isArray(selectedCallSetDetails) ||
+    selectedCallSetDetails.length === 0
+  ) {
+    return { error: "selectedCallSetDetails must be a non-empty array." };
+  }
+
+  if (
+    selectedCallSetDetails.some(
+      (detail) => !detail || typeof detail !== "object" || Array.isArray(detail),
+    )
+  ) {
+    return { error: "Every selectedCallSetDetails entry must be an object." };
+  }
+
+  const variantSetId = selectedCallSetDetails[0].studyDbId;
+  if (typeof variantSetId !== "string" || !variantSetId.trim()) {
+    return {
+      error:
+        "The first selectedCallSetDetails entry must contain a non-empty studyDbId.",
+    };
+  }
+
+  if (
+    selectedCallSetDetails.some(
+      (detail) =>
+        detail.germplasmDbId !== undefined &&
+        typeof detail.germplasmDbId !== "string",
+    )
+  ) {
+    return {
+      error: "germplasmDbId must be a string when provided.",
+    };
+  }
+
+  if (typeof linkagegroups !== "string") {
+    return { error: "linkagegroups must be a string." };
+  }
+
+  const parseCoordinate = (value, fieldName) => {
+    if (value === "" || value === null) return { value: -1 };
+
+    const parsedValue =
+      typeof value === "number"
+        ? value
+        : typeof value === "string" && /^-?\d+$/.test(value.trim())
+          ? Number(value)
+          : NaN;
+
+    if (!Number.isSafeInteger(parsedValue) || parsedValue < -1) {
+      return {
+        error: `${fieldName} must be -1 or a non-negative integer.`,
+      };
+    }
+
+    return { value: parsedValue };
+  };
+
+  const parsedStart = parseCoordinate(start, "start");
+  if (parsedStart.error) return parsedStart;
+
+  const parsedEnd = parseCoordinate(end, "end");
+  if (parsedEnd.error) return parsedEnd;
+
+  if (
+    parsedStart.value !== -1 &&
+    parsedEnd.value !== -1 &&
+    parsedStart.value > parsedEnd.value
+  ) {
+    return { error: "start must be less than or equal to end." };
+  }
+
+  return {
+    value: {
+      ...body,
+      variantList,
+      selectedCallSetDetails,
+      linkagegroups,
+      start: parsedStart.value,
+      end: parsedEnd.value,
+      selectedGigwaServer: selectedGigwaServer.trim(),
+      gigwaSessionId: gigwaSessionId.trim(),
+    },
+  };
+};
+
+let activeExportCount = 0;
 
 // Generate Gigwa Token
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -854,15 +977,35 @@ router.post("/exportData", async (req, res) => {
   const waitForZipComplete = async (
     url,
     headers,
-    { timeoutMs = 600000, intervalMs = 2000 },
+    { timeoutMs, intervalMs, signal, getRequestTimeout },
   ) => {
     const deadline = Date.now() + timeoutMs;
     let lastLen = -1,
       stableCount = 0;
 
+    const waitForNextPoll = () =>
+      new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+          signal.removeEventListener("abort", handleAbort);
+          resolve();
+        }, intervalMs);
+
+        const handleAbort = () => {
+          clearTimeout(timer);
+          const error = new Error("Export cancelled");
+          error.code = "ERR_CANCELED";
+          reject(error);
+        };
+
+        signal.addEventListener("abort", handleAbort, { once: true });
+        if (signal.aborted) handleAbort();
+      });
+
     const headOnce = async () => {
       const resp = await axios.head(url, {
         headers,
+        timeout: getRequestTimeout(),
+        signal,
         validateStatus: () => true,
       });
       return {
@@ -874,7 +1017,7 @@ router.post("/exportData", async (req, res) => {
     while (Date.now() < deadline) {
       const { status, len } = await headOnce();
       if (status !== 200 || len <= 0) {
-        await new Promise((r) => setTimeout(r, intervalMs));
+        await waitForNextPoll();
         continue;
       }
 
@@ -887,6 +1030,8 @@ router.post("/exportData", async (req, res) => {
         },
         responseType: "arraybuffer",
         decompress: false,
+        timeout: getRequestTimeout(),
+        signal,
         validateStatus: () => true,
       });
       const fbuf = Buffer.from(first.data || []);
@@ -896,7 +1041,7 @@ router.post("/exportData", async (req, res) => {
         fbuf[0] === 0x50 &&
         fbuf[1] === 0x4b;
       if (!startOK) {
-        await new Promise((r) => setTimeout(r, intervalMs));
+        await waitForNextPoll();
         continue;
       }
 
@@ -911,6 +1056,8 @@ router.post("/exportData", async (req, res) => {
         },
         responseType: "arraybuffer",
         decompress: false,
+        timeout: getRequestTimeout(),
+        signal,
         validateStatus: () => true,
       });
       const lbuf = Buffer.from(last.data || []);
@@ -918,7 +1065,7 @@ router.post("/exportData", async (req, res) => {
         last.status === 206 &&
         lbuf.includes(Buffer.from([0x50, 0x4b, 0x05, 0x06]));
       if (!tailOK) {
-        await new Promise((r) => setTimeout(r, intervalMs));
+        await waitForNextPoll();
         continue;
       }
 
@@ -928,12 +1075,83 @@ router.post("/exportData", async (req, res) => {
         lastLen = len;
       }
       if (stableCount >= 1) return;
-      await new Promise((r) => setTimeout(r, intervalMs));
+      await waitForNextPoll();
     }
-    throw new Error("Timed out waiting for ZIP");
+    const error = new Error("Timed out waiting for ZIP");
+    error.code = "EXPORT_TIMEOUT";
+    throw error;
+  };
+
+  let exportSlotAcquired = false;
+  let exportTimedOut = false;
+  let clientDisconnected = false;
+  let overallTimeoutId;
+  let exportAbortController;
+  let handleClientDisconnect;
+
+  const cleanupExportResources = () => {
+    if (overallTimeoutId) {
+      clearTimeout(overallTimeoutId);
+      overallTimeoutId = undefined;
+    }
+
+    if (handleClientDisconnect) {
+      res.removeListener("close", handleClientDisconnect);
+      handleClientDisconnect = undefined;
+    }
+
+    if (exportAbortController && !exportAbortController.signal.aborted) {
+      exportAbortController.abort();
+    }
+
+    if (exportSlotAcquired) {
+      activeExportCount -= 1;
+      exportSlotAcquired = false;
+    }
   };
 
   try {
+    const validation = validateExportDataBody(req.body);
+    if (validation.error) {
+      return res.status(400).json({ error: validation.error });
+    }
+
+    if (activeExportCount >= config.exportMaxConcurrent) {
+      res.setHeader("Retry-After", "5");
+      return res.status(503).json({
+        error: "The export service is busy. Please try again shortly.",
+      });
+    }
+
+    activeExportCount += 1;
+    exportSlotAcquired = true;
+
+    exportAbortController = new AbortController();
+    handleClientDisconnect = () => {
+      if (!res.writableEnded) {
+        clientDisconnected = true;
+        exportAbortController.abort();
+      }
+    };
+    res.once("close", handleClientDisconnect);
+    if (res.destroyed && !res.writableEnded) handleClientDisconnect();
+
+    const exportDeadline = Date.now() + config.exportTotalTimeoutMs;
+    overallTimeoutId = setTimeout(() => {
+      exportTimedOut = true;
+      exportAbortController.abort();
+    }, config.exportTotalTimeoutMs);
+    overallTimeoutId.unref?.();
+
+    const getRequestTimeout = () =>
+      Math.max(
+        1,
+        Math.min(
+          config.exportUpstreamTimeoutMs,
+          exportDeadline - Date.now(),
+        ),
+      );
+
     const {
       variantList = [],
       selectedCallSetDetails = [],
@@ -943,17 +1161,12 @@ router.post("/exportData", async (req, res) => {
       selectedGigwaServer,
       username,
       password,
-    } = req.body;
+    } = validation.value;
 
-    if (!selectedGigwaServer) {
-      return res
-        .status(400)
-        .json({ error: "Please specify Gigwa server in your payload" });
-    }
     const baseUrl = normaliseGigwaBaseUrl(selectedGigwaServer);
     const assemblyHeader = "0";
 
-    let token = getGigwaTokenFromBody(req.body);
+    let token = getGigwaTokenFromBody(validation.value);
     let cookieHeader = "";
 
     if (!token) {
@@ -965,6 +1178,8 @@ router.post("/exportData", async (req, res) => {
             "Content-Type": "application/json",
             Accept: "application/json",
           },
+          timeout: getRequestTimeout(),
+          signal: exportAbortController.signal,
           validateStatus: () => true,
         },
       );
@@ -981,7 +1196,12 @@ router.post("/exportData", async (req, res) => {
         buildGigwaRestUrl(selectedGigwaServer, "gigwa/generateToken"),
 
         undefined,
-        { headers: { Accept: "application/json" }, validateStatus: () => true },
+        {
+          headers: { Accept: "application/json" },
+          timeout: getRequestTimeout(),
+          signal: exportAbortController.signal,
+          validateStatus: () => true,
+        },
       );
       const setCookie = probe.headers?.["set-cookie"] || [];
       cookieHeader = extractJSessionId(setCookie) || "";
@@ -994,13 +1214,7 @@ router.post("/exportData", async (req, res) => {
     const joinedVariantList = Array.isArray(variantList)
       ? variantList.join(";")
       : String(variantList || "").trim();
-    const variantSetId = selectedCallSetDetails[0]?.studyDbId;
-
-    if (!variantSetId) {
-      return res.status(400).json({
-        error: "Unable to determine the Gigwa variant set for this export",
-      });
-    }
+    const variantSetId = selectedCallSetDetails[0].studyDbId;
 
     const body = {
       variantSetId,
@@ -1009,8 +1223,8 @@ router.post("/exportData", async (req, res) => {
       referenceName: linkagegroups || "",
       selectedVariantTypes: "",
       alleleCount: "",
-      start: start ? start : -1,
-      end: end ? end : -1,
+      start,
+      end,
       variantEffect: "",
       geneName: "",
       callSetIds: [],
@@ -1049,6 +1263,8 @@ router.post("/exportData", async (req, res) => {
           ...(cookieHeader ? { Cookie: cookieHeader } : {}),
         },
         responseType: "text",
+        timeout: getRequestTimeout(),
+        signal: exportAbortController.signal,
         validateStatus: () => true,
       },
     );
@@ -1079,29 +1295,25 @@ router.post("/exportData", async (req, res) => {
       ...(cookieHeader ? { Cookie: cookieHeader } : {}),
     };
     await waitForZipComplete(downloadUrl, dlHeaders, {
-      timeoutMs: 600000,
-      intervalMs: 2000,
+      timeoutMs: Math.max(1, exportDeadline - Date.now()),
+      intervalMs: config.exportPollIntervalMs,
+      signal: exportAbortController.signal,
+      getRequestTimeout,
     });
 
     // Full download
     const zipResp = await axios.get(downloadUrl, {
       headers: dlHeaders,
-      responseType: "arraybuffer",
+      responseType: "stream",
       decompress: false,
+      timeout: getRequestTimeout(),
+      signal: exportAbortController.signal,
       validateStatus: () => true,
     });
 
-    const buf = Buffer.from(zipResp.data || []);
-    const isZip =
-      zipResp.status === 200 &&
-      buf.length >= 4 &&
-      buf[0] === 0x50 &&
-      buf[1] === 0x4b &&
-      buf[2] === 0x03 &&
-      buf[3] === 0x04;
-    if (!isZip) {
-      const t = Buffer.from(zipResp.data || []).toString("utf8");
-      return res.status(zipResp.status).send(t || "Failed to fetch ZIP");
+    if (zipResp.status !== 200) {
+      zipResp.data.destroy();
+      return res.status(zipResp.status).send("Failed to fetch ZIP");
     }
 
     res.setHeader("Content-Encoding", "identity");
@@ -1116,8 +1328,27 @@ router.post("/exportData", async (req, res) => {
     );
     if (zipResp.headers["content-length"])
       res.setHeader("Content-Length", zipResp.headers["content-length"]);
-    return res.status(200).end(buf);
+    res.status(200);
+    await pipeline(zipResp.data, res);
+    return;
   } catch (error) {
+    if (clientDisconnected) return;
+
+    if (res.headersSent) {
+      res.destroy(error);
+      return;
+    }
+
+    if (
+      exportTimedOut ||
+      error?.code === "ECONNABORTED" ||
+      error?.code === "EXPORT_TIMEOUT"
+    ) {
+      return res.status(504).json({
+        error: "The export timed out while waiting for Gigwa.",
+      });
+    }
+
     if (error?.response) {
       const txt = Buffer.from(error.response.data || []).toString("utf8");
       return res
@@ -1127,6 +1358,8 @@ router.post("/exportData", async (req, res) => {
     return res
       .status(500)
       .send("API request failed: " + (error?.message || "Unknown error"));
+  } finally {
+    cleanupExportResources();
   }
 });
 //////////////////////////////////////////////////////////////////////////

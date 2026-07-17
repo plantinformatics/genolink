@@ -15,6 +15,30 @@ const defaultGenotypeMappingSource = "hybrid_internal_first";
 const genotypeMappingSource =
   process.env.GENOTYPE_MAPPING_SOURCE || defaultGenotypeMappingSource;
 
+const readPositiveInteger = (name, defaultValue) => {
+  const value = Number(process.env[name] || defaultValue);
+
+  if (!Number.isSafeInteger(value) || value < 1) {
+    throw new Error(`${name} must be a positive integer.`);
+  }
+
+  return value;
+};
+
+const exportMaxConcurrent = readPositiveInteger("EXPORT_MAX_CONCURRENT", 2);
+const exportUpstreamTimeoutMs = readPositiveInteger(
+  "EXPORT_UPSTREAM_TIMEOUT_MS",
+  30000,
+);
+const exportTotalTimeoutMs = readPositiveInteger(
+  "EXPORT_TOTAL_TIMEOUT_MS",
+  600000,
+);
+const exportPollIntervalMs = readPositiveInteger(
+  "EXPORT_POLL_INTERVAL_MS",
+  2000,
+);
+
 let gigwaServers = [];
 try {
   gigwaServers = parseGigwaServers(
@@ -40,6 +64,11 @@ module.exports = {
   genolinkServer: process.env.GENOLINK_SERVER,
   genesysServer: process.env.GENESYS_SERVER,
   genolinkServerPort: process.env.GENOLINK_SERVER_PORT || 4000,
+  jsonBodyLimit: process.env.JSON_BODY_LIMIT || "1mb",
+  exportMaxConcurrent,
+  exportUpstreamTimeoutMs,
+  exportTotalTimeoutMs,
+  exportPollIntervalMs,
 
   genotypeMappingSource,
 
