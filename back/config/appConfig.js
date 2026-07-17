@@ -40,6 +40,7 @@ module.exports = {
   genolinkServer: process.env.GENOLINK_SERVER,
   genesysServer: process.env.GENESYS_SERVER,
   genolinkServerPort: process.env.GENOLINK_SERVER_PORT || 4000,
+  jsonBodyLimit: process.env.JSON_BODY_LIMIT || "1mb",
 
   genotypeMappingSource,
 

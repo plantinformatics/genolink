@@ -15,7 +15,7 @@ const BASE_PATH = rawBase.replace(/\/+$/, "");
 const distPath = path.join(__dirname, "dist");
 
 app.use(cors());
-app.use(express.json({ limit: "500mb" }));
+app.use(express.json({ limit: appConfig.jsonBodyLimit }));
 app.use(trackRequests);
 
 app.get(`${BASE_PATH}/api/ping`, (_req, res) =>
