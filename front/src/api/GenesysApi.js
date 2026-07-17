@@ -196,6 +196,7 @@ class GenesysApi extends BaseApi {
     userInput = " ",
     isReset = false,
     accessionNumbers = [],
+    preparedBody = null,
   ) {
     try {
       const urlParams = new URLSearchParams(window.location.search);
@@ -231,6 +232,10 @@ class GenesysApi extends BaseApi {
         body = {
           _text: userInput,
         };
+      }
+
+      if (preparedBody) {
+        body = preparedBody;
       }
 
       const limit = 100;
@@ -279,6 +284,7 @@ class GenesysApi extends BaseApi {
     isReset = false,
     accessionNumbers = [],
     selectedColumnIds = null,
+    preparedBody = null,
   ) {
     try {
       const urlParams = new URLSearchParams(window.location.search);
@@ -314,6 +320,10 @@ class GenesysApi extends BaseApi {
         body = {
           _text: userInput,
         };
+      }
+
+      if (preparedBody) {
+        body = preparedBody;
       }
 
       const pageSize = 500;
@@ -709,11 +719,22 @@ class GenesysApi extends BaseApi {
     }
   }
 
-  async resetFilter(dispatch) {
+  async resetFilter(dispatch, hasGenotype = false) {
     try {
+      const baseBody = { _text: " " };
+      const preparedBody = hasGenotype
+        ? await this.buildGenotypedRequestBody(baseBody)
+        : baseBody;
       const [filtercode, initialData] = await Promise.all([
-        this.fetchInitialFilterData(dispatch, " ", true),
-        this.fetchInitialQueryData(dispatch, " ", true),
+        this.fetchInitialFilterData(dispatch, " ", true, [], preparedBody),
+        this.fetchInitialQueryData(
+          dispatch,
+          " ",
+          true,
+          [],
+          null,
+          preparedBody,
+        ),
       ]);
       dispatch(setResetTrigger(true));
       return filtercode;
