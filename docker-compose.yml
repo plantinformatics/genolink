@@ -39,6 +39,7 @@ services:
       GENESYS_SERVER: ${GENESYS_SERVER}
       GENOLINK_SERVER_PORT: ${APP_PORT}
       JSON_BODY_LIMIT: ${JSON_BODY_LIMIT:-1mb}
+      EXPORT_MAX_CONCURRENT: ${EXPORT_MAX_CONCURRENT:-2}
 
     depends_on:
       - db

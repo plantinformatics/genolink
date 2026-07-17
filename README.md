@@ -128,6 +128,7 @@ GENOLINK_SERVER=<your_Genolink_server_address>   # e.g. https://genolink.plantin
 GENESYS_SERVER=https://api.sandbox.genesys-pgr.org
 APP_PORT=<PORT> # e.g. 3000
 JSON_BODY_LIMIT=1mb # optional; maximum incoming JSON request size
+EXPORT_MAX_CONCURRENT=2 # optional; simultaneous exports per backend process
 ```
 
 #### 11. Run the Application
@@ -172,6 +173,7 @@ GENESYS_SERVER=https://api.sandbox.genesys-pgr.org
 APP_PORT=<PORT> # e.g. 3000
 DB_PORT=<PORT> # e.g. 3306
 JSON_BODY_LIMIT=1mb # optional; maximum incoming JSON request size
+EXPORT_MAX_CONCURRENT=2 # optional; simultaneous exports per backend process
 VITE_Genesys_OIDC_CLIENT_ID=<your_Genesys_client_id>
 VITE_Genesys_OIDC_CLIENT_SECRET=<your_Genesys_client_secret>
 VITE_GENOLINK_SERVER=<your_Genolink_server_address>   # e.g. https://genolink.plantinformatics.io OR http://127.0.0.1:3000

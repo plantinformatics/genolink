@@ -15,6 +15,12 @@ const defaultGenotypeMappingSource = "hybrid_internal_first";
 const genotypeMappingSource =
   process.env.GENOTYPE_MAPPING_SOURCE || defaultGenotypeMappingSource;
 
+const exportMaxConcurrent = Number(process.env.EXPORT_MAX_CONCURRENT || 2);
+
+if (!Number.isSafeInteger(exportMaxConcurrent) || exportMaxConcurrent < 1) {
+  throw new Error("EXPORT_MAX_CONCURRENT must be a positive integer.");
+}
+
 let gigwaServers = [];
 try {
   gigwaServers = parseGigwaServers(
@@ -41,6 +47,7 @@ module.exports = {
   genesysServer: process.env.GENESYS_SERVER,
   genolinkServerPort: process.env.GENOLINK_SERVER_PORT || 4000,
   jsonBodyLimit: process.env.JSON_BODY_LIMIT || "1mb",
+  exportMaxConcurrent,
 
   genotypeMappingSource,
 

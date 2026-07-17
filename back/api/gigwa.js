@@ -254,6 +254,8 @@ const validateExportDataBody = (body) => {
   };
 };
 
+let activeExportCount = 0;
+
 // Generate Gigwa Token
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 router.post("/generateGigwaToken", async (req, res) => {
@@ -1053,11 +1055,23 @@ router.post("/exportData", async (req, res) => {
     throw new Error("Timed out waiting for ZIP");
   };
 
+  let exportSlotAcquired = false;
+
   try {
     const validation = validateExportDataBody(req.body);
     if (validation.error) {
       return res.status(400).json({ error: validation.error });
     }
+
+    if (activeExportCount >= config.exportMaxConcurrent) {
+      res.setHeader("Retry-After", "5");
+      return res.status(503).json({
+        error: "The export service is busy. Please try again shortly.",
+      });
+    }
+
+    activeExportCount += 1;
+    exportSlotAcquired = true;
 
     const {
       variantList = [],
@@ -1241,6 +1255,10 @@ router.post("/exportData", async (req, res) => {
     return res
       .status(500)
       .send("API request failed: " + (error?.message || "Unknown error"));
+  } finally {
+    if (exportSlotAcquired) {
+      activeExportCount -= 1;
+    }
   }
 });
 //////////////////////////////////////////////////////////////////////////
