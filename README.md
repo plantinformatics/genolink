@@ -80,6 +80,7 @@ VITE_Genesys_OIDC_CLIENT_ID=<your_client_id>
 VITE_Genesys_OIDC_CLIENT_SECRET=<your_client_secret>
 VITE_GENOLINK_SERVER=<your_Genolink_server_address>   # e.g. https://genolink.plantinformatics.io OR http://127.0.0.1:3000
 VITE_GENESYS_SERVER=https://api.sandbox.genesys-pgr.org
+VITE_GENOTYPE_FILTER_STATUS=no # set to yes to filter for genotyped accessions by default
 ```
 
 **Genesys environment alignment**
@@ -208,6 +209,7 @@ VITE_GENOLINK_SERVER=<your_Genolink_server_address>   # e.g. https://genolink.pl
 VITE_GENESYS_SERVER=https://api.sandbox.genesys-pgr.org
 VITE_PLATFORM=Gigwa
 VITE_REQUIRE_GIGWA_CREDENTIALS=true
+VITE_GENOTYPE_FILTER_STATUS=no # set to yes to filter for genotyped accessions by default
 BASE_PATH=<optional_base_path> # e.g. /test OR leave empty for root
 ```
 

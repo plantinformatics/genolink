@@ -10,6 +10,8 @@ export const defaultInstituteCode = /^[A-Z]{3}\d+$/.test(envInstituteCode)
 export const platforms = import.meta.env.VITE_PLATFORM?.split(",") || ["Gigwa"];
 export const REQUIRE_GIGWA_CREDENTIALS =
   import.meta.env.VITE_REQUIRE_GIGWA_CREDENTIALS === "true";
+export const genotypeFilterDefault =
+  import.meta.env.VITE_GENOTYPE_FILTER_STATUS?.trim().toLowerCase() === "yes";
 
 const allowedGenotypeMappingSources = [
   "internal",

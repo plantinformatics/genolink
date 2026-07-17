@@ -48,6 +48,7 @@ import GenotypeExplorer from "../../genotype/GenotypeExplorer";
 import { genesysApi, genolinkInternalApi } from "../../../pages/Home";
 import {
   defaultInstituteCode,
+  genotypeFilterDefault,
   genotypeMappingSource,
 } from "../../../config/apiConfig";
 import { Autocomplete, TextField, Chip, Box } from "@mui/material";
@@ -63,7 +64,7 @@ const SearchFilters = ({ initialDataReady }) => {
   const [selectedSubsets, setSelectedSubsets] = useState([]);
   const [subsetsTick, setSubsetsTick] = useState(0);
   const [donorNameList, setDonorNameList] = useState([]);
-  const [hasGenotype, setHasGenotype] = useState(false);
+  const [hasGenotype, setHasGenotype] = useState(genotypeFilterDefault);
   const instituteCheckedBoxesRef = useRef([]);
   const cropCheckedBoxesRef = useRef([]);
   const [isInitialMount, setIsInitialMount] = useState(true);
@@ -253,12 +254,24 @@ const SearchFilters = ({ initialDataReady }) => {
           }
         }
 
+        let baseBody = { _text: " " };
+        if (!filterMode && !genotypeIdsParam) {
+          baseBody.institute = { code: [defaultInstituteCode] };
+        } else if (filterMode && genotypeIdsParam) {
+          baseBody.accessionNumbers =
+            accessionNums.length > 0 ? accessionNums : ["__INVALID__"];
+        }
+        const preparedBody = genotypeFilterDefault
+          ? await genesysApi.buildGenotypedRequestBody(baseBody)
+          : baseBody;
+
         const [_, { filterCode, body }] = await Promise.all([
           genesysApi.fetchInitialFilterData(
             dispatch,
             " ",
             false,
             accessionNums,
+            preparedBody,
           ),
           genesysApi.fetchInitialQueryData(
             dispatch,
@@ -266,11 +279,23 @@ const SearchFilters = ({ initialDataReady }) => {
             false,
             accessionNums,
             selectedColumnIds,
+            preparedBody,
           ),
         ]);
 
         setFilterCode(filterCode);
         setFilterBody(body);
+        if (genotypeFilterDefault) {
+          const currentFilters = store.getState().passport.activeFilters;
+          dispatch(
+            setActiveFilters([
+              ...currentFilters.filter(
+                (filter) => filter.type !== "Genotype Filter",
+              ),
+              { type: "Genotype Filter", value: "On" },
+            ]),
+          );
+        }
         setInitialRequestSent(true);
         setInitialRequestStatus("success");
       } catch (error) {
@@ -293,6 +318,9 @@ const SearchFilters = ({ initialDataReady }) => {
         break;
       case "Genotype Ids":
         dispatch(setGenotypeIds([]));
+        break;
+      case "Genotype Filter":
+        setHasGenotype(false);
         break;
       case "Figs":
         dispatch(setSelectedFig(""));
@@ -578,6 +606,8 @@ const SearchFilters = ({ initialDataReady }) => {
         newFilters.push({ type: "Accession Numbers", value: accessionNumbers });
       if (genotypeIds.length > 0)
         newFilters.push({ type: "Genotype Ids", value: genotypeIds });
+      if (hasGenotype)
+        newFilters.push({ type: "Genotype Filter", value: "On" });
       if (selectedFig) newFilters.push({ type: "Figs", value: selectedFig });
       if (instituteCheckedBoxes.length > 0)
         newFilters.push({
@@ -705,12 +735,15 @@ const SearchFilters = ({ initialDataReady }) => {
     setIsResetLoading(true);
 
     try {
-      const filterCode = await genesysApi.resetFilter(dispatch);
+      const filterCode = await genesysApi.resetFilter(
+        dispatch,
+        genotypeFilterDefault,
+      );
       setFilterCode(filterCode);
       dispatch(setActiveFilters([]));
       dispatch(setResetTrigger(true));
       dispatch(setWildSearchValue(""));
-      setHasGenotype(false);
+      setHasGenotype(genotypeFilterDefault);
       if (instituteCheckedBoxesRef.current.length > 0)
         instituteCheckedBoxesRef.current = [];
       if (cropCheckedBoxesRef.current.length > 0)
