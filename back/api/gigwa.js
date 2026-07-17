@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const axios = require("axios");
+const { pipeline } = require("node:stream/promises");
 const logger = require("../middlewares/logger");
 const config = require("../config/appConfig");
 const {
@@ -1282,24 +1283,16 @@ router.post("/exportData", async (req, res) => {
     // Full download
     const zipResp = await axios.get(downloadUrl, {
       headers: dlHeaders,
-      responseType: "arraybuffer",
+      responseType: "stream",
       decompress: false,
       timeout: getRequestTimeout(),
       signal: exportAbortController.signal,
       validateStatus: () => true,
     });
 
-    const buf = Buffer.from(zipResp.data || []);
-    const isZip =
-      zipResp.status === 200 &&
-      buf.length >= 4 &&
-      buf[0] === 0x50 &&
-      buf[1] === 0x4b &&
-      buf[2] === 0x03 &&
-      buf[3] === 0x04;
-    if (!isZip) {
-      const t = Buffer.from(zipResp.data || []).toString("utf8");
-      return res.status(zipResp.status).send(t || "Failed to fetch ZIP");
+    if (zipResp.status !== 200) {
+      zipResp.data.destroy();
+      return res.status(zipResp.status).send("Failed to fetch ZIP");
     }
 
     res.setHeader("Content-Encoding", "identity");
@@ -1314,9 +1307,16 @@ router.post("/exportData", async (req, res) => {
     );
     if (zipResp.headers["content-length"])
       res.setHeader("Content-Length", zipResp.headers["content-length"]);
-    return res.status(200).end(buf);
+    res.status(200);
+    await pipeline(zipResp.data, res);
+    return;
   } catch (error) {
     if (clientDisconnected) return;
+
+    if (res.headersSent) {
+      res.destroy(error);
+      return;
+    }
 
     if (
       exportTimedOut ||
