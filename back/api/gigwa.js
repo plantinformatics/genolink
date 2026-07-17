@@ -976,15 +976,35 @@ router.post("/exportData", async (req, res) => {
   const waitForZipComplete = async (
     url,
     headers,
-    { timeoutMs = 600000, intervalMs = 2000 },
+    { timeoutMs, intervalMs, signal, getRequestTimeout },
   ) => {
     const deadline = Date.now() + timeoutMs;
     let lastLen = -1,
       stableCount = 0;
 
+    const waitForNextPoll = () =>
+      new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+          signal.removeEventListener("abort", handleAbort);
+          resolve();
+        }, intervalMs);
+
+        const handleAbort = () => {
+          clearTimeout(timer);
+          const error = new Error("Export cancelled");
+          error.code = "ERR_CANCELED";
+          reject(error);
+        };
+
+        signal.addEventListener("abort", handleAbort, { once: true });
+        if (signal.aborted) handleAbort();
+      });
+
     const headOnce = async () => {
       const resp = await axios.head(url, {
         headers,
+        timeout: getRequestTimeout(),
+        signal,
         validateStatus: () => true,
       });
       return {
@@ -996,7 +1016,7 @@ router.post("/exportData", async (req, res) => {
     while (Date.now() < deadline) {
       const { status, len } = await headOnce();
       if (status !== 200 || len <= 0) {
-        await new Promise((r) => setTimeout(r, intervalMs));
+        await waitForNextPoll();
         continue;
       }
 
@@ -1009,6 +1029,8 @@ router.post("/exportData", async (req, res) => {
         },
         responseType: "arraybuffer",
         decompress: false,
+        timeout: getRequestTimeout(),
+        signal,
         validateStatus: () => true,
       });
       const fbuf = Buffer.from(first.data || []);
@@ -1018,7 +1040,7 @@ router.post("/exportData", async (req, res) => {
         fbuf[0] === 0x50 &&
         fbuf[1] === 0x4b;
       if (!startOK) {
-        await new Promise((r) => setTimeout(r, intervalMs));
+        await waitForNextPoll();
         continue;
       }
 
@@ -1033,6 +1055,8 @@ router.post("/exportData", async (req, res) => {
         },
         responseType: "arraybuffer",
         decompress: false,
+        timeout: getRequestTimeout(),
+        signal,
         validateStatus: () => true,
       });
       const lbuf = Buffer.from(last.data || []);
@@ -1040,7 +1064,7 @@ router.post("/exportData", async (req, res) => {
         last.status === 206 &&
         lbuf.includes(Buffer.from([0x50, 0x4b, 0x05, 0x06]));
       if (!tailOK) {
-        await new Promise((r) => setTimeout(r, intervalMs));
+        await waitForNextPoll();
         continue;
       }
 
@@ -1050,12 +1074,17 @@ router.post("/exportData", async (req, res) => {
         lastLen = len;
       }
       if (stableCount >= 1) return;
-      await new Promise((r) => setTimeout(r, intervalMs));
+      await waitForNextPoll();
     }
-    throw new Error("Timed out waiting for ZIP");
+    const error = new Error("Timed out waiting for ZIP");
+    error.code = "EXPORT_TIMEOUT";
+    throw error;
   };
 
   let exportSlotAcquired = false;
+  let exportTimedOut = false;
+  let overallTimeoutId;
+  let exportAbortController;
 
   try {
     const validation = validateExportDataBody(req.body);
@@ -1072,6 +1101,23 @@ router.post("/exportData", async (req, res) => {
 
     activeExportCount += 1;
     exportSlotAcquired = true;
+
+    exportAbortController = new AbortController();
+    const exportDeadline = Date.now() + config.exportTotalTimeoutMs;
+    overallTimeoutId = setTimeout(() => {
+      exportTimedOut = true;
+      exportAbortController.abort();
+    }, config.exportTotalTimeoutMs);
+    overallTimeoutId.unref?.();
+
+    const getRequestTimeout = () =>
+      Math.max(
+        1,
+        Math.min(
+          config.exportUpstreamTimeoutMs,
+          exportDeadline - Date.now(),
+        ),
+      );
 
     const {
       variantList = [],
@@ -1099,6 +1145,8 @@ router.post("/exportData", async (req, res) => {
             "Content-Type": "application/json",
             Accept: "application/json",
           },
+          timeout: getRequestTimeout(),
+          signal: exportAbortController.signal,
           validateStatus: () => true,
         },
       );
@@ -1115,7 +1163,12 @@ router.post("/exportData", async (req, res) => {
         buildGigwaRestUrl(selectedGigwaServer, "gigwa/generateToken"),
 
         undefined,
-        { headers: { Accept: "application/json" }, validateStatus: () => true },
+        {
+          headers: { Accept: "application/json" },
+          timeout: getRequestTimeout(),
+          signal: exportAbortController.signal,
+          validateStatus: () => true,
+        },
       );
       const setCookie = probe.headers?.["set-cookie"] || [];
       cookieHeader = extractJSessionId(setCookie) || "";
@@ -1177,6 +1230,8 @@ router.post("/exportData", async (req, res) => {
           ...(cookieHeader ? { Cookie: cookieHeader } : {}),
         },
         responseType: "text",
+        timeout: getRequestTimeout(),
+        signal: exportAbortController.signal,
         validateStatus: () => true,
       },
     );
@@ -1207,8 +1262,10 @@ router.post("/exportData", async (req, res) => {
       ...(cookieHeader ? { Cookie: cookieHeader } : {}),
     };
     await waitForZipComplete(downloadUrl, dlHeaders, {
-      timeoutMs: 600000,
-      intervalMs: 2000,
+      timeoutMs: Math.max(1, exportDeadline - Date.now()),
+      intervalMs: config.exportPollIntervalMs,
+      signal: exportAbortController.signal,
+      getRequestTimeout,
     });
 
     // Full download
@@ -1216,6 +1273,8 @@ router.post("/exportData", async (req, res) => {
       headers: dlHeaders,
       responseType: "arraybuffer",
       decompress: false,
+      timeout: getRequestTimeout(),
+      signal: exportAbortController.signal,
       validateStatus: () => true,
     });
 
@@ -1246,6 +1305,16 @@ router.post("/exportData", async (req, res) => {
       res.setHeader("Content-Length", zipResp.headers["content-length"]);
     return res.status(200).end(buf);
   } catch (error) {
+    if (
+      exportTimedOut ||
+      error?.code === "ECONNABORTED" ||
+      error?.code === "EXPORT_TIMEOUT"
+    ) {
+      return res.status(504).json({
+        error: "The export timed out while waiting for Gigwa.",
+      });
+    }
+
     if (error?.response) {
       const txt = Buffer.from(error.response.data || []).toString("utf8");
       return res
@@ -1256,6 +1325,8 @@ router.post("/exportData", async (req, res) => {
       .status(500)
       .send("API request failed: " + (error?.message || "Unknown error"));
   } finally {
+    if (overallTimeoutId) clearTimeout(overallTimeoutId);
+
     if (exportSlotAcquired) {
       activeExportCount -= 1;
     }
