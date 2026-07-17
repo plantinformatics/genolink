@@ -134,6 +134,126 @@ const getGigwaTokenFromQuery = (query) => {
   });
 };
 
+const validateExportDataBody = (body) => {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return { error: "Request body must be a JSON object." };
+  }
+
+  const {
+    variantList = [],
+    selectedCallSetDetails,
+    linkagegroups = "",
+    start = -1,
+    end = -1,
+    selectedGigwaServer,
+    gigwaSessionId,
+  } = body;
+
+  if (
+    typeof selectedGigwaServer !== "string" ||
+    !selectedGigwaServer.trim()
+  ) {
+    return { error: "selectedGigwaServer must be a non-empty string." };
+  }
+
+  if (typeof gigwaSessionId !== "string" || !gigwaSessionId.trim()) {
+    return { error: "gigwaSessionId must be a non-empty string." };
+  }
+
+  if (!Array.isArray(variantList)) {
+    return { error: "variantList must be an array of strings." };
+  }
+
+  if (variantList.some((variant) => typeof variant !== "string")) {
+    return { error: "Every variantList entry must be a string." };
+  }
+
+  if (
+    !Array.isArray(selectedCallSetDetails) ||
+    selectedCallSetDetails.length === 0
+  ) {
+    return { error: "selectedCallSetDetails must be a non-empty array." };
+  }
+
+  if (
+    selectedCallSetDetails.some(
+      (detail) => !detail || typeof detail !== "object" || Array.isArray(detail),
+    )
+  ) {
+    return { error: "Every selectedCallSetDetails entry must be an object." };
+  }
+
+  const variantSetId = selectedCallSetDetails[0].studyDbId;
+  if (typeof variantSetId !== "string" || !variantSetId.trim()) {
+    return {
+      error:
+        "The first selectedCallSetDetails entry must contain a non-empty studyDbId.",
+    };
+  }
+
+  if (
+    selectedCallSetDetails.some(
+      (detail) =>
+        detail.germplasmDbId !== undefined &&
+        typeof detail.germplasmDbId !== "string",
+    )
+  ) {
+    return {
+      error: "germplasmDbId must be a string when provided.",
+    };
+  }
+
+  if (typeof linkagegroups !== "string") {
+    return { error: "linkagegroups must be a string." };
+  }
+
+  const parseCoordinate = (value, fieldName) => {
+    if (value === "" || value === null) return { value: -1 };
+
+    const parsedValue =
+      typeof value === "number"
+        ? value
+        : typeof value === "string" && /^-?\d+$/.test(value.trim())
+          ? Number(value)
+          : NaN;
+
+    if (!Number.isSafeInteger(parsedValue) || parsedValue < -1) {
+      return {
+        error: `${fieldName} must be -1 or a non-negative integer.`,
+      };
+    }
+
+    return { value: parsedValue };
+  };
+
+  const parsedStart = parseCoordinate(start, "start");
+  if (parsedStart.error) return parsedStart;
+
+  const parsedEnd = parseCoordinate(end, "end");
+  if (parsedEnd.error) return parsedEnd;
+
+  if (
+    parsedStart.value !== -1 &&
+    parsedEnd.value !== -1 &&
+    parsedStart.value > parsedEnd.value
+  ) {
+    return { error: "start must be less than or equal to end." };
+  }
+
+  return {
+    value: {
+      ...body,
+      variantList,
+      selectedCallSetDetails,
+      linkagegroups,
+      start: parsedStart.value,
+      end: parsedEnd.value,
+      selectedGigwaServer: selectedGigwaServer.trim(),
+      gigwaSessionId: gigwaSessionId.trim(),
+    },
+  };
+};
+
 // Generate Gigwa Token
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 router.post("/generateGigwaToken", async (req, res) => {
@@ -934,6 +1054,11 @@ router.post("/exportData", async (req, res) => {
   };
 
   try {
+    const validation = validateExportDataBody(req.body);
+    if (validation.error) {
+      return res.status(400).json({ error: validation.error });
+    }
+
     const {
       variantList = [],
       selectedCallSetDetails = [],
@@ -943,17 +1068,12 @@ router.post("/exportData", async (req, res) => {
       selectedGigwaServer,
       username,
       password,
-    } = req.body;
+    } = validation.value;
 
-    if (!selectedGigwaServer) {
-      return res
-        .status(400)
-        .json({ error: "Please specify Gigwa server in your payload" });
-    }
     const baseUrl = normaliseGigwaBaseUrl(selectedGigwaServer);
     const assemblyHeader = "0";
 
-    let token = getGigwaTokenFromBody(req.body);
+    let token = getGigwaTokenFromBody(validation.value);
     let cookieHeader = "";
 
     if (!token) {
@@ -994,13 +1114,7 @@ router.post("/exportData", async (req, res) => {
     const joinedVariantList = Array.isArray(variantList)
       ? variantList.join(";")
       : String(variantList || "").trim();
-    const variantSetId = selectedCallSetDetails[0]?.studyDbId;
-
-    if (!variantSetId) {
-      return res.status(400).json({
-        error: "Unable to determine the Gigwa variant set for this export",
-      });
-    }
+    const variantSetId = selectedCallSetDetails[0].studyDbId;
 
     const body = {
       variantSetId,
@@ -1009,8 +1123,8 @@ router.post("/exportData", async (req, res) => {
       referenceName: linkagegroups || "",
       selectedVariantTypes: "",
       alleleCount: "",
-      start: start ? start : -1,
-      end: end ? end : -1,
+      start,
+      end,
       variantEffect: "",
       geneName: "",
       callSetIds: [],
