@@ -1089,6 +1089,27 @@ router.post("/exportData", async (req, res) => {
   let exportAbortController;
   let handleClientDisconnect;
 
+  const cleanupExportResources = () => {
+    if (overallTimeoutId) {
+      clearTimeout(overallTimeoutId);
+      overallTimeoutId = undefined;
+    }
+
+    if (handleClientDisconnect) {
+      res.removeListener("close", handleClientDisconnect);
+      handleClientDisconnect = undefined;
+    }
+
+    if (exportAbortController && !exportAbortController.signal.aborted) {
+      exportAbortController.abort();
+    }
+
+    if (exportSlotAcquired) {
+      activeExportCount -= 1;
+      exportSlotAcquired = false;
+    }
+  };
+
   try {
     const validation = validateExportDataBody(req.body);
     if (validation.error) {
@@ -1338,14 +1359,7 @@ router.post("/exportData", async (req, res) => {
       .status(500)
       .send("API request failed: " + (error?.message || "Unknown error"));
   } finally {
-    if (overallTimeoutId) clearTimeout(overallTimeoutId);
-    if (handleClientDisconnect) {
-      res.removeListener("close", handleClientDisconnect);
-    }
-
-    if (exportSlotAcquired) {
-      activeExportCount -= 1;
-    }
+    cleanupExportResources();
   }
 });
 //////////////////////////////////////////////////////////////////////////
