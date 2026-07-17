@@ -693,7 +693,11 @@ const SearchFilters = ({ initialDataReady }) => {
   };
   useEffect(() => {
     if (resetTrigger) {
-      dispatch(setInstituteCheckedBoxes([]));
+      dispatch(
+        setInstituteCheckedBoxes(
+          filterMode === "Passport Filter" ? [defaultInstituteCode] : [],
+        ),
+      );
       dispatch(setAccessionNumbers([]));
       dispatch(setGenotypeIds([]));
       dispatch(setSelectedFig(""));
@@ -731,21 +735,38 @@ const SearchFilters = ({ initialDataReady }) => {
     convertDonorCodes();
   }, [donorCodeList]);
 
-  const resetFilters = async () => {
+  const resetFilters = async ({ restoreDefaultInstitute = false } = {}) => {
     setIsResetLoading(true);
 
     try {
       const filterCode = await genesysApi.resetFilter(
         dispatch,
         genotypeFilterDefault,
+        restoreDefaultInstitute ? defaultInstituteCode : null,
       );
       setFilterCode(filterCode);
-      dispatch(setActiveFilters([]));
+      const defaultFilters = [];
+      if (restoreDefaultInstitute) {
+        defaultFilters.push({
+          type: "Institute Code",
+          value: [defaultInstituteCode],
+        });
+      }
+      if (genotypeFilterDefault) {
+        defaultFilters.push({ type: "Genotype Filter", value: "On" });
+      }
+      dispatch(setActiveFilters(defaultFilters));
+      dispatch(
+        setInstituteCheckedBoxes(
+          restoreDefaultInstitute ? [defaultInstituteCode] : [],
+        ),
+      );
       dispatch(setResetTrigger(true));
       dispatch(setWildSearchValue(""));
       setHasGenotype(genotypeFilterDefault);
-      if (instituteCheckedBoxesRef.current.length > 0)
-        instituteCheckedBoxesRef.current = [];
+      instituteCheckedBoxesRef.current = restoreDefaultInstitute
+        ? [defaultInstituteCode]
+        : [];
       if (cropCheckedBoxesRef.current.length > 0)
         cropCheckedBoxesRef.current = [];
       setSubsetsTick((t) => t + 1);
@@ -756,7 +777,8 @@ const SearchFilters = ({ initialDataReady }) => {
     }
   };
 
-  const handleResetFilter = () => resetFilters();
+  const handleResetFilter = () =>
+    resetFilters({ restoreDefaultInstitute: filterMode === "Passport Filter" });
 
   const handleFilterModeChange = (event) => {
     const nextFilterMode = event.target.value;
@@ -764,7 +786,9 @@ const SearchFilters = ({ initialDataReady }) => {
     if (nextFilterMode === filterMode) return;
 
     setFilterMode(nextFilterMode);
-    resetFilters();
+    resetFilters({
+      restoreDefaultInstitute: nextFilterMode === "Passport Filter",
+    });
   };
 
   return (

@@ -719,9 +719,18 @@ class GenesysApi extends BaseApi {
     }
   }
 
-  async resetFilter(dispatch, hasGenotype = false) {
+  async resetFilter(
+    dispatch,
+    hasGenotype = false,
+    instituteCode = null,
+  ) {
     try {
-      const baseBody = { _text: " " };
+      const baseBody = {
+        _text: " ",
+        ...(instituteCode
+          ? { institute: { code: [instituteCode] } }
+          : {}),
+      };
       const preparedBody = hasGenotype
         ? await this.buildGenotypedRequestBody(baseBody)
         : baseBody;
