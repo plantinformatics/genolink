@@ -63,8 +63,8 @@ module.exports = app;
 
 if (require.main === module) {
   dbInit().then(() => {
-    app.listen(appConfig.genolinkServerPort, () => {
-      console.log(`Server listening on port ${appConfig.genolinkServerPort}`);
+    app.listen(appConfig.serverPort, () => {
+      console.log(`Server listening on port ${appConfig.serverPort}`);
     });
   });
 }

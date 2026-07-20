@@ -21,6 +21,8 @@ export default defineConfig(({ mode }) => {
     : [];
 
   const VITE_BASE_FOR_BUILD = BASE_PATH ? `${BASE_PATH}/` : "/";
+  const backendPort = parseInt(env.APP_PORT, 10) || 4000;
+  const apiPath = `${BASE_PATH}/api` || "/api";
 
   return {
     base: mode === "development" ? "/dev/" : VITE_BASE_FOR_BUILD,
@@ -41,6 +43,12 @@ export default defineConfig(({ mode }) => {
       host: env.VITE_FRONTEND_DEV_HOST || "127.0.0.1",
       port: parseInt(env.VITE_FRONTEND_DEV_PORT, 10) || 3001,
       allowedHosts,
+      proxy: {
+        [apiPath]: {
+          target: `http://127.0.0.1:${backendPort}`,
+          changeOrigin: false,
+        },
+      },
       fs: {
         allow: [ROOT_DIR, SHARED_DATA_DIR],
       },

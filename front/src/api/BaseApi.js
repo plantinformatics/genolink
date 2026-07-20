@@ -1,7 +1,7 @@
 import axios from "axios";
 
 class BaseApi {
-  constructor(baseUrl) {
+  constructor(baseUrl = "") {
     this.baseUrl = baseUrl;
   }
 

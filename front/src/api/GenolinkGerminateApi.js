@@ -1,14 +1,14 @@
 import BaseApi from './BaseApi';
-import { genolinkServer } from '../config/apiConfig';
+import { BASE_PATH } from "../config/basePath";
 
 
 class GenolinkGerminateApi extends BaseApi {
   constructor(token) {
-    super(genolinkServer, token);
+    super();
   }
 
   buildEndpoint(group, posStart, posEnd) {
-    let endpoint = `/api/germinate/brapi/v2/callset/calls`;
+    let endpoint = `${BASE_PATH}/api/germinate/brapi/v2/callset/calls`;
     if (group) endpoint += `/chromosome/${group}`;
     if (posStart && posEnd) endpoint += `/position/${posStart}/${posEnd}`;
     return endpoint;
@@ -30,7 +30,7 @@ class GenolinkGerminateApi extends BaseApi {
   // Fetch linkage groups with mapped chromosome names
   async fetchGerminateLinkageGroups(username, password, accession) {
     try {
-      const response = await this.post("/api/germinate/brapi/v2/callsets/chromosomes", { username, password, accession });
+      const response = await this.post(`${BASE_PATH}/api/germinate/brapi/v2/callsets/chromosomes`, { username, password, accession });
       const linkageGroupNames = response.chromosomes;
       return linkageGroupNames;
     } catch (error) {

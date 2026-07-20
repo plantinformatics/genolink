@@ -1,7 +1,6 @@
 import BaseApi from "./BaseApi";
 import {
   defaultInstituteCode,
-  genolinkServer,
   genotypeMappingSource,
 } from "../config/apiConfig";
 import { BASE_PATH } from "../config/basePath";
@@ -35,7 +34,7 @@ const GENESYS_API_BASE = `${BASE_PATH}/api/genesys`;
 
 class GenesysApi extends BaseApi {
   constructor() {
-    super(genolinkServer);
+    super();
     this.genotypedAccessions = [];
     this.genotypedSamples = [];
     this.genotypeStatus = [];
