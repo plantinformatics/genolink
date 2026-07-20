@@ -5,7 +5,15 @@
 
 ## Prerequisite: Generate Gigwa Session ID
 
-Before sending any request to genotype-related endpoints that contain `/gigwa/` in the URL, first generate a Gigwa session ID.
+Before a Gigwa server can be supplied as `selectedGigwaServer`, a system administrator must register it in the backend `.env` file using `GIGWA_SERVERS`. The value must be valid JSON containing the approved server URLs, for example:
+
+```env
+GIGWA_SERVERS=["https://gigwa.plantinformatics.io", "https://gigwa.example.org"]
+```
+
+Restart the backend after changing this setting. Requests for a server that is not registered in `GIGWA_SERVERS` are rejected with HTTP `403`.
+
+Before sending any request to genotype-related endpoints that contain `/gigwa/` in the URL, first generate a Gigwa session ID for the registered server.
 
 #### Request
 
@@ -589,4 +597,3 @@ POST https://genolink.plantinformatics.io/api/gigwa/brapi/v2/search/allelematrix
     }
 }
  ``` 
-
