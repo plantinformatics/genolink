@@ -2,12 +2,16 @@ import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 import { fileURLToPath } from "url";
+import { readFileSync } from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const ROOT_DIR = __dirname;
 const SHARED_DATA_DIR = path.resolve(__dirname, "../shared-data");
+const { version: APP_VERSION } = JSON.parse(
+  readFileSync(path.resolve(__dirname, "package.json"), "utf8"),
+);
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
@@ -37,6 +41,7 @@ export default defineConfig(({ mode }) => {
 
     define: {
       __BASE_PATH__: JSON.stringify(BASE_PATH),
+      "import.meta.env.VITE_APP_VERSION": JSON.stringify(APP_VERSION),
       "import.meta.env.GENESYS_SERVER": JSON.stringify(
         env.GENESYS_SERVER || "",
       ),

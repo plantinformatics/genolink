@@ -9,6 +9,10 @@ import styles from "./SearchFilters.module.css";
 import store from "../../../redux/store";
 import MetadataFieldsSettings from "../MetadataFieldsSettings";
 import { germplasmStorageMapping, sampStatMapping } from "./MultiSelectFilter";
+import {
+  appSourceUrl,
+  appVersionLabel,
+} from "../../../config/appVersion";
 
 import {
   setInstituteCheckedBoxes,
@@ -794,6 +798,15 @@ const SearchFilters = ({ initialDataReady }) => {
   return (
     <>
       <div className={styles.genolinkContainer}>
+        <a
+          href={appSourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={styles.versionLink}
+          title={`View Genolink ${appVersionLabel} source code on GitHub`}
+        >
+          {appVersionLabel}
+        </a>
         <div className={styles.genolinkSubContainer}>
           <img
             src="Genolink.png"
