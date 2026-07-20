@@ -12,7 +12,7 @@ const SHARED_DATA_DIR = path.resolve(__dirname, "../shared-data");
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
 
-  const rawBase = env.BASE_PATH || env.VITE_BASE_PATH || "";
+  const rawBase = env.BASE_PATH || "";
   const BASE_PATH = rawBase.replace(/\/+$/, "");
   const allowedHosts = env.VITE_FRONTEND_ALLOWED_HOSTS
     ? env.VITE_FRONTEND_ALLOWED_HOSTS.split(",")
@@ -37,6 +37,12 @@ export default defineConfig(({ mode }) => {
 
     define: {
       __BASE_PATH__: JSON.stringify(BASE_PATH),
+      "import.meta.env.GENESYS_SERVER": JSON.stringify(
+        env.GENESYS_SERVER || "",
+      ),
+      "import.meta.env.GENOTYPE_MAPPING_SOURCE": JSON.stringify(
+        env.GENOTYPE_MAPPING_SOURCE || "",
+      ),
     },
 
     server: {

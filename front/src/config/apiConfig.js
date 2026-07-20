@@ -1,5 +1,4 @@
-export const genolinkServer = import.meta.env.VITE_GENOLINK_SERVER;
-export const genesysServer = import.meta.env.VITE_GENESYS_SERVER;
+export const genesysServer = import.meta.env.GENESYS_SERVER;
 const fallbackInstituteCode = "AUS165";
 const envInstituteCode = import.meta.env.VITE_DEFAULT_INSTITUTE_CODE?.trim()
   .toUpperCase();
@@ -23,7 +22,7 @@ const allowedGenotypeMappingSources = [
 const defaultGenotypeMappingSource = "hybrid_internal_first";
 
 export const genotypeMappingSource = allowedGenotypeMappingSources.includes(
-  import.meta.env.VITE_GENOTYPE_MAPPING_SOURCE,
+  import.meta.env.GENOTYPE_MAPPING_SOURCE,
 )
-  ? import.meta.env.VITE_GENOTYPE_MAPPING_SOURCE
+  ? import.meta.env.GENOTYPE_MAPPING_SOURCE
   : defaultGenotypeMappingSource;

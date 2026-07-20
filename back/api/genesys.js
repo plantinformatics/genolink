@@ -20,8 +20,8 @@ const genesysHttpsAgent = new https.Agent({
 const GENESYS_TIMEOUT_MS = 60000;
 
 const oidcConfig = {
-  client_id: process.env.VITE_Genesys_OIDC_CLIENT_ID,
-  client_secret: process.env.VITE_Genesys_OIDC_CLIENT_SECRET,
+  client_id: process.env.GENESYS_CLIENT_ID,
+  client_secret: process.env.GENESYS_CLIENT_SECRET,
 };
 
 let cachedToken = null;
