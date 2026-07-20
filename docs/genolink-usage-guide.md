@@ -57,7 +57,7 @@ By leveraging Genesys APIs, Genolink ensures accurate and up-to-date passport da
 
 The genotype data associated with plant accessions is stored in Variant Call Format (VCF) files, which contain Genotype IDs as unique identifiers. To facilitate accession-genotype mapping, Genolink maintains a dedicated database table linking accessions to their corresponding Genotype IDs.
 
-Users are required to upload a pre-formatted CSV template provided by Genolink to populate this mapping database. This step is crucial, as incomplete or incorrect mapping files will cause errors when querying genotype data. The tool ensures that only accessions with correctly linked Genotype IDs can be searched across different genomic platforms.
+Administrators populate this mapping table with a pre-formatted CSV file. Each row records an accession, an optional Genotype ID, a genotype status (`Completed`, `Pending`, `Excluded`, or `TBC`), and optionally the URL of the Gigwa server containing the sample. Only `Completed` mappings are used when Genolink maps accessions to Genotype IDs. The server URL allows Genolink to direct users to the appropriate Gigwa server when selected accessions span multiple servers. See the [sample-to-accession upload guide](./data-upload/upload-sample-accessions.md) for the required CSV format and upload/update commands.
 
 
 <p align="center">
