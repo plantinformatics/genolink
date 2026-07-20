@@ -83,6 +83,15 @@ GENOTYPE_MAPPING_SOURCE=hybrid_internal_first
 VITE_GENOTYPE_FILTER_STATUS=no # set to yes to filter for genotyped accessions by default
 ```
 
+`GENOTYPE_MAPPING_SOURCE` accepts the following values:
+
+- `internal`: use only mappings stored in the Genolink database.
+- `genesys`: use only mappings returned by Genesys.
+- `hybrid_internal_first`: use internal mappings first, then query Genesys for
+  accessions that remain unmapped. This is the default.
+- `hybrid_genesys_first`: use Genesys mappings first, then query the internal
+  database for accessions that remain unmapped.
+
 **Genesys environment alignment**
 
 - If you are using **Genesys sandbox**, set:
