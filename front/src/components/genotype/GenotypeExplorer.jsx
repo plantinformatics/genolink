@@ -595,7 +595,6 @@ const GenotypeExplorer = () => {
 
           if (combinedResults.combinedResult.length === 0) {
             alert("No genotype data found across all Gigwa servers.");
-            setIsVerifyLoading(false);
             return;
           }
 
@@ -654,6 +653,8 @@ const GenotypeExplorer = () => {
         }
       }
       alert(message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
