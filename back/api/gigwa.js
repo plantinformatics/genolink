@@ -1399,7 +1399,7 @@ router.post("/samplesDatasetInfo", async (req, res) => {
     if (!samples && accessions.length > 0) {
       samples = await axios
         .post(
-          `${config.genolinkServer}${BASE_PATH}/api/internalApi/mapAccessionToGenotypeId`,
+          `${config.internalServerOrigin}${BASE_PATH}/api/internalApi/mapAccessionToGenotypeId`,
           {
             Accessions: accessions,
           },

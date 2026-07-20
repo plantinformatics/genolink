@@ -3,7 +3,7 @@ const axios = require("axios");
 const config = require("../config/appConfig");
 const logger = require("../middlewares/logger");
 
-const BASE_PATH = process.env.BASE_PATH || "";
+const BASE_PATH = (process.env.BASE_PATH || "").replace(/\/+$/, "");
 
 const normaliseAccessions = (accessions = []) => {
   if (!Array.isArray(accessions)) {
@@ -47,7 +47,7 @@ const getInternalMappingsByAccessions = async (accessions) => {
 
   try {
     const response = await axios.post(
-      `${config.genolinkServer}${BASE_PATH}/api/internalApi/mapAccessionToGenotypeId`,
+      `${config.internalServerOrigin}${BASE_PATH}/api/internalApi/mapAccessionToGenotypeId`,
       {
         Accessions: cleanedAccessions,
       },
@@ -80,7 +80,7 @@ const getGenesysMappingsByAccessions = async (accessions) => {
   }
 
   const response = await axios.post(
-    `${config.genolinkServer}${BASE_PATH}/api/genesys/genotype-ids`,
+    `${config.internalServerOrigin}${BASE_PATH}/api/genesys/genotype-ids`,
     {
       accessionNumbers: cleanedAccessions,
     },

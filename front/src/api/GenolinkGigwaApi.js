@@ -1,10 +1,9 @@
 import BaseApi from "./BaseApi";
-import { genolinkServer } from "../config/apiConfig";
 import { BASE_PATH } from "../config/basePath";
 
 class GenolinkGigwaApi extends BaseApi {
   constructor(selectedGigwaServer = "") {
-    super(genolinkServer);
+    super();
     this.selectedGigwaServer = selectedGigwaServer;
     this.gigwaSessionId = null;
   }

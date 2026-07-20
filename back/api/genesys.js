@@ -20,8 +20,8 @@ const genesysHttpsAgent = new https.Agent({
 const GENESYS_TIMEOUT_MS = 60000;
 
 const oidcConfig = {
-  client_id: process.env.VITE_Genesys_OIDC_CLIENT_ID,
-  client_secret: process.env.VITE_Genesys_OIDC_CLIENT_SECRET,
+  client_id: process.env.GENESYS_CLIENT_ID,
+  client_secret: process.env.GENESYS_CLIENT_SECRET,
 };
 
 let cachedToken = null;
@@ -107,7 +107,7 @@ const buildGenesysRequestOptions = (token) => ({
     Authorization: `Bearer ${token}`,
     "Content-Type": "application/json",
     Accept: "application/json, text/plain, */*",
-    Origin: config.genolinkServer,
+    Origin: config.genolinkOrigin,
   },
   httpsAgent: genesysHttpsAgent,
   timeout: GENESYS_TIMEOUT_MS,
@@ -505,7 +505,7 @@ router.post("/passportQuery", async (req, res) => {
 
     const samplesObj = await axios
       .post(
-        `${config.genolinkServer}/api/internalApi/mapAccessionToGenotypeId`,
+        `${config.internalServerOrigin}${BASE_PATH}/api/internalApi/mapAccessionToGenotypeId`,
         {
           Accessions: allAccessionNumbers,
         },

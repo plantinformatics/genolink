@@ -25,6 +25,36 @@ const readPositiveInteger = (name, defaultValue) => {
   return value;
 };
 
+const readHttpOrigin = (name) => {
+  const value = process.env[name]?.trim();
+
+  if (!value) {
+    throw new Error(`${name} is required.`);
+  }
+
+  let url;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new Error(`${name} must be a valid HTTP(S) origin.`);
+  }
+
+  if (
+    !["http:", "https:"].includes(url.protocol) ||
+    url.username ||
+    url.password ||
+    url.pathname !== "/" ||
+    url.search ||
+    url.hash
+  ) {
+    throw new Error(
+      `${name} must contain only an HTTP(S) origin, without credentials, path, query, or fragment.`,
+    );
+  }
+
+  return url.origin;
+};
+
 const exportMaxConcurrent = readPositiveInteger("EXPORT_MAX_CONCURRENT", 2);
 const exportUpstreamTimeoutMs = readPositiveInteger(
   "EXPORT_UPSTREAM_TIMEOUT_MS",
@@ -38,6 +68,8 @@ const exportPollIntervalMs = readPositiveInteger(
   "EXPORT_POLL_INTERVAL_MS",
   2000,
 );
+const serverPort = readPositiveInteger("APP_PORT", 4000);
+const genolinkOrigin = readHttpOrigin("GENOLINK_ORIGIN");
 
 let gigwaServers = [];
 try {
@@ -61,9 +93,10 @@ if (!allowedGenotypeMappingSources.includes(genotypeMappingSource)) {
 module.exports = {
   gigwaServers,
   germinateServer: process.env.GERMINATE_SERVER,
-  genolinkServer: process.env.GENOLINK_SERVER,
   genesysServer: process.env.GENESYS_SERVER,
-  genolinkServerPort: process.env.GENOLINK_SERVER_PORT || 4000,
+  genolinkOrigin,
+  serverPort,
+  internalServerOrigin: `http://127.0.0.1:${serverPort}`,
   jsonBodyLimit: process.env.JSON_BODY_LIMIT || "100mb",
   exportMaxConcurrent,
   exportUpstreamTimeoutMs,

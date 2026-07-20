@@ -1,10 +1,9 @@
 import BaseApi from "./BaseApi";
-import { genolinkServer } from "../config/apiConfig";
 import { BASE_PATH } from "../config/basePath";
 
 class GenolinkInternalApi extends BaseApi {
   constructor() {
-    super(genolinkServer);
+    super();
   }
 
   // async getAllAccessions() {

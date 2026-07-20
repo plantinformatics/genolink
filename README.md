@@ -76,20 +76,29 @@ npm install
 Create a .env file in the '_front_' directory with the following content:
 
 ```bash
-VITE_Genesys_OIDC_CLIENT_ID=<your_client_id>
-VITE_Genesys_OIDC_CLIENT_SECRET=<your_client_secret>
-VITE_GENOLINK_SERVER=<your_Genolink_server_address>   # e.g. https://genolink.plantinformatics.io OR http://127.0.0.1:3000
-VITE_GENESYS_SERVER=https://api.sandbox.genesys-pgr.org
+GENESYS_SERVER=https://api.sandbox.genesys-pgr.org
+APP_PORT=<PORT> # e.g. 3000; Express port and Vite development proxy target
+BASE_PATH=<optional_base_path> # e.g. /test OR leave empty for root
+GENOTYPE_MAPPING_SOURCE=hybrid_internal_first
 VITE_GENOTYPE_FILTER_STATUS=no # set to yes to filter for genotyped accessions by default
 ```
+
+`GENOTYPE_MAPPING_SOURCE` accepts the following values:
+
+- `internal`: use only mappings stored in the Genolink database.
+- `genesys`: use only mappings returned by Genesys.
+- `hybrid_internal_first`: use internal mappings first, then query Genesys for
+  accessions that remain unmapped. This is the default.
+- `hybrid_genesys_first`: use Genesys mappings first, then query the internal
+  database for accessions that remain unmapped.
 
 **Genesys environment alignment**
 
 - If you are using **Genesys sandbox**, set:
-  - `VITE_GENESYS_SERVER=https://api.sandbox.genesys-pgr.org`
+  - `GENESYS_SERVER=https://api.sandbox.genesys-pgr.org`
   - Use the **sandbox** Client ID and Secret.
 - If you are using **Genesys production**, set:
-  - `VITE_GENESYS_SERVER=https://api.genesys-pgr.org`
+  - `GENESYS_SERVER=https://api.genesys-pgr.org`
   - Use the **production** Client ID and Secret.
 
 > **Note:** To obtain the correct Genesys OIDC Client ID and Secret for your Genolink server address (e.g. your domain or local 127.0.0.1:3000), please contact the [Genesys support team](https://www.genesys-pgr.org/content/about/contact).
@@ -141,8 +150,10 @@ DB_NAME=<your_db_name>
 DB_HOST=localhost
 DB_DIALECT=mysql
 GIGWA_SERVERS='["https://your-gigwa-server.example"]'
-GENOLINK_SERVER=<your_Genolink_server_address>   # e.g. https://genolink.plantinformatics.io OR http://127.0.0.1:3000
 GENESYS_SERVER=https://api.sandbox.genesys-pgr.org
+GENESYS_CLIENT_ID=<your_Genesys_client_id>
+GENESYS_CLIENT_SECRET=<your_Genesys_client_secret>
+GENOLINK_ORIGIN=https://your-genolink.example # public origin registered with Genesys
 APP_PORT=<PORT> # e.g. 3000
 JSON_BODY_LIMIT=100mb # optional; maximum incoming JSON request size
 EXPORT_MAX_CONCURRENT=2 # optional; simultaneous exports per backend process
@@ -194,8 +205,8 @@ DB_NAME=<your_db_name>
 DB_HOST=db
 DB_DIALECT=mysql
 GIGWA_SERVERS='["https://your-gigwa-server.example"]'
-GENOLINK_SERVER=<your_Genolink_server_address>   # e.g. https://genolink.plantinformatics.io OR http://127.0.0.1:3000
 GENESYS_SERVER=https://api.sandbox.genesys-pgr.org
+GENOLINK_ORIGIN=https://your-genolink.example # public origin registered with Genesys
 APP_PORT=<PORT> # e.g. 3000
 DB_PORT=<PORT> # e.g. 3306
 JSON_BODY_LIMIT=100mb # optional; maximum incoming JSON request size
@@ -203,10 +214,9 @@ EXPORT_MAX_CONCURRENT=2 # optional; simultaneous exports per backend process
 EXPORT_UPSTREAM_TIMEOUT_MS=30000 # optional; timeout for each Gigwa request
 EXPORT_TOTAL_TIMEOUT_MS=600000 # optional; timeout for the complete export
 EXPORT_POLL_INTERVAL_MS=2000 # optional; delay between ZIP readiness checks
-VITE_Genesys_OIDC_CLIENT_ID=<your_Genesys_client_id>
-VITE_Genesys_OIDC_CLIENT_SECRET=<your_Genesys_client_secret>
-VITE_GENOLINK_SERVER=<your_Genolink_server_address>   # e.g. https://genolink.plantinformatics.io OR http://127.0.0.1:3000
-VITE_GENESYS_SERVER=https://api.sandbox.genesys-pgr.org
+GENESYS_CLIENT_ID=<your_Genesys_client_id>
+GENESYS_CLIENT_SECRET=<your_Genesys_client_secret>
+GENOTYPE_MAPPING_SOURCE=hybrid_internal_first
 VITE_PLATFORM=Gigwa
 VITE_REQUIRE_GIGWA_CREDENTIALS=true
 VITE_GENOTYPE_FILTER_STATUS=no # set to yes to filter for genotyped accessions by default
@@ -216,10 +226,10 @@ BASE_PATH=<optional_base_path> # e.g. /test OR leave empty for root
 **Genesys environment alignment**
 
 - If you are using **Genesys sandbox**, set:
-  - `VITE_GENESYS_SERVER=https://api.sandbox.genesys-pgr.org`
+  - `GENESYS_SERVER=https://api.sandbox.genesys-pgr.org`
   - Use the **sandbox** Client ID and Secret.
 - If you are using **Genesys production**, set:
-  - `VITE_GENESYS_SERVER=https://api.genesys-pgr.org`
+  - `GENESYS_SERVER=https://api.genesys-pgr.org`
   - Use the **production** Client ID and Secret.
 
 > **Note:** To obtain the correct Genesys OIDC Client ID and Secret for your Genolink server address (e.g. your domain or local 127.0.0.1:3000), please contact the [Genesys support team](https://www.genesys-pgr.org/content/about/contact).

@@ -5,6 +5,7 @@ const generateGerminateToken = require("../utils/generateGerminateToken");
 const checkCredentials = require("../middlewares/checkCredentials");
 const config = require("../config/appConfig");
 const logger = require("../middlewares/logger");
+const BASE_PATH = (process.env.BASE_PATH || "").replace(/\/+$/, "");
 
 // list all callsets
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -110,7 +111,7 @@ router.post("/brapi/v2/callset/calls", checkCredentials, async (req, res) => {
     const token = await generateGerminateToken(req);
     const sampleObj = await axios
       .post(
-        `${config.genolinkServer}/api/internalApi/mapAccessionToGenotypeId`,
+        `${config.internalServerOrigin}${BASE_PATH}/api/internalApi/mapAccessionToGenotypeId`,
         {
           Accessions: req.body.accession,
         }
@@ -154,7 +155,7 @@ router.post(
       const token = await generateGerminateToken(req);
       const sampleObj = await axios
         .post(
-          `${config.genolinkServer}/api/internalApi/mapAccessionToGenotypeId`,
+          `${config.internalServerOrigin}${BASE_PATH}/api/internalApi/mapAccessionToGenotypeId`,
           {
             Accessions: req.body.accession,
           }
@@ -204,7 +205,7 @@ router.post(
 
       const sampleObj = await axios
         .post(
-          `${config.genolinkServer}/api/internalApi/mapAccessionToGenotypeId`,
+          `${config.internalServerOrigin}${BASE_PATH}/api/internalApi/mapAccessionToGenotypeId`,
           {
             Accessions: req.body.accession,
           }
@@ -253,7 +254,7 @@ router.post(
       const token = await generateGerminateToken(req);
       const sampleObj = await axios
         .post(
-          `${config.genolinkServer}/api/internalApi/mapAccessionToGenotypeId`,
+          `${config.internalServerOrigin}${BASE_PATH}/api/internalApi/mapAccessionToGenotypeId`,
           {
             Accessions: req.body.accession,
           }
@@ -303,7 +304,7 @@ router.post(
 
       const sampleObj = await axios
         .post(
-          `${config.genolinkServer}/api/internalApi/mapAccessionToGenotypeId`,
+          `${config.internalServerOrigin}${BASE_PATH}/api/internalApi/mapAccessionToGenotypeId`,
           {
             Accessions: req.body.accession,
           }
@@ -395,7 +396,7 @@ router.post("/brapi/v2/callsets/chromosomes", async (req, res) => {
 
     const sampleObj = await axios
       .post(
-        `${config.genolinkServer}/api/internalApi/mapAccessionToGenotypeId`,
+        `${config.internalServerOrigin}${BASE_PATH}/api/internalApi/mapAccessionToGenotypeId`,
         {
           Accessions: req.body.accession,
         }
