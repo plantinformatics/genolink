@@ -196,6 +196,12 @@ const GenotypeExplorer = () => {
   }, [selectedGigwaServers]);
 
   useEffect(() => {
+    setExportServer((currentServer) =>
+      selectedGigwaServers.includes(currentServer) ? currentServer : "",
+    );
+  }, [selectedGigwaServers]);
+
+  useEffect(() => {
     if (resetTrigger) {
       handleReset();
       dispatch(setResetTrigger(false));
@@ -894,6 +900,7 @@ const GenotypeExplorer = () => {
     setShowDatasetSelector(false);
     setPosStart("");
     setPosEnd("");
+    setExportServer("");
     dispatch(genotypeActions.resetGenotype());
     dispatch(setWildSearchValue(""));
     setSearchType("");
