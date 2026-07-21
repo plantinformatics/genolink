@@ -739,13 +739,16 @@ const SearchFilters = ({ initialDataReady }) => {
     convertDonorCodes();
   }, [donorCodeList]);
 
-  const resetFilters = async ({ restoreDefaultInstitute = false } = {}) => {
+  const resetFilters = async ({
+    restoreDefaultInstitute = false,
+    restoreDefaultGenotype = genotypeFilterDefault,
+  } = {}) => {
     setIsResetLoading(true);
 
     try {
       const filterCode = await genesysApi.resetFilter(
         dispatch,
-        genotypeFilterDefault,
+        restoreDefaultGenotype,
         restoreDefaultInstitute ? defaultInstituteCode : null,
       );
       setFilterCode(filterCode);
@@ -756,7 +759,7 @@ const SearchFilters = ({ initialDataReady }) => {
           value: [defaultInstituteCode],
         });
       }
-      if (genotypeFilterDefault) {
+      if (restoreDefaultGenotype) {
         defaultFilters.push({ type: "Genotype Filter", value: "On" });
       }
       dispatch(setActiveFilters(defaultFilters));
@@ -767,7 +770,7 @@ const SearchFilters = ({ initialDataReady }) => {
       );
       dispatch(setResetTrigger(true));
       dispatch(setWildSearchValue(""));
-      setHasGenotype(genotypeFilterDefault);
+      setHasGenotype(restoreDefaultGenotype);
       instituteCheckedBoxesRef.current = restoreDefaultInstitute
         ? [defaultInstituteCode]
         : [];
@@ -781,8 +784,16 @@ const SearchFilters = ({ initialDataReady }) => {
     }
   };
 
-  const handleResetFilter = () =>
-    resetFilters({ restoreDefaultInstitute: filterMode === "Passport Filter" });
+  const handleResetFilter = () => {
+    const restorePassportDefaults = filterMode === "Passport Filter";
+
+    resetFilters({
+      restoreDefaultInstitute: restorePassportDefaults,
+      restoreDefaultGenotype: restorePassportDefaults
+        ? genotypeFilterDefault
+        : false,
+    });
+  };
 
   const handleFilterModeChange = (event) => {
     const nextFilterMode = event.target.value;
@@ -792,6 +803,7 @@ const SearchFilters = ({ initialDataReady }) => {
     setFilterMode(nextFilterMode);
     resetFilters({
       restoreDefaultInstitute: nextFilterMode === "Passport Filter",
+      restoreDefaultGenotype: false,
     });
   };
 
