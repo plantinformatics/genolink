@@ -1,14 +1,14 @@
 import { useState } from "react";
 
 const fieldsMapping = {
+  "Accession Number": {
+    apiParam: "accessionNumber",
+    tsvHeader: "Accession Number",
+  },
   "Institute Code": { apiParam: "instituteCode", tsvHeader: "Institute Code" },
   "Holding Institute": {
     apiParam: "institute.fullName",
     tsvHeader: "Holding Institute",
-  },
-  "Accession Number": {
-    apiParam: "accessionNumber",
-    tsvHeader: "Accession Number",
   },
   "Accession Name": { apiParam: "accessionName", tsvHeader: "Accession Name" },
   Aliases: { apiParam: "aliases", tsvHeader: "Aliases" },
@@ -136,8 +136,7 @@ const ExportFieldsModal = ({ isVisible, onClose, onExport }) => {
           <div className="divider"></div>
 
           {Object.keys(fieldsMapping).map((field) => {
-            if (field === "Accession Number" || field === "Country Code")
-              return null;
+            if (field === "Country Code") return null;
 
             return (
               <div key={field} className="fieldRow">
@@ -147,6 +146,7 @@ const ExportFieldsModal = ({ isVisible, onClose, onExport }) => {
                     value={field}
                     checked={selectedMappings[field] !== undefined}
                     onChange={handleCheckboxChange}
+                    disabled={field === "Accession Number"}
                   />
                   {fieldsMapping[field].tsvHeader}
                 </label>
