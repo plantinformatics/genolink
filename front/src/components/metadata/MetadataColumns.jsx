@@ -244,7 +244,7 @@ export function renderMetadataCell(colId, item, ctx) {
 
     case "datasetDoi": {
       if (ctx.datasetInfoLoading) {
-        return "Loading";
+        return "Loading...";
       }
 
       const datasetInfo = ctx.datasetInfoForAcc;
@@ -274,7 +274,7 @@ export function renderMetadataCell(colId, item, ctx) {
 
     case "subsets":
       return ctx.subsetTitlesForAcc === undefined
-        ? "Loading"
+        ? "Loading..."
         : ctx.subsetTitlesForAcc.length > 0
         ? ctx.subsetTitlesForAcc.join(", ")
         : "N/A";

@@ -727,7 +727,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
 
               const genotypeID =
                 genesysGenotypeLoading
-                  ? "Loading"
+                  ? "Loading..."
                   : combinedGenotypeIds.length > 0
                   ? combinedGenotypeIds.join(", ")
                   : "N/A";
@@ -735,7 +735,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
               const status =
                 statusByAcc.get(acc) ??
                 (genesysGenotypeLoading
-                  ? "Loading"
+                  ? "Loading..."
                   : genesysGenotypeIds.length > 0
                   ? "Completed"
                   : acc?.startsWith("AGG")
