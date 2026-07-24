@@ -19,7 +19,6 @@ import {
   setResetTrigger,
   setAccessionNumbers,
   setGenotypeIds,
-  setFigs,
   setCreationStartDate,
   setCreationEndDate,
   setAcquisitionStartDate,
@@ -37,7 +36,6 @@ import {
   setCheckedAccessions,
   setActiveFilters,
   setWildSearchValue,
-  setSelectedFig,
   setSubsets,
 } from "../../../redux/passport/passportActions";
 
@@ -45,7 +43,6 @@ import WildSearchFilter from "./WildSearchFilter";
 import MultiSelectFilter from "./MultiSelectFilter";
 import AccessionFilter from "./AccessionFilter";
 import GenotypeIdFilter from "./GenotypeIdFilter";
-import FigFilter from "./FigFilter";
 import MetadataSearchResultTable from "../MetadataSearchResultTable";
 import DateRangeFilter from "./DateRangeFilter";
 import GenotypeExplorer from "../../genotype/GenotypeExplorer";
@@ -92,7 +89,6 @@ const SearchFilters = ({ initialDataReady }) => {
     (state) => state.passport.accessionNumbers,
   );
   const genotypeIds = useSelector((state) => state.passport.genotypeIds);
-  const figs = useSelector((state) => state.passport.figs);
   const creationStartDate = useSelector(
     (state) => state.passport.creationStartDate,
   );
@@ -187,19 +183,6 @@ const SearchFilters = ({ initialDataReady }) => {
       genotypeMappingSource === "hybrid_genesys_first"
     );
   };
-
-  useEffect(() => {
-    const fetchFigs = async () => {
-      try {
-        const response = await genolinkInternalApi.getAllFigs();
-        dispatch(setFigs(response.figs));
-      } catch (error) {
-        console.error("Failed to fetch figs:", error);
-      }
-    };
-
-    fetchFigs();
-  }, []);
 
   useEffect(() => {
     const fetchSubsets = async () => {
@@ -326,9 +309,6 @@ const SearchFilters = ({ initialDataReady }) => {
       case "Genotype Filter":
         setHasGenotype(false);
         break;
-      case "Figs":
-        dispatch(setSelectedFig(""));
-        break;
       case "Institute Code":
         dispatch(setInstituteCheckedBoxes([]));
         break;
@@ -400,9 +380,6 @@ const SearchFilters = ({ initialDataReady }) => {
             break;
           case "Genotype Ids":
             updatedBody.genotypeIds = filter.value;
-            break;
-          case "Figs":
-            updatedBody.selectedFig = filter.value;
             break;
           case "Institute Code":
             updatedBody.institute = { code: filter.value };
@@ -479,27 +456,17 @@ const SearchFilters = ({ initialDataReady }) => {
       germplasmStorageCheckedBoxes,
       availibilityCheckedBoxes,
       curationTypeCheckedBoxes,
-      selectedFig,
     } = state.passport;
 
     instituteCheckedBoxesRef.current = instituteCheckedBoxes;
     cropCheckedBoxesRef.current = cropCheckedBoxes;
 
     let accessionNums1;
-    let accessionNums2;
 
     const cleanedGenotypeIds = cleanGenotypeIds(genotypeIds);
 
     if (cleanedGenotypeIds.length > 0 && shouldUseInternalGenotypeIdMapping()) {
       accessionNums1 = await mapGenotypeIdsUsingInternalDb(cleanedGenotypeIds);
-    }
-
-    if (selectedFig) {
-      const convertedFig = await genolinkInternalApi.figMapping(selectedFig);
-      accessionNums2 = [...convertedFig];
-      accessionNums2 = accessionNums2.map((acc) =>
-        acc.replace(/"/g, "").trim().toUpperCase(),
-      );
     }
 
     let sets = [];
@@ -513,8 +480,6 @@ const SearchFilters = ({ initialDataReady }) => {
       );
     if (accessionNums1 && accessionNums1.length > 0)
       sets.push(new Set(accessionNums1));
-    if (accessionNums2 && accessionNums2.length > 0)
-      sets.push(new Set(accessionNums2));
 
     let commonAccessions = [];
 
@@ -612,7 +577,6 @@ const SearchFilters = ({ initialDataReady }) => {
         newFilters.push({ type: "Genotype Ids", value: genotypeIds });
       if (hasGenotype)
         newFilters.push({ type: "Genotype Filter", value: "On" });
-      if (selectedFig) newFilters.push({ type: "Figs", value: selectedFig });
       if (instituteCheckedBoxes.length > 0)
         newFilters.push({
           type: "Institute Code",
@@ -704,7 +668,6 @@ const SearchFilters = ({ initialDataReady }) => {
       );
       dispatch(setAccessionNumbers([]));
       dispatch(setGenotypeIds([]));
-      dispatch(setSelectedFig(""));
       dispatch(setCreationStartDate(null));
       dispatch(setCreationEndDate(null));
       dispatch(setAcquisitionStartDate(null));
@@ -1282,28 +1245,6 @@ const SearchFilters = ({ initialDataReady }) => {
                             options={curationTypeList}
                             type="curationTypeCheckedBoxes"
                           />
-                        ) : (
-                          <p className={styles.unAwailableFilter}>
-                            No available filters.
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <div className={styles.drawer}>
-                      <button
-                        className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
-                        onClick={(e) => {
-                          e.currentTarget.parentElement.classList.toggle(
-                            styles.open,
-                          );
-                        }}
-                      >
-                        FIGS set <span className={styles.drawerArrow}></span>
-                      </button>
-
-                      <div className={styles.drawerContent}>
-                        {figs && figs.length > 0 ? (
-                          <FigFilter />
                         ) : (
                           <p className={styles.unAwailableFilter}>
                             No available filters.

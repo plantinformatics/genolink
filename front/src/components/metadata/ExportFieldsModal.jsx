@@ -46,10 +46,10 @@ const fieldsMapping = {
   },
   DOI: { apiParam: "doi", tsvHeader: "DOI" },
   "Dataset DOI": { apiParam: "datasetDoi", tsvHeader: "Dataset DOI" },
+  Subsets: { apiParam: "subsets", tsvHeader: "Subsets" },
   "Last Updated": { apiParam: "lastModifiedDate", tsvHeader: "Last Updated" },
   "Genotype Status": { apiParam: "status", tsvHeader: "Genotype Status" },
   GenotypeID: { apiParam: "GenotypeID", tsvHeader: "GenotypeID" },
-  "FIGs Set": { apiParam: "figsSet", tsvHeader: "FIGs Set" },
   "Country Code": {
     apiParam: "countryOfOrigin.codeNum",
     tsvHeader: "Country Code",

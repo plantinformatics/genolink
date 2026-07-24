@@ -631,6 +631,83 @@ router.post("/subset/filter", async (req, res) => {
   }
 });
 
+router.post("/accession/subsets", async (req, res) => {
+  try {
+    const { accessionNumbers } = req.body || {};
+
+    if (!Array.isArray(accessionNumbers) || accessionNumbers.length === 0) {
+      return res.status(400).send({
+        message: "Body must include a non-empty 'accessionNumbers' array.",
+      });
+    }
+
+    const cleanedAccessions = [
+      ...new Set(
+        accessionNumbers
+          .filter((item) => typeof item === "string")
+          .map((item) => item.trim())
+          .filter(Boolean),
+      ),
+    ];
+
+    if (cleanedAccessions.length === 0) {
+      return res.status(400).send({
+        message: "No valid accession numbers provided.",
+      });
+    }
+
+    const limit = 100;
+    const baseUrl = `${config.genesysServer}/api/v2/acn/list`;
+    const body = { accessionNumbers: cleanedAccessions };
+    const firstResponse = await postToGenesysWithRetry(
+      `${baseUrl}?p=0&l=${limit}`,
+      body,
+    );
+    const firstPage = firstResponse.data || {};
+    const content = Array.isArray(firstPage.content)
+      ? [...firstPage.content]
+      : [];
+    const totalPages = Number(firstPage.totalPages) || 1;
+
+    for (let page = 1; page < totalPages; page++) {
+      const response = await postToGenesysWithRetry(
+        `${baseUrl}?p=${page}&l=${limit}`,
+        body,
+      );
+
+      if (Array.isArray(response.data?.content)) {
+        content.push(...response.data.content);
+      }
+    }
+
+    const accessionSubsets = content.map((accession) => ({
+      accessionNumber: accession.accessionNumber,
+      instituteCode: accession.instituteCode,
+      subsets: Array.isArray(accession.subsets)
+        ? accession.subsets.map((subset) => ({
+            uuid: subset.uuid,
+            title: subset.title,
+          }))
+        : [],
+    }));
+
+    return res.status(200).send(accessionSubsets);
+  } catch (error) {
+    logger.error(
+      `API Error in /accession/subsets: ${JSON.stringify(
+        getErrorDetails(error),
+        null,
+        2,
+      )}`,
+    );
+
+    return res.status(error.response?.status || 500).send({
+      message: "Genesys accession subsets request failed",
+      error: getErrorDetails(error),
+    });
+  }
+});
+
 router.post("/genotype-ids", async (req, res) => {
   try {
     const { accessionNumbers } = req.body || {};

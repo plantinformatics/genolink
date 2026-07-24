@@ -62,6 +62,10 @@ function combineGenotypeIds(internalIds = [], genesysIds = []) {
   ];
 }
 
+function accessionInstituteKey(accessionNumber, instituteCode) {
+  return `${instituteCode || ""}\u0000${accessionNumber || ""}`;
+}
+
 const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
   const searchResults = useSelector((state) => state.passport.searchResults);
   const totalAccessions = useSelector(
@@ -88,10 +92,10 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
       (hasGenotype ? totalPreGenotypedAccessions : totalAccessions) / 500,
     ),
   );
-  const [figMapping, setFigMapping] = useState({});
   const [datasetInfoByAccession, setDatasetInfoByAccession] = useState({});
   const [genesysGenotypeIdsByAccession, setGenesysGenotypeIdsByAccession] =
     useState({});
+  const [subsetTitlesByAccession, setSubsetTitlesByAccession] = useState({});
 
   const [isPending, startTransition] = useTransition();
   const [columnWidths, setColumnWidths] = useState({});
@@ -203,6 +207,11 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
     statusByAcc,
   ]);
 
+  const visibleCompletedAccessionSet = useMemo(
+    () => new Set(visibleCompletedAccessions),
+    [visibleCompletedAccessions],
+  );
+
   useEffect(() => {
     if (!searchResults || searchResults.length === 0) {
       setSelectAll(false);
@@ -214,39 +223,53 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
   }, [checkedAccessions, searchResults]);
 
   useEffect(() => {
-    if (!searchResults || searchResults.length === 0) return;
-
-    const accessionIds = searchResults.map((item) => item.accessionNumber);
-
-    const fetchFigs = async () => {
-      try {
-        const mapping =
-          await genolinkInternalApi.getFigsByAccessions(accessionIds);
-        setFigMapping(mapping); // mapping = { acc1: ["fig1", "fig2"], acc2: ["fig3"] }
-      } catch (error) {
-        console.error("Failed to fetch figs by accessions:", error);
-      }
-    };
-
-    fetchFigs();
-  }, [searchResults]);
-
-  useEffect(() => {
     let cancelled = false;
 
     const fetchDatasetInfoForVisibleRows = async () => {
-      if (visibleCompletedAccessions.length === 0) {
-        setDatasetInfoByAccession({});
-        return;
-      }
+      const accessionsToCheck = visibleCompletedAccessions.filter(
+        (accession) =>
+          !Object.prototype.hasOwnProperty.call(
+            datasetInfoByAccession,
+            accession,
+          ),
+      );
 
-      const mapping =
-        await genolinkInternalApi.fetchDatasetInfoForAccessions(
-          visibleCompletedAccessions,
+      if (accessionsToCheck.length === 0) return;
+
+      try {
+        const mapping =
+          await genolinkInternalApi.fetchDatasetInfoForAccessions(
+            accessionsToCheck,
+          );
+
+        if (cancelled) return;
+
+        setDatasetInfoByAccession((previous) => {
+          const next = { ...previous, ...mapping };
+
+          accessionsToCheck.forEach((accession) => {
+            if (!Object.prototype.hasOwnProperty.call(next, accession)) {
+              next[accession] = [];
+            }
+          });
+
+          return next;
+        });
+      } catch (error) {
+        console.error(
+          "Failed to fetch dataset information by accessions:",
+          error,
         );
 
-      if (!cancelled) {
-        setDatasetInfoByAccession(mapping);
+        if (!cancelled) {
+          setDatasetInfoByAccession((previous) => {
+            const next = { ...previous };
+            accessionsToCheck.forEach((accession) => {
+              next[accession] = [];
+            });
+            return next;
+          });
+        }
       }
     };
 
@@ -255,7 +278,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
     return () => {
       cancelled = true;
     };
-  }, [visibleCompletedAccessions]);
+  }, [visibleCompletedAccessions, datasetInfoByAccession]);
 
   useEffect(() => {
     if (!shouldFetchGenesysGenotypeIds) return;
@@ -321,6 +344,23 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
         });
       } catch (error) {
         console.error("Failed to fetch Genesys genotype IDs:", error);
+
+        if (!cancelled) {
+          setGenesysGenotypeIdsByAccession((previous) => {
+            const next = { ...previous };
+
+            searchResults
+              .map((item) => item.accessionNumber)
+              .filter(Boolean)
+              .forEach((accession) => {
+                if (!Object.prototype.hasOwnProperty.call(next, accession)) {
+                  next[accession] = [];
+                }
+              });
+
+            return next;
+          });
+        }
       }
     };
 
@@ -333,6 +373,105 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
     searchResults,
     shouldFetchGenesysGenotypeIds,
     genesysGenotypeIdsByAccession,
+  ]);
+
+  useEffect(() => {
+    if (!visibleColumnIds.includes("subsets")) return;
+    if (!searchResults || searchResults.length === 0) return;
+
+    let cancelled = false;
+
+    const fetchSubsetsForVisibleRows = async () => {
+      const rowsToCheck = searchResults.filter((item) => {
+        const key = accessionInstituteKey(
+          item.accessionNumber,
+          item.instituteCode,
+        );
+
+        return (
+          item.accessionNumber &&
+          !Object.prototype.hasOwnProperty.call(
+            subsetTitlesByAccession,
+            key,
+          )
+        );
+      });
+
+      const accessionNumbers = [
+        ...new Set(rowsToCheck.map((item) => item.accessionNumber)),
+      ];
+
+      if (accessionNumbers.length === 0) return;
+
+      try {
+        const response =
+          await genesysApi.getAccessionSubsets(accessionNumbers);
+
+        if (cancelled) return;
+
+        setSubsetTitlesByAccession((previous) => {
+          const next = { ...previous };
+
+          rowsToCheck.forEach((item) => {
+            const key = accessionInstituteKey(
+              item.accessionNumber,
+              item.instituteCode,
+            );
+
+            if (!Object.prototype.hasOwnProperty.call(next, key)) {
+              next[key] = [];
+            }
+          });
+
+          if (Array.isArray(response)) {
+            response.forEach((accession) => {
+              const key = accessionInstituteKey(
+                accession.accessionNumber,
+                accession.instituteCode,
+              );
+              const titles = Array.isArray(accession.subsets)
+                ? accession.subsets
+                    .map((subset) => subset?.title)
+                    .filter(Boolean)
+                : [];
+
+              next[key] = [...new Set(titles)];
+            });
+          }
+
+          return next;
+        });
+      } catch (error) {
+        console.error("Failed to fetch Genesys subsets:", error);
+
+        if (!cancelled) {
+          setSubsetTitlesByAccession((previous) => {
+            const next = { ...previous };
+
+            rowsToCheck.forEach((item) => {
+              next[
+                accessionInstituteKey(
+                  item.accessionNumber,
+                  item.instituteCode,
+                )
+              ] = [];
+            });
+
+            return next;
+          });
+        }
+      }
+    };
+
+    fetchSubsetsForVisibleRows();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    searchResults,
+    visibleColumnIds,
+    subsetTitlesByAccession,
   ]);
 
   const getColumnWidth = useCallback(
@@ -568,6 +707,12 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
           <tbody>
             {searchResults?.map((item, index) => {
               const acc = item.accessionNumber;
+              const genesysGenotypeLoading =
+                shouldFetchGenesysGenotypeIds &&
+                !Object.prototype.hasOwnProperty.call(
+                  genesysGenotypeIdsByAccession,
+                  acc,
+                );
 
               const internalGenotypeIds =
                 internalGenotypeIdsByAcc.get(acc) || [];
@@ -581,13 +726,17 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
               );
 
               const genotypeID =
-                combinedGenotypeIds.length > 0
+                genesysGenotypeLoading
+                  ? "Loading"
+                  : combinedGenotypeIds.length > 0
                   ? combinedGenotypeIds.join(", ")
                   : "N/A";
 
               const status =
                 statusByAcc.get(acc) ??
-                (genesysGenotypeIds.length > 0
+                (genesysGenotypeLoading
+                  ? "Loading"
+                  : genesysGenotypeIds.length > 0
                   ? "Completed"
                   : acc?.startsWith("AGG")
                     ? "TBC"
@@ -604,8 +753,21 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
                   onRowClick={handleRowClick}
                   status={status}
                   genotypeID={genotypeID}
-                  figsForAcc={figMapping[acc]}
                   datasetInfoForAcc={datasetInfoByAccession[acc]}
+                  datasetInfoLoading={
+                    visibleColumnIds.includes("datasetDoi") &&
+                    (genesysGenotypeLoading ||
+                      (visibleCompletedAccessionSet.has(acc) &&
+                        !Object.prototype.hasOwnProperty.call(
+                          datasetInfoByAccession,
+                          acc,
+                        )))
+                  }
+                  subsetTitlesForAcc={
+                    subsetTitlesByAccession[
+                      accessionInstituteKey(acc, item.instituteCode)
+                    ]
+                  }
                   visibleColumnIds={visibleColumnIds}
                   formatDate={formatDate}
                   countryByCode={countryByCode}
