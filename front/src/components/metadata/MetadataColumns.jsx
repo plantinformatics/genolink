@@ -70,6 +70,11 @@ export const METADATA_COLUMNS = [
   { id: "doi", label: "DOI", apiParams: ["doi"] },
   { id: "datasetDoi", label: "Dataset DOI", apiParams: [] },
   {
+    id: "subsets",
+    label: "Subsets",
+    apiParams: ["instituteCode"],
+  },
+  {
     id: "available",
     label: "Available for Distribution",
     apiParams: ["available"],
@@ -84,7 +89,6 @@ export const METADATA_COLUMNS = [
   // computed / local-only (no Genesys select needed)
   { id: "genotypeStatus", label: "Genotype Status", apiParams: [] },
   { id: "genotypeId", label: "GenotypeID", apiParams: [] },
-  { id: "figsSet", label: "FIGS set", apiParams: [] },
 ];
 
 // Always fetched (even if user hides those columns)
@@ -239,6 +243,10 @@ export function renderMetadataCell(colId, item, ctx) {
       return item.doi || "N/A";
 
     case "datasetDoi": {
+      if (ctx.datasetInfoLoading) {
+        return "Loading...";
+      }
+
       const datasetInfo = ctx.datasetInfoForAcc;
       if (!Array.isArray(datasetInfo) || datasetInfo.length === 0) {
         return "N/A";
@@ -263,6 +271,13 @@ export function renderMetadataCell(colId, item, ctx) {
         </span>
       );
     }
+
+    case "subsets":
+      return ctx.subsetTitlesForAcc === undefined
+        ? "Loading..."
+        : ctx.subsetTitlesForAcc.length > 0
+        ? ctx.subsetTitlesForAcc.join(", ")
+        : "N/A";
 
     case "available":
       return item.available === true
@@ -289,11 +304,6 @@ export function renderMetadataCell(colId, item, ctx) {
       //   return ctx.genotypeIdMapping[item.accessionNumber] || "N/A";
       return ctx.genotypeID;
 
-    case "figsSet": {
-      //   const figs = ctx.figMapping[item.accessionNumber];
-      //   return figs?.length > 0 ? figs.join(", ") : "N/A";
-      return ctx.figsForAcc;
-    }
     case "pdciScore":
       return item["pdci.score"] || "N/A";
 

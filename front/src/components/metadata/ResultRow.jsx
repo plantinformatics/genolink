@@ -11,8 +11,9 @@ const ResultRow = React.memo(function ResultRow({
   visibleColumnIds,
   status,
   genotypeID,
-  figsForAcc,
   datasetInfoForAcc,
+  datasetInfoLoading,
+  subsetTitlesForAcc,
   formatDate,
   countryByCode,
 }) {
@@ -30,8 +31,9 @@ const ResultRow = React.memo(function ResultRow({
   const ctx = {
     status,
     genotypeID,
-    figsForAcc,
     datasetInfoForAcc,
+    datasetInfoLoading,
+    subsetTitlesForAcc,
     formatDate,
     countryByCode,
   };

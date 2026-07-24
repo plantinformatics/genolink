@@ -38,8 +38,7 @@ Use **Passport Filter** to build a structured search. Available filters include:
 - biological status of the accession;
 - type of germplasm storage;
 - availability for distribution;
-- curation type;
-- FIGS set; and
+- curation type; and
 - Genesys subset.
 
 Open a filter section, select one or more values, and then choose **Apply Filter**. Compatible filters are combined to narrow the results.
