@@ -733,6 +733,8 @@ const SearchFilters = ({ initialDataReady }) => {
       );
       dispatch(setResetTrigger(true));
       dispatch(setWildSearchValue(""));
+      setSelectedSubsets([]);
+      setFilterBody({});
       setHasGenotype(restoreDefaultGenotype);
       instituteCheckedBoxesRef.current = restoreDefaultInstitute
         ? [defaultInstituteCode]
