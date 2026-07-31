@@ -12,6 +12,7 @@ const {
 } = require("../utils/genotypeMappingResolver");
 const rawBase = process.env.BASE_PATH || "";
 const BASE_PATH = rawBase.replace(/\/+$/, "");
+const MAX_GIGWA_ACCESSIONS = 1000;
 
 const normaliseGigwaBaseUrl = (selectedGigwaServer) => {
   return requireAllowedGigwaServer(selectedGigwaServer, config.gigwaServers);
@@ -573,6 +574,16 @@ router.post("/searchSamplesInDatasets", async (req, res) => {
   if (!accessions || accessions.length === 0) {
     logger.error("No accessions provided");
     return res.status(400).send({ message: "No accessions provided" });
+  }
+
+  if (!Array.isArray(accessions)) {
+    return res.status(400).send({ message: "Accessions must be an array" });
+  }
+
+  if (accessions.length > MAX_GIGWA_ACCESSIONS) {
+    return res.status(400).send({
+      message: `A maximum of ${MAX_GIGWA_ACCESSIONS} accessions can be searched for genotype data at one time. Received ${accessions.length} accessions.`,
+    });
   }
 
   const runApiStep = async (stepName, apiCall) => {

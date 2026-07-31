@@ -23,6 +23,8 @@ import { platforms, REQUIRE_GIGWA_CREDENTIALS } from "../../config/apiConfig";
 import styles from "./GenotypeExplorer.module.css";
 import SampleSourceTable from "./SampleSourceTable";
 
+const MAX_GIGWA_ACCESSIONS = 1000;
+
 const getGenotypeIdFromCallset = (callset) =>
   callset?.germplasmDbId?.split("§")?.[1] ?? "";
 
@@ -110,7 +112,9 @@ const GenotypeExplorer = () => {
     useState([]);
   const [exportServer, setExportServer] = useState("");
   const [variantPageSize, setVariantPageSize] = useState(100);
-  const [callsetPageSize, setCallsetPageSize] = useState(500);
+  const [callsetPageSize, setCallsetPageSize] = useState(
+    MAX_GIGWA_ACCESSIONS,
+  );
 
   const selectedOption = useSelector((state) => state.genotype.selectedOption);
   const genomData = useSelector((state) => state.genotype.genomData);
@@ -434,6 +438,13 @@ const GenotypeExplorer = () => {
       }
 
       if (selectedOption === "Gigwa") {
+        if (checkedAccessions.length > MAX_GIGWA_ACCESSIONS) {
+          alert(
+            `A maximum of ${MAX_GIGWA_ACCESSIONS} accessions can be searched for genotype data at one time. You currently have ${checkedAccessions.length} accessions selected. Please reduce your selection and try again.`,
+          );
+          return;
+        }
+
         const hasMissingCredentials = selectedGigwaServers.some(
           (server, index) => {
             return (
