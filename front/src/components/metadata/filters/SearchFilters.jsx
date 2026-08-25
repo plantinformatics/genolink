@@ -51,6 +51,7 @@ import {
   defaultInstituteCode,
   genotypeFilterDefault,
   genotypeMappingSource,
+  searchBackgroundImage,
 } from "../../../config/apiConfig";
 import { Autocomplete, TextField, Chip, Box } from "@mui/material";
 
@@ -128,7 +129,6 @@ const SearchFilters = ({ initialDataReady }) => {
 
   const dispatch = useDispatch();
 
-  const wheatImage = "Wheat.PNG";
   const selectedUUIDs = selectedSubsets.map((item) => item.uuid);
 
   const cleanGenotypeIds = (ids = []) => {
@@ -1337,7 +1337,7 @@ const SearchFilters = ({ initialDataReady }) => {
               <div
                 className={styles.genesysResultContainer}
                 style={{
-                  backgroundImage: `url(${wheatImage})`,
+                  backgroundImage: `url(${searchBackgroundImage})`,
                 }}
               >
                 {isLoading || isResetLoading ? (
