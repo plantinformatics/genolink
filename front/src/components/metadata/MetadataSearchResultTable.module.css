@@ -5,9 +5,19 @@
 }
 
 .metadataTable {
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
+}
+
+@media (max-width: 1024px) {
+  .tableWrapper {
+    max-width: 100%;
+    max-height: calc(100dvh - 250px);
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 .tableHead {

@@ -70,6 +70,7 @@ const SearchFilters = ({ initialDataReady }) => {
   const cropCheckedBoxesRef = useRef([]);
   const [isInitialMount, setIsInitialMount] = useState(true);
   const [mappingFailed, setMappingFailed] = useState(false);
+  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const totalAccessions = useSelector(
     (state) => state.passport.totalAccessions,
   );
@@ -127,6 +128,17 @@ const SearchFilters = ({ initialDataReady }) => {
   );
 
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (!isFilterPanelOpen) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") setIsFilterPanelOpen(false);
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isFilterPanelOpen]);
 
   const wheatImage = "Wheat.PNG";
   const selectedUUIDs = selectedSubsets.map((item) => item.uuid);
@@ -844,8 +856,33 @@ const SearchFilters = ({ initialDataReady }) => {
             <Tab>Genotype Data</Tab>
           </TabList>
           <TabPanel>
+            <button
+              type="button"
+              className={styles.mobileFilterButton}
+              onClick={() => setIsFilterPanelOpen(true)}
+              aria-expanded={isFilterPanelOpen}
+              aria-controls="passport-filter-panel"
+            >
+              Filters
+              {activeFilters.length > 0 && (
+                <span className={styles.filterCount}>{activeFilters.length}</span>
+              )}
+            </button>
+            {isFilterPanelOpen && (
+              <button
+                type="button"
+                className={styles.filterBackdrop}
+                onClick={() => setIsFilterPanelOpen(false)}
+                aria-label="Close filters"
+              />
+            )}
             <div className={styles.passportContentRow}>
-              <div className={styles.genesysFilterContainer}>
+              <div
+                id="passport-filter-panel"
+                className={`${styles.genesysFilterContainer} ${
+                  isFilterPanelOpen ? styles.filterPanelOpen : ""
+                }`}
+              >
                 {isResetLoading ? (
                   <div className={styles.filterPanelLoading}>
                     <LoadingComponent />
@@ -853,7 +890,17 @@ const SearchFilters = ({ initialDataReady }) => {
                 ) : (
                   <>
                     <div className={styles.stickyTitles}>
-                  <h4>Filters</h4>
+                  <div className={styles.filterTitleRow}>
+                    <h4>Filters</h4>
+                    <button
+                      type="button"
+                      className={styles.closeFilterButton}
+                      onClick={() => setIsFilterPanelOpen(false)}
+                      aria-label="Close filters"
+                    >
+                      &times;
+                    </button>
+                  </div>
                   {initialRequestSent &&
                     (!isLoading ? (
                       <h5>Total Accessions: {totalAccessions}</h5>
@@ -864,7 +911,10 @@ const SearchFilters = ({ initialDataReady }) => {
                     <button
                       type="button"
                       className={`${styles.buttonPrimary} ${styles.searchButton}`}
-                      onClick={() => handleSearch(wildSearchValue)}
+                      onClick={() => {
+                        handleSearch(wildSearchValue);
+                        setIsFilterPanelOpen(false);
+                      }}
                       onMouseDown={() => document.activeElement?.blur()}
                     >
                       Apply Filter
