@@ -1316,8 +1316,7 @@ const SearchFilters = ({ initialDataReady }) => {
                         <label
                           style={{
                             fontWeight: 500,
-                            color: wildSearchValue ? "#888" : "inherit",
-                            cursor: wildSearchValue ? "not-allowed" : "pointer",
+                            cursor: "pointer",
                           }}
                         >
                           <input
@@ -1325,7 +1324,6 @@ const SearchFilters = ({ initialDataReady }) => {
                             checked={hasGenotype}
                             onChange={handleChange}
                             className={styles.mR8}
-                            disabled={wildSearchValue}
                           />
                           Check for genotype
                         </label>
