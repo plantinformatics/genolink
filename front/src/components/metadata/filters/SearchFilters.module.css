@@ -165,7 +165,14 @@
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  height: 100vh;
+  height: calc(100dvh - 170px);
+  min-height: 480px;
+}
+
+.mobileFilterButton,
+.filterBackdrop,
+.closeFilterButton {
+  display: none;
 }
 
 .genesysFilterContainer {
@@ -175,9 +182,9 @@
   overflow-y: auto;
   height: 100%;
   background-color: #eff2f3;
-  flex: 0 0 380px;
-  width: 380px;
-  min-width: 380px;
+  flex: 0 0 clamp(320px, 28vw, 380px);
+  width: clamp(320px, 28vw, 380px);
+  min-width: clamp(320px, 28vw, 380px);
   max-width: 380px;
   overflow-x: hidden;
 }
@@ -365,7 +372,7 @@
 
 .passportFilterDrawers {
   display: inline-block;
-  width: 350px;
+  width: 100%;
   text-align: left;
   border: 2px solid #ebba35;
   background-color: beige;
@@ -514,4 +521,185 @@
 
 .partnerLogo {
   height: 80px;
+}
+
+@media (max-width: 1024px) {
+  .passportContentRow {
+    height: calc(100dvh - 175px);
+    min-height: 420px;
+  }
+
+  .mobileFilterButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 10px;
+    padding: 9px 16px;
+    position: relative;
+    z-index: 20;
+    color: #fff;
+    background: #0056b3;
+    border: 1px solid #004494;
+    border-radius: 6px;
+    font-weight: 700;
+  }
+
+  .filterCount {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: 999px;
+    color: #0056b3;
+    background: #fff;
+    font-size: 12px;
+  }
+
+  .filterBackdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: rgba(0, 0, 0, 0.45);
+  }
+
+  .genesysFilterContainer {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 10001;
+    width: min(380px, 88vw);
+    min-width: 0;
+    max-width: 88vw;
+    height: 100dvh;
+    margin: 0;
+    padding-top: 0;
+    transform: translateX(-105%);
+    transition: transform 0.25s ease;
+    box-shadow: 4px 0 18px rgba(0, 0, 0, 0.25);
+  }
+
+  .filterPanelOpen {
+    transform: translateX(0);
+  }
+
+  .filterTitleRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .filterTitleRow h4 {
+    margin: 0;
+  }
+
+  .closeFilterButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    border: 0;
+    color: #333;
+    background: transparent;
+    font-size: 32px;
+    line-height: 1;
+  }
+
+  .genesysResultContainer {
+    width: 100%;
+    height: 100%;
+  }
+
+  .passportFilterDrawers,
+  .btnInfo,
+  .fileInput,
+  .filterModeSelect {
+    max-width: 100%;
+  }
+
+  .genotypeResultContainer {
+    height: auto;
+    min-height: 100dvh;
+  }
+
+  .logoContainer {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 600px) {
+  .genolinkContainer {
+    padding: 8px 62px 8px 8px;
+  }
+
+  .poweredRow {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 12px;
+  }
+
+  .leftSpacer {
+    display: none;
+  }
+
+  .poweredRow p {
+    flex: 1 1 100%;
+    order: 3;
+  }
+
+  .helpButton {
+    margin: 0;
+    font-size: 16px;
+  }
+
+  .genolinkHeader {
+    font-size: 21px;
+  }
+
+  .dataSourceNote {
+    font-size: 13px;
+  }
+
+  .passportContentRow {
+    height: calc(100dvh - 210px);
+    min-height: 380px;
+  }
+
+  .genesysResultContainer {
+    padding: 6px;
+  }
+
+  .filterModeContainer {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .filterModeSelect,
+  .passportFilterDrawers,
+  .btnInfo {
+    width: 100%;
+  }
+
+  .footerSection {
+    padding: 14px;
+  }
+
+  .footerDescription {
+    font-size: 15px;
+  }
+
+  .partnerLogo {
+    max-width: 42vw;
+    height: auto;
+    max-height: 65px;
+  }
 }

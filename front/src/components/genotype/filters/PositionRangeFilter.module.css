@@ -1,5 +1,6 @@
 .container {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   align-items: center;
   margin: 10px 0;
@@ -7,10 +8,12 @@
 
 .input {
   width: 280px;
+  max-width: 100%;
 }
 
 .posWidth {
   width: 240px;
+  max-width: 100%;
 }
 
 .formControl {

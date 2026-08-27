@@ -1,5 +1,6 @@
 .accessionSearchBox {
   width: 350px;
+  max-width: 100%;
   padding: 8px;
   margin-bottom: 5px;
 }
@@ -7,4 +8,5 @@
 .inputFile {
   padding: 4px;
   width: 250px;
+  max-width: 100%;
 }
