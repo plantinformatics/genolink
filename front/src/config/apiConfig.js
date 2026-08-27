@@ -26,3 +26,5 @@ export const genotypeMappingSource = allowedGenotypeMappingSources.includes(
 )
   ? import.meta.env.GENOTYPE_MAPPING_SOURCE
   : defaultGenotypeMappingSource;
+
+export const searchBackgroundImage = import.meta.env.VITE_SEARCH_BACKGROUND_IMAGE?.trim() || "genolinkbg.png";

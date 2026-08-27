@@ -51,6 +51,7 @@ import {
   defaultInstituteCode,
   genotypeFilterDefault,
   genotypeMappingSource,
+  searchBackgroundImage,
 } from "../../../config/apiConfig";
 import { Autocomplete, TextField, Chip, Box } from "@mui/material";
 
@@ -140,7 +141,6 @@ const SearchFilters = ({ initialDataReady }) => {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isFilterPanelOpen]);
 
-  const wheatImage = "Wheat.PNG";
   const selectedUUIDs = selectedSubsets.map((item) => item.uuid);
 
   const cleanGenotypeIds = (ids = []) => {
@@ -1366,8 +1366,7 @@ const SearchFilters = ({ initialDataReady }) => {
                         <label
                           style={{
                             fontWeight: 500,
-                            color: wildSearchValue ? "#888" : "inherit",
-                            cursor: wildSearchValue ? "not-allowed" : "pointer",
+                            cursor: "pointer",
                           }}
                         >
                           <input
@@ -1375,7 +1374,6 @@ const SearchFilters = ({ initialDataReady }) => {
                             checked={hasGenotype}
                             onChange={handleChange}
                             className={styles.mR8}
-                            disabled={wildSearchValue}
                           />
                           Check for genotype
                         </label>
@@ -1387,7 +1385,7 @@ const SearchFilters = ({ initialDataReady }) => {
               <div
                 className={styles.genesysResultContainer}
                 style={{
-                  backgroundImage: `url(${wheatImage})`,
+                  backgroundImage: `url(${searchBackgroundImage})`,
                 }}
               >
                 {isLoading || isResetLoading ? (
