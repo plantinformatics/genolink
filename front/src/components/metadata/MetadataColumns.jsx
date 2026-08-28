@@ -34,6 +34,7 @@ export const METADATA_COLUMNS = [
     label: "Accession Name",
     apiParams: ["accessionName"],
   },
+  { id: "pedigree", label: "Pedigree", apiParams: ["ancest"] },
   { id: "aliases", label: "Aliases", apiParams: ["aliases"] },
   { id: "remarks", label: "Remarks", apiParams: ["remarks.remark"] },
   { id: "taxonomy", label: "Taxonomy", apiParams: ["taxonomy.taxonName"] },
@@ -170,6 +171,9 @@ export function renderMetadataCell(colId, item, ctx) {
 
     case "accessionName":
       return item.accessionName || "N/A";
+
+    case "pedigree":
+      return item.ancest || "N/A";
 
     case "aliases":
       return item.aliases && item.aliases.length > 1
