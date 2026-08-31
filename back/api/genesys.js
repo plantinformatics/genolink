@@ -424,6 +424,7 @@ router.post("/accession/query", async (req, res) => {
           "doi",
           "institute.id",
           "accessionName",
+          "ancest",
           "institute.owner.name",
           "genus",
           "taxonomy.grinTaxonomySpecies.speciesName",
