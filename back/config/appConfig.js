@@ -69,6 +69,10 @@ const exportPollIntervalMs = readPositiveInteger(
   2000,
 );
 const serverPort = readPositiveInteger("APP_PORT", 4000);
+const accessionSubsetCacheDays = readPositiveInteger(
+  "ACCESSION_SUBSET_CACHE_DAYS",
+  30,
+);
 const genolinkOrigin = readHttpOrigin("GENOLINK_ORIGIN");
 
 let gigwaServers = [];
@@ -102,6 +106,7 @@ module.exports = {
   exportUpstreamTimeoutMs,
   exportTotalTimeoutMs,
   exportPollIntervalMs,
+  accessionSubsetCacheMs: accessionSubsetCacheDays * 24 * 60 * 60 * 1000,
 
   genotypeMappingSource,
 

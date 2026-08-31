@@ -160,6 +160,7 @@ EXPORT_MAX_CONCURRENT=2 # optional; simultaneous exports per backend process
 EXPORT_UPSTREAM_TIMEOUT_MS=30000 # optional; timeout for each Gigwa export request
 EXPORT_TOTAL_TIMEOUT_MS=600000 # optional; timeout for the complete export
 EXPORT_POLL_INTERVAL_MS=2000 # optional; delay between ZIP readiness checks
+ACCESSION_SUBSET_CACHE_DAYS=30 # optional; lifetime of cached Genesys subset data
 ```
 
 #### 11. Run the Application
@@ -214,6 +215,7 @@ EXPORT_MAX_CONCURRENT=2 # optional; simultaneous exports per backend process
 EXPORT_UPSTREAM_TIMEOUT_MS=30000 # optional; timeout for each Gigwa request
 EXPORT_TOTAL_TIMEOUT_MS=600000 # optional; timeout for the complete export
 EXPORT_POLL_INTERVAL_MS=2000 # optional; delay between ZIP readiness checks
+ACCESSION_SUBSET_CACHE_DAYS=30 # optional; lifetime of cached Genesys subset data
 GENESYS_CLIENT_ID=<your_Genesys_client_id>
 GENESYS_CLIENT_SECRET=<your_Genesys_client_secret>
 GENOTYPE_MAPPING_SOURCE=hybrid_internal_first
