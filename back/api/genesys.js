@@ -9,6 +9,12 @@ const sampleNameToAccession = require("../utils/sampleNameToAccession");
 const country2Region = require("../../shared-data/Country2Region.json");
 const { Op } = require("sequelize");
 const db = require("../models");
+const {
+  accessionSubsetKey,
+  cleanAccessionNumbers,
+  createAccessionSubsetService,
+  normaliseSubsets,
+} = require("../utils/accessionSubsets");
 
 // Force IPv4 for Genesys API calls because the production server has no IPv6 route,
 // and Node may attempt IPv6 connections which can cause AggregateError/ENETUNREACH.
@@ -133,6 +139,56 @@ const postToGenesysWithRetry = async (url, body) => {
     throw error;
   }
 };
+
+const GENESYS_ACCESSION_LIST_LIMIT = 1000;
+
+const fetchAccessionSubsetsFromGenesys = async (accessionNumbers) => {
+  const results = [];
+  const baseUrl = `${config.genesysServer}/api/v2/acn/list`;
+
+  for (
+    let start = 0;
+    start < accessionNumbers.length;
+    start += GENESYS_ACCESSION_LIST_LIMIT
+  ) {
+    const chunk = accessionNumbers.slice(
+      start,
+      start + GENESYS_ACCESSION_LIST_LIMIT,
+    );
+    const body = { accessionNumbers: chunk };
+    let page = 0;
+    let totalPages = 1;
+
+    do {
+      const response = await postToGenesysWithRetry(
+        `${baseUrl}?p=${page}&l=${GENESYS_ACCESSION_LIST_LIMIT}`,
+        body,
+      );
+      const pageData = response.data || {};
+
+      if (Array.isArray(pageData.content)) {
+        results.push(
+          ...pageData.content.map((accession) => ({
+            accessionNumber: accession.accessionNumber,
+            instituteCode: accession.instituteCode,
+            subsets: normaliseSubsets(accession.subsets),
+          })),
+        );
+      }
+
+      totalPages = Number(pageData.totalPages) || 1;
+      page += 1;
+    } while (page < totalPages);
+  }
+
+  return results;
+};
+
+const getAccessionSubsets = createAccessionSubsetService({
+  cacheModel: db.AccessionSubsetCache,
+  cacheLifetimeMs: config.accessionSubsetCacheMs,
+  fetchFromGenesys: fetchAccessionSubsetsFromGenesys,
+});
 
 const buildQueryString = (params = {}) => {
   const queryParams = new URLSearchParams();
@@ -338,14 +394,18 @@ router.post("/accession/query", async (req, res) => {
     if (req.query.d) queryParams.set("d", req.query.d);
     if (req.query.f) queryParams.set("f", req.query.f);
 
+    const requestedSelectFields = String(req.query.select || "")
+      .split(",")
+      .map((field) => field.trim())
+      .filter(Boolean);
+    const wantsSubsets = requestedSelectFields.includes("subsets");
+
     if (req.query.select) {
       const selectFields = [
         "accessionNumber",
         "countryOfOrigin.codeNum",
-        ...String(req.query.select)
-          .split(",")
-          .map((field) => field.trim())
-          .filter(Boolean),
+        ...(wantsSubsets ? ["instituteCode"] : []),
+        ...requestedSelectFields.filter((field) => field !== "subsets"),
       ];
 
       queryParams.set("select", [...new Set(selectFields)].join(","));
@@ -403,6 +463,22 @@ router.post("/accession/query", async (req, res) => {
     const data = response.data;
 
     let statusMap = null;
+    let subsetsMap = null;
+
+    if (wantsSubsets && Array.isArray(data?.content) && data.content.length) {
+      const subsetRows = await getAccessionSubsets(
+        data.content.map((row) => ({
+          accessionNumber: row.accessionNumber,
+          instituteCode: row.instituteCode,
+        })),
+      );
+      subsetsMap = new Map(
+        subsetRows.map((row) => [
+          accessionSubsetKey(row.accessionNumber, row.instituteCode),
+          row.subsets,
+        ]),
+      );
+    }
 
     if (
       wantsGenotypeStatus &&
@@ -473,6 +549,13 @@ router.post("/accession/query", async (req, res) => {
           if (typeof mappedSampStat !== "undefined") {
             base.sampStat = mappedSampStat;
           }
+        }
+
+        if (subsetsMap) {
+          base.subsets =
+            subsetsMap.get(
+              accessionSubsetKey(row.accessionNumber, row.instituteCode),
+            ) || [];
         }
 
         return base;
@@ -641,14 +724,7 @@ router.post("/accession/subsets", async (req, res) => {
       });
     }
 
-    const cleanedAccessions = [
-      ...new Set(
-        accessionNumbers
-          .filter((item) => typeof item === "string")
-          .map((item) => item.trim())
-          .filter(Boolean),
-      ),
-    ];
+    const cleanedAccessions = cleanAccessionNumbers(accessionNumbers);
 
     if (cleanedAccessions.length === 0) {
       return res.status(400).send({
@@ -656,39 +732,11 @@ router.post("/accession/subsets", async (req, res) => {
       });
     }
 
-    const limit = 100;
-    const baseUrl = `${config.genesysServer}/api/v2/acn/list`;
-    const body = { accessionNumbers: cleanedAccessions };
-    const firstResponse = await postToGenesysWithRetry(
-      `${baseUrl}?p=0&l=${limit}`,
-      body,
-    );
-    const firstPage = firstResponse.data || {};
-    const content = Array.isArray(firstPage.content)
-      ? [...firstPage.content]
-      : [];
-    const totalPages = Number(firstPage.totalPages) || 1;
-
-    for (let page = 1; page < totalPages; page++) {
-      const response = await postToGenesysWithRetry(
-        `${baseUrl}?p=${page}&l=${limit}`,
-        body,
-      );
-
-      if (Array.isArray(response.data?.content)) {
-        content.push(...response.data.content);
-      }
-    }
-
-    const accessionSubsets = content.map((accession) => ({
-      accessionNumber: accession.accessionNumber,
-      instituteCode: accession.instituteCode,
-      subsets: Array.isArray(accession.subsets)
-        ? accession.subsets.map((subset) => ({
-            uuid: subset.uuid,
-            title: subset.title,
-          }))
-        : [],
+    const subsetRows = await getAccessionSubsets(cleanedAccessions);
+    const accessionSubsets = subsetRows.map((row) => ({
+      accessionNumber: row.accessionNumber,
+      instituteCode: row.instituteCode || "",
+      subsets: row.subsets,
     }));
 
     return res.status(200).send(accessionSubsets);
