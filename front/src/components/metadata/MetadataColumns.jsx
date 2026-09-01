@@ -3,6 +3,7 @@ import { genesysServer } from "../../config/apiConfig";
 import { germplasmStorageMapping } from "./filters/MultiSelectFilter";
 
 const genesysBaseUrl = new URL(genesysServer);
+genesysBaseUrl.hostname = genesysBaseUrl.hostname.replace(/^api\./, "www.");
 
 export const METADATA_FIELDS_STORAGE_KEY =
   "genolink.metadata.selectedFields.v1";
@@ -287,8 +288,8 @@ export function renderMetadataCell(colId, item, ctx) {
       return ctx.subsetTitlesForAcc === undefined
         ? "Loading..."
         : ctx.subsetTitlesForAcc.length > 0
-        ? ctx.subsetTitlesForAcc.join(", ")
-        : "N/A";
+          ? ctx.subsetTitlesForAcc.join(", ")
+          : "N/A";
 
     case "available":
       return item.available === true
