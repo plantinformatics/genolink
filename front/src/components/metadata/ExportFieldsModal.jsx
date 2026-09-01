@@ -12,6 +12,7 @@ const fieldsMapping = {
   },
   "Accession Name": { apiParam: "accessionName", tsvHeader: "Accession Name" },
   Pedigree: { apiParam: "ancest", tsvHeader: "Pedigree" },
+  "MLS Status": { apiParam: "mlsStatus", tsvHeader: "MLS Status" },
   Aliases: { apiParam: "aliases", tsvHeader: "Aliases" },
   Remarks: { apiParam: "remarks.remark", tsvHeader: "Remarks" },
   Taxonomy: { apiParam: "taxonomy.taxonName", tsvHeader: "Taxonomy" },
