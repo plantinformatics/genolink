@@ -3,7 +3,6 @@ import { genesysServer } from "../../config/apiConfig";
 import { germplasmStorageMapping } from "./filters/MultiSelectFilter";
 
 const genesysBaseUrl = new URL(genesysServer);
-genesysBaseUrl.hostname = genesysBaseUrl.hostname.replace(/^api\./, "www.");
 
 export const METADATA_FIELDS_STORAGE_KEY =
   "genolink.metadata.selectedFields.v1";
@@ -35,6 +34,7 @@ export const METADATA_COLUMNS = [
     apiParams: ["accessionName"],
   },
   { id: "pedigree", label: "Pedigree", apiParams: ["ancest"] },
+  { id: "mlsStatus", label: "MLS Status", apiParams: ["mlsStatus"] },
   { id: "aliases", label: "Aliases", apiParams: ["aliases"] },
   { id: "remarks", label: "Remarks", apiParams: ["remarks.remark"] },
   { id: "taxonomy", label: "Taxonomy", apiParams: ["taxonomy.taxonName"] },
@@ -174,6 +174,13 @@ export function renderMetadataCell(colId, item, ctx) {
 
     case "pedigree":
       return item.ancest || "N/A";
+
+    case "mlsStatus":
+      return item.mlsStatus === true
+        ? "True"
+        : item.mlsStatus === false
+          ? "False"
+          : "N/A";
 
     case "aliases":
       return item.aliases && item.aliases.length > 1
