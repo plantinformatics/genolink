@@ -74,7 +74,7 @@ export const METADATA_COLUMNS = [
   {
     id: "subsets",
     label: "Subsets",
-    apiParams: ["instituteCode"],
+    apiParams: ["subsets.title"],
   },
   {
     id: "available",
@@ -284,12 +284,12 @@ export function renderMetadataCell(colId, item, ctx) {
       );
     }
 
-    case "subsets":
-      return ctx.subsetTitlesForAcc === undefined
-        ? "Loading..."
-        : ctx.subsetTitlesForAcc.length > 0
-          ? ctx.subsetTitlesForAcc.join(", ")
-          : "N/A";
+    case "subsets": {
+      const subsetTitles = item["subsets.title"];
+      return Array.isArray(subsetTitles) && subsetTitles.length > 0
+        ? subsetTitles.join(", ")
+        : "N/A";
+    }
 
     case "available":
       return item.available === true
