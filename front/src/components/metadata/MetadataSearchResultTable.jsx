@@ -62,10 +62,6 @@ function combineGenotypeIds(internalIds = [], genesysIds = []) {
   ];
 }
 
-function accessionInstituteKey(accessionNumber, instituteCode) {
-  return `${instituteCode || ""}\u0000${accessionNumber || ""}`;
-}
-
 const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
   const searchResults = useSelector((state) => state.passport.searchResults);
   const totalAccessions = useSelector(
@@ -95,7 +91,6 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
   const [datasetInfoByAccession, setDatasetInfoByAccession] = useState({});
   const [genesysGenotypeIdsByAccession, setGenesysGenotypeIdsByAccession] =
     useState({});
-  const [subsetTitlesByAccession, setSubsetTitlesByAccession] = useState({});
 
   const [isPending, startTransition] = useTransition();
   const [columnWidths, setColumnWidths] = useState({});
@@ -373,105 +368,6 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
     searchResults,
     shouldFetchGenesysGenotypeIds,
     genesysGenotypeIdsByAccession,
-  ]);
-
-  useEffect(() => {
-    if (!visibleColumnIds.includes("subsets")) return;
-    if (!searchResults || searchResults.length === 0) return;
-
-    let cancelled = false;
-
-    const fetchSubsetsForVisibleRows = async () => {
-      const rowsToCheck = searchResults.filter((item) => {
-        const key = accessionInstituteKey(
-          item.accessionNumber,
-          item.instituteCode,
-        );
-
-        return (
-          item.accessionNumber &&
-          !Object.prototype.hasOwnProperty.call(
-            subsetTitlesByAccession,
-            key,
-          )
-        );
-      });
-
-      const accessionNumbers = [
-        ...new Set(rowsToCheck.map((item) => item.accessionNumber)),
-      ];
-
-      if (accessionNumbers.length === 0) return;
-
-      try {
-        const response =
-          await genesysApi.getAccessionSubsets(accessionNumbers);
-
-        if (cancelled) return;
-
-        setSubsetTitlesByAccession((previous) => {
-          const next = { ...previous };
-
-          rowsToCheck.forEach((item) => {
-            const key = accessionInstituteKey(
-              item.accessionNumber,
-              item.instituteCode,
-            );
-
-            if (!Object.prototype.hasOwnProperty.call(next, key)) {
-              next[key] = [];
-            }
-          });
-
-          if (Array.isArray(response)) {
-            response.forEach((accession) => {
-              const key = accessionInstituteKey(
-                accession.accessionNumber,
-                accession.instituteCode,
-              );
-              const titles = Array.isArray(accession.subsets)
-                ? accession.subsets
-                    .map((subset) => subset?.title)
-                    .filter(Boolean)
-                : [];
-
-              next[key] = [...new Set(titles)];
-            });
-          }
-
-          return next;
-        });
-      } catch (error) {
-        console.error("Failed to fetch Genesys subsets:", error);
-
-        if (!cancelled) {
-          setSubsetTitlesByAccession((previous) => {
-            const next = { ...previous };
-
-            rowsToCheck.forEach((item) => {
-              next[
-                accessionInstituteKey(
-                  item.accessionNumber,
-                  item.instituteCode,
-                )
-              ] = [];
-            });
-
-            return next;
-          });
-        }
-      }
-    };
-
-    fetchSubsetsForVisibleRows();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    searchResults,
-    visibleColumnIds,
-    subsetTitlesByAccession,
   ]);
 
   const getColumnWidth = useCallback(
@@ -762,11 +658,6 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
                           datasetInfoByAccession,
                           acc,
                         )))
-                  }
-                  subsetTitlesForAcc={
-                    subsetTitlesByAccession[
-                      accessionInstituteKey(acc, item.instituteCode)
-                    ]
                   }
                   visibleColumnIds={visibleColumnIds}
                   formatDate={formatDate}

@@ -151,57 +151,6 @@ class GenesysApi extends BaseApi {
     return allSubsets;
   }
 
-  async getAccessionSubsets(accessionNumbers) {
-    if (!Array.isArray(accessionNumbers) || accessionNumbers.length === 0) {
-      return [];
-    }
-
-    const endpoint = `${GENESYS_API_BASE}/accession/subsets`;
-
-    return this.post(endpoint, { accessionNumbers });
-  }
-
-  accessionInstituteKey(accessionNumber, instituteCode) {
-    return `${instituteCode || ""}\u0000${accessionNumber || ""}`;
-  }
-
-  async fetchAccessionSubsetMap(accessionNumbers = []) {
-    const cleanedAccessions = [
-      ...new Set(
-        accessionNumbers
-          .filter((item) => typeof item === "string")
-          .map((item) => item.trim())
-          .filter(Boolean),
-      ),
-    ];
-
-    const subsetMap = {};
-    const batchSize = 500;
-
-    for (let i = 0; i < cleanedAccessions.length; i += batchSize) {
-      const chunk = cleanedAccessions.slice(i, i + batchSize);
-      const response = await this.getAccessionSubsets(chunk);
-
-      if (!Array.isArray(response)) {
-        continue;
-      }
-
-      response.forEach((accession) => {
-        const key = this.accessionInstituteKey(
-          accession.accessionNumber,
-          accession.instituteCode,
-        );
-        const titles = Array.isArray(accession.subsets)
-          ? accession.subsets.map((subset) => subset?.title).filter(Boolean)
-          : [];
-
-        subsetMap[key] = [...new Set(titles)];
-      });
-    }
-
-    return subsetMap;
-  }
-
   async genotypeInfo(accessionNumbers) {
     if (!Array.isArray(accessionNumbers) || accessionNumbers.length === 0) {
       return {
@@ -900,18 +849,11 @@ class GenesysApi extends BaseApi {
       const shouldDownloadDatasetDoi = Boolean(
         selectedMappings["Dataset DOI"],
       );
-      const shouldDownloadSubsets = Boolean(selectedMappings.Subsets);
-
       const genesysSelectedMappings = { ...selectedMappings };
       delete genesysSelectedMappings["Dataset DOI"];
-      delete genesysSelectedMappings.Subsets;
       const selectFields = Object.keys(genesysSelectedMappings).map(
         (field) => genesysSelectedMappings[field].apiParam,
       );
-
-      if (shouldDownloadSubsets) {
-        selectFields.push("instituteCode");
-      }
 
       const select = [...new Set(selectFields)].join(",");
 
@@ -967,7 +909,6 @@ class GenesysApi extends BaseApi {
       if (allResults.length > 0) {
         let datasetInfoMapping = {};
         let genesysGenotypeIdMap = {};
-        let subsetInfoMapping = {};
 
         const accessionIds = allResults
           .map((item) => item.accessionNumber)
@@ -982,11 +923,6 @@ class GenesysApi extends BaseApi {
             await genolinkInternalApi.fetchDatasetInfoForAccessions(
               accessionIds,
             );
-        }
-
-        if (shouldDownloadSubsets) {
-          subsetInfoMapping =
-            await this.fetchAccessionSubsetMap(accessionIds);
         }
 
         if (
@@ -1007,7 +943,6 @@ class GenesysApi extends BaseApi {
           selectedMappingsForTSV,
           genesysGenotypeIdMap,
           datasetInfoMapping,
-          subsetInfoMapping,
         );
 
         this.downloadFile(
@@ -1028,7 +963,6 @@ class GenesysApi extends BaseApi {
     selectedMappings,
     genesysGenotypeIdMap = {},
     datasetInfoMapping = {},
-    subsetInfoMapping = {},
   ) {
     const header = Object.keys(selectedMappings)
       .map((field) => selectedMappings[field].tsvHeader)
@@ -1121,13 +1055,8 @@ class GenesysApi extends BaseApi {
             );
           }
 
-          if (fieldPath === "subsets") {
-            const key = this.accessionInstituteKey(
-              item.accessionNumber,
-              item.instituteCode,
-            );
-            const subsetTitles = subsetInfoMapping[key];
-
+          if (fieldPath === "subsets.title") {
+            const subsetTitles = item["subsets.title"];
             return Array.isArray(subsetTitles) && subsetTitles.length > 0
               ? subsetTitles.join(", ")
               : "N/A";
