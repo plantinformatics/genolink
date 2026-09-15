@@ -184,9 +184,8 @@ export function renderMetadataCell(colId, item, ctx) {
           : "N/A";
 
     case "aliases":
-      return item.aliases && item.aliases.length > 1
+      return item.aliases && item.aliases.length > 0
         ? item.aliases
-            .filter((alias) => alias.aliasType !== "ACCENAME")
             .map(
               (alias) =>
                 `${alias.name}${alias.usedBy ? ` ${alias.usedBy}` : ""}`,

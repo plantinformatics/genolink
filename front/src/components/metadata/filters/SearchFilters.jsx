@@ -36,10 +36,13 @@ import {
   setCheckedAccessions,
   setActiveFilters,
   setWildSearchValue,
+  setAccessionNameSearchValue,
+  setAliasSearchMode,
   setSubsets,
 } from "../../../redux/passport/passportActions";
 
 import WildSearchFilter from "./WildSearchFilter";
+import AliasSearchFilter from "./AliasSearchFilter";
 import MultiSelectFilter from "./MultiSelectFilter";
 import AccessionFilter from "./AccessionFilter";
 import GenotypeIdFilter from "./GenotypeIdFilter";
@@ -81,6 +84,12 @@ const SearchFilters = ({ initialDataReady }) => {
 
   const wildSearchValue = useSelector(
     (state) => state.passport.wildSearchValue,
+  );
+  const accessionNameSearchValue = useSelector(
+    (state) => state.passport.accessionNameSearchValue,
+  );
+  const aliasSearchMode = useSelector(
+    (state) => state.passport.aliasSearchMode,
   );
 
   const instituteCode = useSelector((state) => state.passport.instituteCode);
@@ -201,6 +210,11 @@ const SearchFilters = ({ initialDataReady }) => {
       try {
         const body = {
           _text: wildSearchValue && wildSearchValue.trim(),
+          ...(accessionNameSearchValue && {
+            aliases: {
+              [aliasSearchMode]: [accessionNameSearchValue.trim()],
+            },
+          }),
           institute:
             !isInitialMount || instituteCheckedBoxesRef.current.length > 0
               ? { code: instituteCheckedBoxesRef.current }
@@ -221,7 +235,12 @@ const SearchFilters = ({ initialDataReady }) => {
     fetchSubsets();
 
     if (isInitialMount) setIsInitialMount(false);
-  }, [wildSearchValue, subsetsTick]);
+  }, [
+    wildSearchValue,
+    accessionNameSearchValue,
+    aliasSearchMode,
+    subsetsTick,
+  ]);
 
   useEffect(() => {
     if (!initialDataReady) return;
@@ -312,6 +331,9 @@ const SearchFilters = ({ initialDataReady }) => {
       case "Text":
         dispatch(setWildSearchValue(""));
         break;
+      case "Alias Search":
+        dispatch(setAccessionNameSearchValue(""));
+        break;
       case "Accession Numbers":
         dispatch(setAccessionNumbers([]));
         break;
@@ -386,6 +408,11 @@ const SearchFilters = ({ initialDataReady }) => {
         switch (filter.type) {
           case "Text":
             updatedBody._text = filter.value;
+            break;
+          case "Alias Search":
+            updatedBody.aliases = {
+              [filter.operator]: [filter.value],
+            };
             break;
           case "Accession Numbers":
             updatedBody.accessionNumbers = filter.value;
@@ -515,6 +542,10 @@ const SearchFilters = ({ initialDataReady }) => {
 
       _text: userInput || (wildSearchValue && wildSearchValue.trim()),
 
+      aliases: accessionNameSearchValue
+        ? { [aliasSearchMode]: [accessionNameSearchValue.trim()] }
+        : {},
+
       accessionNumbers: [...commonAccessions],
 
       institute:
@@ -583,6 +614,12 @@ const SearchFilters = ({ initialDataReady }) => {
 
       const newFilters = [];
       if (userInput) newFilters.push({ type: "Text", value: userInput });
+      if (accessionNameSearchValue)
+        newFilters.push({
+          type: "Alias Search",
+          value: accessionNameSearchValue,
+          operator: aliasSearchMode,
+        });
       if (accessionNumbers.length > 0)
         newFilters.push({ type: "Accession Numbers", value: accessionNumbers });
       if (genotypeIds.length > 0)
@@ -745,6 +782,8 @@ const SearchFilters = ({ initialDataReady }) => {
       );
       dispatch(setResetTrigger(true));
       dispatch(setWildSearchValue(""));
+      dispatch(setAccessionNameSearchValue(""));
+      dispatch(setAliasSearchMode("sw"));
       setSelectedSubsets([]);
       setFilterBody({});
       setHasGenotype(restoreDefaultGenotype);
@@ -977,6 +1016,14 @@ const SearchFilters = ({ initialDataReady }) => {
                                       .map((v) => sampStatMapping[v])
                                       .filter(Boolean)
                                       .join(", ")
+                                  : filter.type === "Alias Search"
+                                    ? `${
+                                        filter.operator === "eq"
+                                          ? "Exact"
+                                          : filter.operator === "sw"
+                                            ? "Starts with"
+                                            : "Contains"
+                                      }: ${filter.value}`
                                   : Array.isArray(filter.value)
                                     ? filter.value.join(", ")
                                     : filter.value}
@@ -993,7 +1040,24 @@ const SearchFilters = ({ initialDataReady }) => {
                   ) : null}
                 </div>
                 {filterMode === "Passport Filter" ? (
-                  <WildSearchFilter />
+                  <>
+                    <WildSearchFilter />
+                    <div className={styles.drawer}>
+                      <button
+                        className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
+                        onClick={(event) => {
+                          event.currentTarget.parentElement.classList.toggle(
+                            styles.open,
+                          );
+                        }}
+                      >
+                        Alias Search <span className={styles.drawerArrow}></span>
+                      </button>
+                      <div className={styles.drawerContent}>
+                        <AliasSearchFilter />
+                      </div>
+                    </div>
+                  </>
                 ) : filterMode === "Accession Filter" ? (
                   <AccessionFilter />
                 ) : (

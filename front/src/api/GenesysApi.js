@@ -1116,7 +1116,6 @@ class GenesysApi extends BaseApi {
           if (fieldPath === "aliases") {
             return item.aliases && item.aliases.length > 0
               ? item.aliases
-                  .filter((alias) => alias.aliasType !== "ACCENAME")
                   .map(
                     (alias) =>
                       `${alias.name}${alias.usedBy ? ` ${alias.usedBy}` : ""}`,

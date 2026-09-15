@@ -166,6 +166,14 @@ export const setWildSearchValue = (wildSearchValue) => ({
   type: "SET_WILD_SEARCH_VALUE",
   payload: wildSearchValue,
 });
+export const setAccessionNameSearchValue = (accessionNameSearchValue) => ({
+  type: "SET_ACCESSION_NAME_SEARCH_VALUE",
+  payload: accessionNameSearchValue,
+});
+export const setAliasSearchMode = (aliasSearchMode) => ({
+  type: "SET_ALIAS_SEARCH_MODE",
+  payload: aliasSearchMode,
+});
 export const setSubsets = (subsets) => ({
   type: "SET_SUBSETS",
   payload: subsets,
