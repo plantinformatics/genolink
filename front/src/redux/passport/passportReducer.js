@@ -38,6 +38,8 @@ const initialState = {
   platform: "Gigwa",
   activeFilters: [],
   wildSearchValue: "",
+  accessionNameSearchValue: "",
+  aliasSearchMode: "sw",
   subsets: [],
   metadataSelectedColumns: null,
 };
@@ -241,6 +243,16 @@ const rootReducer = (state = initialState, action) => {
       return {
         ...state,
         wildSearchValue: action.payload,
+      };
+    case "SET_ACCESSION_NAME_SEARCH_VALUE":
+      return {
+        ...state,
+        accessionNameSearchValue: action.payload,
+      };
+    case "SET_ALIAS_SEARCH_MODE":
+      return {
+        ...state,
+        aliasSearchMode: action.payload,
       };
     case "SET_SUBSETS":
       return {
