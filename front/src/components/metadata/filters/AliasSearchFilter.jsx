@@ -11,19 +11,20 @@ const aliasModes = [
     key: "eq",
     label: "Exact match",
     placeholder: "Example: OSIRIS",
-    help: "The complete alias must match.",
+    help: "The complete alias must match. Do not use quotes.",
   },
   {
     key: "sw",
     label: "Starts with",
     placeholder: "Example: OSIRIS",
-    help: "Matches OSIRIS, OSIRIS 1, and similar aliases.",
+    help: "Matches OSIRIS, OSIRIS 1, and similar aliases. Do not use quotes.",
   },
   {
     key: "contains",
     label: "Contains",
     placeholder: "Example: SIRIS",
-    help: "Matches the text anywhere; broad searches may be slower.",
+    help:
+      "Matches the text anywhere; broad searches may be slower. Do not use quotes.",
   },
 ];
 
@@ -71,7 +72,10 @@ const AliasSearchFilter = () => {
   return (
     <div className={styles.aliasSearchFields}>
       {aliasModes.map(({ key, label, placeholder, help }) => (
-        <label key={key} className={styles.aliasSearchField}>
+        <label
+          key={key}
+          className={`${styles.aliasSearchField} ${styles.searchFieldWithHint}`}
+        >
           <span>{label}</span>
           <input
             type="text"
@@ -87,8 +91,14 @@ const AliasSearchFilter = () => {
             className={styles.accessionSearchBox}
             placeholder={placeholder}
             aria-label={`Alias search: ${label}`}
+            aria-describedby={`alias-search-${key}-hint`}
           />
-          <small>{help}</small>
+          <small
+            id={`alias-search-${key}-hint`}
+            className={styles.searchHint}
+          >
+            {help}
+          </small>
         </label>
       ))}
     </div>

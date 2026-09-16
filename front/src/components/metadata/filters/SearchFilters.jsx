@@ -1051,7 +1051,8 @@ const SearchFilters = ({ initialDataReady }) => {
                           );
                         }}
                       >
-                        Alias Search <span className={styles.drawerArrow}></span>
+                        Advanced Name/Alias search{" "}
+                        <span className={styles.drawerArrow}></span>
                       </button>
                       <div className={styles.drawerContent}>
                         <AliasSearchFilter />

@@ -52,18 +52,27 @@ const WildSearchFilter = () => {
   };
 
   return (
-    <>
-      <div>
-        <input
-          type="text"
-          value={inputValue}
-          onChange={onChangeAccession}
-          onBlur={handleBlur}
-          className={styles.accessionSearchBox}
-          placeholder="Text Search"
-        />
+    <div className={styles.searchFieldWithHint}>
+      <input
+        type="text"
+        value={inputValue}
+        onChange={onChangeAccession}
+        onBlur={handleBlur}
+        className={styles.accessionSearchBox}
+        placeholder="Text Search"
+        aria-label="Full-text search"
+        aria-describedby="wild-search-hint"
+      />
+      <div id="wild-search-hint" className={styles.searchHint}>
+        <strong>Search tips</strong>
+        <ul>
+          <li>Exact phrase: &quot;leaf&quot;</li>
+          <li>Multiple terms (OR): leaf | pea</li>
+          <li>Prefix: leaf*</li>
+          <li>Group terms: (leaf | pea)</li>
+        </ul>
       </div>
-    </>
+    </div>
   );
 };
 

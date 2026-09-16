@@ -27,10 +27,26 @@
   margin-bottom: 0;
 }
 
-.aliasSearchField small {
+.searchHint {
+  display: none;
   color: #666;
   font-size: 0.78rem;
   font-weight: 400;
+}
+
+.searchFieldWithHint:hover > .searchHint,
+.searchFieldWithHint:focus-within > .searchHint {
+  display: block;
+}
+
+.searchHint strong {
+  display: block;
+  margin-bottom: 3px;
+}
+
+.searchHint ul {
+  margin: 0 0 8px;
+  padding-left: 20px;
 }
 
 .aliasSearchField input:disabled {
