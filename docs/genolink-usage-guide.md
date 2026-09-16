@@ -43,7 +43,17 @@ Use **Passport Filter** to build a structured search. Available filters include:
 
 Open a filter section, select one or more values, and then choose **Apply Filter**. Compatible filters are combined to narrow the results.
 
-The free-text search is an alternative broad search. While text is present in that box, **Check for genotype** is unavailable.
+The free-text search is an alternative broad search across the passport record. It supports double quotes for an exact phrase (`"Chinese Spring"`), a vertical bar for alternatives (`leaf | pea`), an asterisk for a prefix (`leaf*`), and parentheses for grouping (`(leaf | pea)`). While text is present in that box, **Check for genotype** is unavailable.
+
+To search accession names and other names associated with an accession without matching unrelated fields such as pedigree, open **Advanced Name/Alias search**. Genesys stores these names in the accession's aliases, so this search checks every alias attached to the record. For example, a search for `OSIRIS` may return an accession whose displayed accession name is `NR 34` when `OSIRIS` is one of its other aliases.
+
+Choose one of the following search options:
+
+- **Exact match** requires the complete alias to match the entered value.
+- **Starts with** matches aliases that begin with the entered value.
+- **Contains** matches the entered value anywhere in an alias; broad searches may take longer.
+
+Enter a value in only one option. After a value is entered, the other two options are disabled until the active value is cleared. Do not add quotation marks to an advanced name/alias search.
 
 ![Passport Filter mode with filter sections and the Apply Filter button](./images/img2.png)
 
