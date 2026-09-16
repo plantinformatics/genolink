@@ -1,28 +1,32 @@
-const {
-  app,
-  request,
-  axios,
-  generateGenesysToken,
-} = require("../../../helpers/setup");
+const { app, request, axios } = require("../../../helpers/setup");
+
+const isTokenRequest = (url) => url.endsWith("/oauth/token");
 
 describe("GET /passportFilter/possibleValues", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    generateGenesysToken.mockResolvedValue("fake-token");
   });
 
   it("returns transformed suggestions on successful fetch", async () => {
-    axios.post.mockResolvedValueOnce({
-      data: {
-        suggestions: {
-          "institute.code": { terms: [{ term: "Inst1" }, { term: "Inst2" }] },
-          "crop.shortName": { terms: [{ term: "CropA" }] },
-          "taxonomy.genus": { terms: [{ term: "GenusX" }] },
-          "countryOfOrigin.code3": { terms: [{ term: "USA" }] },
-          sampStat: { terms: [{ term: "Status1" }] },
-          storage: { terms: [{ term: "Cold" }] },
+    axios.post.mockImplementation((url) => {
+      if (isTokenRequest(url)) {
+        return Promise.resolve({ data: { access_token: "fake-token" } });
+      }
+
+      return Promise.resolve({
+        data: {
+          suggestions: {
+            "institute.code": {
+              terms: [{ term: "Inst1" }, { term: "Inst2" }],
+            },
+            "crop.shortName": { terms: [{ term: "CropA" }] },
+            "taxonomy.genus": { terms: [{ term: "GenusX" }] },
+            "countryOfOrigin.code3": { terms: [{ term: "USA" }] },
+            sampStat: { terms: [{ term: "Status1" }] },
+            storage: { terms: [{ term: "Cold" }] },
+          },
         },
-      },
+      });
     });
 
     const res = await request(app).get(
@@ -38,13 +42,24 @@ describe("GET /passportFilter/possibleValues", () => {
       BiologicalStatus: ["Status1"],
       TypeOfGermplasmStorage: ["Cold"],
     });
-    expect(axios.post).toHaveBeenCalledTimes(1);
+    expect(
+      axios.post.mock.calls.filter(([url]) => !isTokenRequest(url)),
+    ).toHaveLength(1);
   });
 
   it("retries token and succeeds on 401 error", async () => {
-    axios.post
-      .mockRejectedValueOnce({ response: { status: 401 } }) // first fails with 401
-      .mockResolvedValueOnce({
+    let apiCallCount = 0;
+    axios.post.mockImplementation((url) => {
+      if (isTokenRequest(url)) {
+        return Promise.resolve({ data: { access_token: "refreshed-token" } });
+      }
+
+      apiCallCount += 1;
+      if (apiCallCount === 1) {
+        return Promise.reject({ response: { status: 401 } });
+      }
+
+      return Promise.resolve({
         data: {
           suggestions: {
             "institute.code": { terms: [{ term: "Inst1" }] },
@@ -55,25 +70,33 @@ describe("GET /passportFilter/possibleValues", () => {
             storage: { terms: [] },
           },
         },
-      }); // retry success
+      });
+    });
 
     const res = await request(app).get(
       "/api/genesys/passportFilter/possibleValues"
     );
 
-    expect(axios.post).toHaveBeenCalledTimes(2);
+    expect(apiCallCount).toBe(2);
     expect(res.status).toBe(200);
     expect(res.body.institute).toEqual(["Inst1"]);
   });
 
   it("returns 500 on other errors", async () => {
-    axios.post.mockRejectedValueOnce(new Error("Network error"));
+    axios.post.mockImplementation((url) => {
+      if (isTokenRequest(url)) {
+        return Promise.resolve({ data: { access_token: "fake-token" } });
+      }
+
+      return Promise.reject(new Error("Network error"));
+    });
 
     const res = await request(app).get(
       "/api/genesys/passportFilter/possibleValues"
     );
 
     expect(res.status).toBe(500);
-    expect(res.text).toMatch(/API request failed/);
+    expect(res.body.message).toBe("Genesys possible values request failed");
+    expect(res.body.error.message).toBe("Network error");
   });
 });
