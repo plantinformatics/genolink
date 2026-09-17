@@ -6,6 +6,7 @@ import {
 import { BASE_PATH } from "../config/basePath";
 import { genolinkInternalApi } from "../pages/Home";
 import country2Region from "shared-data/Country2Region.json";
+import { normaliseGigwaBaseUrl } from "../utils/gigwaServerUrl";
 
 import {
   setInstituteCheckedBoxes,
@@ -343,17 +344,7 @@ class GenesysApi extends BaseApi {
   }
 
   normaliseServerUrl(serverUrl) {
-    if (!serverUrl || typeof serverUrl !== "string") {
-      return null;
-    }
-
-    const trimmed = serverUrl.trim();
-
-    if (!trimmed) {
-      return null;
-    }
-
-    return trimmed.replace(/\/+$/, "");
+    return normaliseGigwaBaseUrl(serverUrl);
   }
 
   addAccessionServerUrl(accession, serverUrl) {
