@@ -1,51 +1,57 @@
-const DATASET_DOI_MAPPINGS = require("../config/datasetDoiMappings");
+const { Op } = require("sequelize");
+const db = require("../models");
 
-function accessionTokens(accession) {
-  return String(accession)
-    .toUpperCase()
-    .split(/[^A-Z0-9]+/)
-    .filter(Boolean);
-}
-
-function resolveDatasetInfoForAccession(accession) {
-  const tokenSet = new Set(accessionTokens(accession));
-  const mapping = DATASET_DOI_MAPPINGS.find((entry) =>
-    tokenSet.has(String(entry.cropCode).toUpperCase()),
-  );
-
-  if (!mapping || !Array.isArray(mapping.datasetInfo)) {
-    return null;
-  }
-
-  return mapping.datasetInfo.map((item) => ({ ...item }));
-}
-
-function resolveDatasetInfoForAccessions(accessions) {
+async function resolveDatasetInfoForAccessions(accessions) {
   if (!Array.isArray(accessions)) {
     return {};
   }
 
-  const result = {};
-  const seen = new Set();
+  const cleaned = [
+    ...new Set(
+      accessions
+        .filter((accession) => typeof accession === "string")
+        .map((accession) => accession.trim())
+        .filter(Boolean),
+    ),
+  ];
+  const result = Object.fromEntries(cleaned.map((accession) => [accession, []]));
 
-  accessions.forEach((accession) => {
-    if (typeof accession !== "string") {
-      return;
+  if (cleaned.length === 0) return result;
+
+  const rows = await db.SampleAccession.findAll({
+    attributes: ["Accession"],
+    where: { Accession: { [Op.in]: cleaned } },
+    include: [
+      {
+        model: db.DatasetDoi,
+        as: "DatasetDois",
+        attributes: ["Doi"],
+        through: { attributes: [] },
+        required: true,
+      },
+    ],
+  });
+
+  const seenByAccession = new Map();
+  rows.forEach((row) => {
+    if (!result[row.Accession]) result[row.Accession] = [];
+    if (!seenByAccession.has(row.Accession)) {
+      seenByAccession.set(row.Accession, new Set());
     }
 
-    const cleaned = accession.trim();
-    if (!cleaned || seen.has(cleaned)) {
-      return;
-    }
-
-    seen.add(cleaned);
-    result[cleaned] = resolveDatasetInfoForAccession(cleaned);
+    row.DatasetDois.forEach(({ Doi }) => {
+      if (!Doi || seenByAccession.get(row.Accession).has(Doi)) return;
+      seenByAccession.get(row.Accession).add(Doi);
+      result[row.Accession].push({
+        doi: Doi,
+        url: `https://doi.org/${encodeURIComponent(Doi).replace(/%2F/g, "/")}`,
+      });
+    });
   });
 
   return result;
 }
 
 module.exports = {
-  DATASET_DOI_MAPPINGS,
   resolveDatasetInfoForAccessions,
 };

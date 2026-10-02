@@ -2,6 +2,10 @@ const fs = require("fs");
 const csvParser = require("csv-parser");
 const db = require("../models");
 const { Op } = require("sequelize");
+const {
+  parseDatasetDois,
+  setDatasetDois,
+} = require("../utils/datasetDoiCsv");
 
 const csvFilePath = process.argv[2];
 const isDryRun = process.argv.includes("--dry");
@@ -48,6 +52,8 @@ function parseCSV(filePath) {
         );
 
         const serverUrl = hasServerUrl ? normalize(raw.serverUrl) : undefined;
+        const { supplied: hasDatasetDois, dois: datasetDois } =
+          parseDatasetDois(raw);
 
         if (!accession) {
           console.warn("Skipped row with missing accession:", raw);
@@ -66,6 +72,8 @@ function parseCSV(filePath) {
           Status: status,
           hasServerUrl,
           ServerUrl: serverUrl,
+          hasDatasetDois,
+          datasetDois,
         });
       })
       .on("end", () => resolve(rows))
@@ -84,11 +92,20 @@ function parseCSV(filePath) {
       process.exit(0);
     }
 
-    // Deduplicate by Accession (last one in the file wins)
-    const byAccession = new Map();
-    for (const r of csvRows) byAccession.set(r.Accession, r);
+    // Deduplicate by accession and sample (last matching CSV row wins).
+    const byAccessionAndSample = new Map();
+    for (const row of csvRows) {
+      byAccessionAndSample.set(
+        `${row.Accession}\u0000${row.Sample || ""}`,
+        row,
+      );
+    }
 
-    const accessions = [...byAccession.keys()];
+    const accessions = [
+      ...new Set(
+        [...byAccessionAndSample.values()].map((row) => row.Accession),
+      ),
+    ];
 
     // Fetch existing rows for those accessions
     const existing = await db.SampleAccession.findAll({
@@ -114,7 +131,8 @@ function parseCSV(filePath) {
 
     // Build an update plan (only if changes are needed)
     const plan = [];
-    for (const [acc, incoming] of byAccession.entries()) {
+    for (const incoming of byAccessionAndSample.values()) {
+      const acc = incoming.Accession;
       const rows = grouped.get(acc);
       if (!rows || rows.length === 0) continue;
 
@@ -138,11 +156,25 @@ function parseCSV(filePath) {
       const serverUrlChanged =
         incoming.hasServerUrl && oldServerUrlN !== newServerUrlN;
 
+      let datasetDoisChanged = false;
+      if (incoming.hasDatasetDois) {
+        const currentDatasetDois = await target.getDatasetDois({
+          attributes: ["Doi"],
+          joinTableAttributes: [],
+        });
+        const oldDois = currentDatasetDois.map((row) => row.Doi).sort();
+        const newDois = [...incoming.datasetDois].sort();
+        datasetDoisChanged =
+          oldDois.length !== newDois.length ||
+          oldDois.some((doi, index) => doi !== newDois[index]);
+      }
+
       // Only enqueue if something actually changes
       if (
         oldSampleN !== newSampleN ||
         oldStatusN !== newStatusN ||
-        serverUrlChanged
+        serverUrlChanged ||
+        datasetDoisChanged
       ) {
         plan.push({
           target,
@@ -157,6 +189,8 @@ function parseCSV(filePath) {
             hasServerUrl: incoming.hasServerUrl,
             fromServerUrl: target.ServerUrl,
             toServerUrl: incoming.ServerUrl,
+            datasetDoisChanged,
+            toDatasetDois: incoming.datasetDois,
           },
         });
       }
@@ -178,12 +212,16 @@ function parseCSV(filePath) {
           }`
         : "";
 
+      const datasetDoiPreview = m.datasetDoisChanged
+        ? ` | Dataset DOIs -> ${m.toDatasetDois.join("; ") || "NONE"}`
+        : "";
+
       console.log(
         `${i + 1}. [${m.Accession}] id=${m.id} Sample: ${
           m.fromSample ?? "NULL"
         } -> ${m.toSample ?? "NULL"} | Status: ${m.fromStatus} -> ${
           m.toStatus
-        }${serverUrlPreview}`,
+        }${serverUrlPreview}${datasetDoiPreview}`,
       );
     });
     if (plan.length > 15) console.log(`...and ${plan.length - 15} more`);
@@ -233,6 +271,9 @@ function parseCSV(filePath) {
             if (Object.keys(clashChanges).length > 0) {
               await clash.update(clashChanges, { transaction: t });
             }
+            if (incoming.hasDatasetDois) {
+              await setDatasetDois(db, clash, incoming.datasetDois, t);
+            }
             // Skip changing the target in this case.
             continue;
           }
@@ -251,9 +292,12 @@ function parseCSV(filePath) {
         changes.ServerUrl = incoming.ServerUrl;
       }
 
-      if (Object.keys(changes).length === 0) continue; // safety
-
-      await target.update(changes, { transaction: t });
+      if (Object.keys(changes).length > 0) {
+        await target.update(changes, { transaction: t });
+      }
+      if (incoming.hasDatasetDois) {
+        await setDatasetDois(db, target, incoming.datasetDois, t);
+      }
     }
 
     await t.commit();

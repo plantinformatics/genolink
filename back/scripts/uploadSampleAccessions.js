@@ -3,6 +3,10 @@ const fs = require("fs");
 const csvParser = require("csv-parser");
 
 const db = require("../models");
+const {
+  parseDatasetDois,
+  setDatasetDois,
+} = require("../utils/datasetDoiCsv");
 
 const csvFilePath = process.argv[2];
 
@@ -25,6 +29,8 @@ const parseCSV = (filePath) => {
         const sample = data.sample?.trim() || null;
         const status = data.status?.trim();
         const serverUrl = data.serverUrl?.trim() || null;
+        const { supplied: hasDatasetDois, dois: datasetDois } =
+          parseDatasetDois(data);
 
         if (!accession) {
           console.warn("Skipped row with missing accession:", data);
@@ -43,6 +49,8 @@ const parseCSV = (filePath) => {
           Sample: sample,
           Status: status,
           ServerUrl: serverUrl,
+          hasDatasetDois,
+          datasetDois,
         });
       })
       .on("end", () => resolve(sampleAccessions))
@@ -51,6 +59,7 @@ const parseCSV = (filePath) => {
 };
 
 (async () => {
+  let transaction;
   try {
     await db.sequelize.authenticate();
 
@@ -61,13 +70,29 @@ const parseCSV = (filePath) => {
       return;
     }
 
-    const created = await db.SampleAccession.bulkCreate(sampleAccessions, {
-      ignoreDuplicates: true,
-    });
+    transaction = await db.sequelize.transaction();
+    let inserted = 0;
 
-    console.log(`${created.length} sample accessions inserted.`);
+    for (const row of sampleAccessions) {
+      const { hasDatasetDois, datasetDois, ...values } = row;
+      const [sampleAccession, created] = await db.SampleAccession.findOrCreate({
+        where: { Accession: values.Accession, Sample: values.Sample },
+        defaults: values,
+        transaction,
+      });
+
+      if (created) inserted += 1;
+      if (hasDatasetDois) {
+        await setDatasetDois(db, sampleAccession, datasetDois, transaction);
+      }
+    }
+
+    await transaction.commit();
+
+    console.log(`${inserted} sample accessions inserted.`);
     process.exit(0);
   } catch (err) {
+    if (transaction) await transaction.rollback();
     console.error("Error inserting sample accessions:", err);
     process.exit(1);
   }

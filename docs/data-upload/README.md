@@ -4,7 +4,7 @@ This section provides instructions for uploading sample mappings to the Genolink
 
 1. **Sample (Genotype ID) ↔ Accession Mapping**
 
-   Use `uploadSampleAccessions.js` to insert mappings, including their genotype status and optional Gigwa server URL. Use `updateSampleAccessionsFromCSV.js` to update existing mappings; it supports a dry-run preview.
+   Use `uploadSampleAccessions.js` to insert mappings, including their genotype status, optional Gigwa server URL, and dataset DOI associations. Use `updateSampleAccessionsFromCSV.js` to update existing mappings; it supports a dry-run preview.
 
 The scripts can be executed in two ways:
 
