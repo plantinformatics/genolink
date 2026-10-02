@@ -22,7 +22,8 @@ async function datasetDoiHandler(req, res) {
       ),
     ];
 
-    const datasetInfoByAccession = resolveDatasetInfoForAccessions(cleaned);
+    const datasetInfoByAccession =
+      await resolveDatasetInfoForAccessions(cleaned);
 
     res.status(200).json(datasetInfoByAccession);
     logger.info(

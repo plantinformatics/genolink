@@ -33,5 +33,14 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
+  SampleAccession.associate = (db) => {
+    SampleAccession.belongsToMany(db.DatasetDoi, {
+      through: db.SampleAccessionDatasetDoi,
+      foreignKey: "SampleAccessionId",
+      otherKey: "DatasetDoiId",
+      as: "DatasetDois",
+    });
+  };
+
   return SampleAccession;
 };
