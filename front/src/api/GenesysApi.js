@@ -18,6 +18,7 @@ import {
   setGenusSpeciesList,
   setSpeciesList,
   setOriginOfMaterialList,
+  setHistoricalAccessionsList,
   setDonorCodeList,
   setSampStatList,
   setGermplasmStorageList,
@@ -215,6 +216,7 @@ class GenesysApi extends BaseApi {
         dispatch(
           setActiveFilters([
             { type: "Institute Code", value: [defaultInstituteCode] },
+            { type: "Historical Accessions", value: "No" },
           ]),
         );
       } else if (!isReset && filterMode && genotypeIds) {
@@ -226,6 +228,7 @@ class GenesysApi extends BaseApi {
         dispatch(
           setActiveFilters([
             { type: "Genotype Ids", value: genotypeIds.split(",") },
+            { type: "Historical Accessions", value: "No" },
           ]),
         );
       } else {
@@ -254,6 +257,10 @@ class GenesysApi extends BaseApi {
         searchData,
         "countryOfOrigin.code3",
       );
+      const historicalAccessions = this.extractSuggestions(
+        searchData,
+        "historic",
+      );
       const sampStat = this.extractSuggestions(searchData, "sampStat");
       const germplasmStorage = this.extractSuggestions(searchData, "storage");
       const availibility = this.extractSuggestions(searchData, "available");
@@ -266,6 +273,7 @@ class GenesysApi extends BaseApi {
       dispatch(setGenusSpeciesList(genusSpecies));
       dispatch(setSpeciesList(species));
       dispatch(setOriginOfMaterialList(origins));
+      dispatch(setHistoricalAccessionsList(historicalAccessions));
       dispatch(setDonorCodeList(donorCode));
       dispatch(setSampStatList(sampStat));
       dispatch(setGermplasmStorageList(germplasmStorage));
@@ -303,6 +311,7 @@ class GenesysApi extends BaseApi {
         dispatch(
           setActiveFilters([
             { type: "Institute Code", value: [defaultInstituteCode] },
+            { type: "Historical Accessions", value: "No" },
           ]),
         );
       } else if (!isReset && filterMode && genotypeIds) {
@@ -314,6 +323,7 @@ class GenesysApi extends BaseApi {
         dispatch(
           setActiveFilters([
             { type: "Genotype Ids", value: genotypeIds.split(",") },
+            { type: "Historical Accessions", value: "No" },
           ]),
         );
       } else {
@@ -607,6 +617,11 @@ class GenesysApi extends BaseApi {
           ),
         );
         dispatch(
+          setHistoricalAccessionsList(
+            this.extractSuggestions(filterDataResponse, "historic"),
+          ),
+        );
+        dispatch(
           setDonorCodeList(
             this.extractSuggestions(filterDataResponse, "donorCode"),
           ),
@@ -677,6 +692,11 @@ class GenesysApi extends BaseApi {
               filterDataResponse,
               "countryOfOrigin.code3",
             ),
+          ),
+        );
+        dispatch(
+          setHistoricalAccessionsList(
+            this.extractSuggestions(filterDataResponse, "historic"),
           ),
         );
         dispatch(

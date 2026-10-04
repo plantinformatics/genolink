@@ -7,6 +7,7 @@ const initialState = {
   genusSpeciesCheckedBoxes: [],
   speciesCheckedBoxes: [],
   originOfMaterialCheckedBoxes: [],
+  historicalAccessionsCheckedBoxes: ["false"],
   donorCodeCheckedBoxes: [],
   sampStatCheckedBoxes: [],
   germplasmStorageCheckedBoxes: [],
@@ -18,6 +19,7 @@ const initialState = {
   genusSpeciesList: [],
   speciesList: [],
   originOfMaterialList: [],
+  historicalAccessionsList: [],
   donorCodeList: [],
   sampStatList: [],
   germplasmStorageList: [],
@@ -98,6 +100,11 @@ const rootReducer = (state = initialState, action) => {
         ...state,
         originOfMaterialCheckedBoxes: action.payload,
       };
+    case "SET_HISTORICAL_ACCESSIONS_CHECKED_BOXES":
+      return {
+        ...state,
+        historicalAccessionsCheckedBoxes: action.payload,
+      };
     case "SET_DONOR_CODE_CHECKED_BOXES":
       return {
         ...state,
@@ -153,6 +160,11 @@ const rootReducer = (state = initialState, action) => {
       return {
         ...state,
         originOfMaterialList: action.payload,
+      };
+    case "SET_HISTORICAL_ACCESSIONS_LIST":
+      return {
+        ...state,
+        historicalAccessionsList: action.payload,
       };
     case "SET_DONOR_CODE_LIST":
       return {
