@@ -32,6 +32,10 @@ export const setOriginOfMaterialCheckedBoxes = (boxes) => ({
   type: "SET_ORIGIN_OF_MATERIAL_CHECKED_BOXES",
   payload: boxes,
 });
+export const setHistoricalAccessionsCheckedBoxes = (boxes) => ({
+  type: "SET_HISTORICAL_ACCESSIONS_CHECKED_BOXES",
+  payload: boxes,
+});
 export const setDonorCodeCheckedBoxes = (boxes) => ({
   type: "SET_DONOR_CODE_CHECKED_BOXES",
   payload: boxes,
@@ -80,6 +84,11 @@ export const setSpeciesList = (species) => ({
 export const setOriginOfMaterialList = (origin) => ({
   type: "SET_ORIGIN_OF_MATERIAL_LIST",
   payload: origin,
+});
+
+export const setHistoricalAccessionsList = (historic) => ({
+  type: "SET_HISTORICAL_ACCESSIONS_LIST",
+  payload: historic,
 });
 
 export const setDonorCodeList = (origin) => ({

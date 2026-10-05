@@ -28,6 +28,7 @@ import {
   setGenusSpeciesCheckedBoxes,
   setSpeciesCheckedBoxes,
   setOriginOfMaterialCheckedBoxes,
+  setHistoricalAccessionsCheckedBoxes,
   setDonorCodeCheckedBoxes,
   setSampStatCheckedBoxes,
   setGermplasmStorageCheckedBoxes,
@@ -44,6 +45,9 @@ import {
 import WildSearchFilter from "./WildSearchFilter";
 import AliasSearchFilter from "./AliasSearchFilter";
 import MultiSelectFilter from "./MultiSelectFilter";
+import HistoricalAccessionsFilter, {
+  historicalSelectionsToRequestValue,
+} from "./HistoricalAccessionsFilter";
 import AccessionFilter from "./AccessionFilter";
 import GenotypeIdFilter from "./GenotypeIdFilter";
 import MetadataSearchResultTable from "../MetadataSearchResultTable";
@@ -120,6 +124,9 @@ const SearchFilters = ({ initialDataReady }) => {
   const speciesList = useSelector((state) => state.passport.speciesList);
   const originOfMaterialList = useSelector(
     (state) => state.passport.originOfMaterialList,
+  );
+  const historicalAccessionsList = useSelector(
+    (state) => state.passport.historicalAccessionsList,
   );
   const donorCodeList = useSelector((state) => state.passport.donorCodeList);
   const sampStatList = useSelector((state) => state.passport.sampStatList);
@@ -373,6 +380,9 @@ const SearchFilters = ({ initialDataReady }) => {
       case "Origin of Material":
         dispatch(setOriginOfMaterialCheckedBoxes([]));
         break;
+      case "Historical Accessions":
+        dispatch(setHistoricalAccessionsCheckedBoxes(["true", "false"]));
+        break;
       case "Donor Code":
         dispatch(setDonorCodeCheckedBoxes([]));
         break;
@@ -456,6 +466,10 @@ const SearchFilters = ({ initialDataReady }) => {
           case "Origin of Material":
             updatedBody.countryOfOrigin = { code3: filter.value };
             break;
+          case "Historical Accessions":
+            updatedBody.historic =
+              filter.value === "Yes, No" ? null : filter.value === "Yes";
+            break;
           case "Biological Status":
             updatedBody.sampStat = filter.value;
             break;
@@ -490,6 +504,7 @@ const SearchFilters = ({ initialDataReady }) => {
       genusSpeciesCheckedBoxes,
       speciesCheckedBoxes,
       originOfMaterialCheckedBoxes,
+      historicalAccessionsCheckedBoxes,
       donorCodeCheckedBoxes,
       sampStatCheckedBoxes,
       germplasmStorageCheckedBoxes,
@@ -574,6 +589,9 @@ const SearchFilters = ({ initialDataReady }) => {
         originOfMaterialCheckedBoxes.length > 0
           ? { code3: originOfMaterialCheckedBoxes }
           : {},
+      historic: historicalSelectionsToRequestValue(
+        historicalAccessionsCheckedBoxes,
+      ),
       donorCode: donorCodeCheckedBoxes.length > 0 ? donorCodeCheckedBoxes : [],
       sampStat: sampStatCheckedBoxes.length > 0 ? sampStatCheckedBoxes : [],
 
@@ -594,7 +612,9 @@ const SearchFilters = ({ initialDataReady }) => {
     Object.keys(body).forEach((key) => {
       if (
         body[key] === undefined ||
-        (typeof body[key] === "object" && !Object.keys(body[key]).length)
+        (body[key] !== null &&
+          typeof body[key] === "object" &&
+          !Object.keys(body[key]).length)
       ) {
         delete body[key];
       }
@@ -667,6 +687,13 @@ const SearchFilters = ({ initialDataReady }) => {
           type: "Origin of Material",
           value: originOfMaterialCheckedBoxes,
         });
+      if (historicalAccessionsCheckedBoxes.length === 1) {
+        newFilters.push({
+          type: "Historical Accessions",
+          value:
+            historicalAccessionsCheckedBoxes[0] === "true" ? "Yes" : "No",
+        });
+      }
       if (donorCodeCheckedBoxes.length > 0)
         newFilters.push({
           type: "Donor Code",
@@ -726,6 +753,7 @@ const SearchFilters = ({ initialDataReady }) => {
       dispatch(setGenusSpeciesCheckedBoxes([]));
       dispatch(setSpeciesCheckedBoxes([]));
       dispatch(setOriginOfMaterialCheckedBoxes([]));
+      dispatch(setHistoricalAccessionsCheckedBoxes(["false"]));
       dispatch(setDonorCodeCheckedBoxes([]));
       dispatch(setSampStatCheckedBoxes([]));
       dispatch(setGermplasmStorageCheckedBoxes([]));
@@ -770,6 +798,10 @@ const SearchFilters = ({ initialDataReady }) => {
           type: "Institute Code",
           value: [defaultInstituteCode],
         });
+        defaultFilters.push({
+          type: "Historical Accessions",
+          value: "No",
+        });
       }
       if (restoreDefaultGenotype) {
         defaultFilters.push({ type: "Genotype Filter", value: "On" });
@@ -780,6 +812,7 @@ const SearchFilters = ({ initialDataReady }) => {
           restoreDefaultInstitute ? [defaultInstituteCode] : [],
         ),
       );
+      dispatch(setHistoricalAccessionsCheckedBoxes(["false"]));
       dispatch(setResetTrigger(true));
       dispatch(setWildSearchValue(""));
       dispatch(setAccessionNameSearchValue(""));
@@ -1042,6 +1075,24 @@ const SearchFilters = ({ initialDataReady }) => {
                 {filterMode === "Passport Filter" ? (
                   <>
                     <WildSearchFilter />
+                    <div className={styles.drawer}>
+                      <button
+                        className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
+                        onClick={(e) => {
+                          e.currentTarget.parentElement.classList.toggle(
+                            styles.open,
+                          );
+                        }}
+                      >
+                        Historical Accessions{" "}
+                        <span className={styles.drawerArrow}></span>
+                      </button>
+                      <div className={styles.drawerContent}>
+                        <HistoricalAccessionsFilter
+                          options={historicalAccessionsList}
+                        />
+                      </div>
+                    </div>
                     <div className={styles.drawer}>
                       <button
                         className={`${styles.btnInfo} ${styles.passportFilterDrawers}`}
