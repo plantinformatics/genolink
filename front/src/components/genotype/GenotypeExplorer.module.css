@@ -45,17 +45,27 @@
   background-color: #f4f4f4;
   padding: 10px;
   border-radius: 5px;
+  min-width: 0;
 }
 
 .datasetGroupFieldset {
+  width: 100%;
+  min-width: 0;
   margin-bottom: 10px;
   border: 1px solid #ccc;
   padding: 10px;
 }
 
+.datasetGroupFieldset legend {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
 .radioLabel {
   display: block;
+  max-width: 100%;
   margin: 5px 0;
+  overflow-wrap: anywhere;
 }
 
 .filterTypeSelect {
@@ -275,7 +285,11 @@
   padding: 12px;
   position: sticky;
   top: 12px;
+  min-width: 0;
   max-height: calc(100vh - 24px);
+  max-height: calc(100dvh - 24px);
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .resultsPane {
@@ -307,11 +321,6 @@
   .genoSplit {
     grid-template-columns: minmax(260px, 35%) minmax(0, 1fr);
   }
-
-  .filtersPane {
-    max-height: calc(100dvh - 24px);
-    overflow-y: auto;
-  }
 }
 
 @media (max-width: 768px) {
@@ -325,6 +334,7 @@
     position: static;
     width: 100%;
     max-height: none;
+    overflow: visible;
   }
 
   .resultsPane,
