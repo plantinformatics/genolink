@@ -1,34 +1,151 @@
+.genotypeWorkspace {
+  --geno-accent: #0056b3;
+  --geno-accent-dark: #004494;
+  --geno-border: #ced4da;
+  color: #213547;
+}
+
+.workspaceHeader {
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.workspaceHeader h3 {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 7px;
+}
+
+.genotypeInfo {
+  position: relative;
+  display: inline-flex;
+}
+
+.infoButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: #0056b3;
+  background: transparent;
+  font-size: 17px;
+}
+
+.infoButton:hover,
+.infoButton:focus-visible {
+  color: #004494;
+  background: #e2e6ea;
+  outline: 2px solid #80bdff;
+  outline-offset: 1px;
+}
+
+.infoTooltip {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  z-index: 30;
+  display: flex;
+  visibility: hidden;
+  width: min(340px, calc(100vw - 32px));
+  padding: 12px 14px;
+  border: 1px solid #adb5bd;
+  border-radius: 5px;
+  color: #212529;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  opacity: 0;
+  transform: translateX(-50%) translateY(-3px);
+  flex-direction: column;
+  gap: 7px;
+  font-size: 0.9rem;
+  font-weight: 400;
+  line-height: 1.4;
+  text-align: left;
+  pointer-events: none;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease,
+    visibility 0.15s ease;
+}
+
+.infoTooltip strong {
+  color: #0056b3;
+}
+
+.genotypeInfo:hover .infoTooltip,
+.genotypeInfo:focus-within .infoTooltip {
+  visibility: visible;
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+.selectionHint {
+  margin: 10px 0 0;
+  padding: 10px 14px;
+  border: 1px solid #ffeeba;
+  border-radius: 4px;
+  color: #856404;
+  background-color: #fff3cd;
+  font-size: 1rem;
+}
+
 .platformSelector {
   width: 100%;
   max-width: 1290px;
 }
 
 .serverSummaryBox {
-  border: 1px solid #ccc;
-  margin: 8px 0;
-  padding: 8px;
-  border-radius: 4px;
+  border: 1px solid var(--geno-border);
+  border-left: 3px solid var(--geno-accent);
+  margin: 10px 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #f4f4f4;
   overflow-wrap: anywhere;
 }
 
+.serverSummaryBox h4,
+.serverSummaryBox h5 {
+  margin: 3px 0;
+}
+
+.filtersPane .serverSummaryBox h4 {
+  font-size: 0.95rem;
+}
+
+.serverSummaryBox h5 {
+  font-size: 0.85rem;
+}
+
 .copySampleButton {
-  margin-left: 10px;
-  padding: 5px;
-  font-size: 16px;
+  margin: 4px 0 12px;
+  padding: 7px 10px;
+  font-size: 14px;
   display: inline-flex;
   align-items: center;
   border: 1px solid #6c757d;
   border-radius: 5px;
-  background-color: transparent;
-  color: #6c757d;
+  background-color: #fff;
+  color: var(--geno-accent);
   cursor: pointer;
   transition: background-color 0.2s, color 0.2s, border-color 0.2s;
 }
 
 .copySampleButton:hover {
   background-color: #e2e6ea;
-  border-color: #5a6268;
-  color: #343a40;
+  border-color: var(--geno-accent);
+  color: var(--geno-accent-dark);
 }
 
 .copyIcon {
@@ -43,8 +160,9 @@
 
 .datasetSelectorContainer {
   background-color: #f4f4f4;
-  padding: 10px;
-  border-radius: 5px;
+  padding: 12px;
+  border: 1px solid var(--geno-border);
+  border-radius: 7px;
   min-width: 0;
 }
 
@@ -53,12 +171,18 @@
   min-width: 0;
   margin-bottom: 10px;
   border: 1px solid #ccc;
-  padding: 10px;
+  padding: 8px 10px 10px;
+  border-radius: 5px;
+  background: #fff;
 }
 
 .datasetGroupFieldset legend {
   max-width: 100%;
   overflow-wrap: anywhere;
+  padding: 0 5px;
+  color: #333;
+  font-size: 0.8rem;
+  font-weight: 700;
 }
 
 .radioLabel {
@@ -66,6 +190,13 @@
   max-width: 100%;
   margin: 5px 0;
   overflow-wrap: anywhere;
+  line-height: 1.35;
+  cursor: pointer;
+}
+
+.radioLabel input {
+  margin-right: 7px;
+  accent-color: var(--geno-accent);
 }
 
 .filterTypeSelect {
@@ -73,7 +204,7 @@
   width: 100%;
   padding: 0.5rem 2rem 0.5rem 0.75rem;
   border: 1px solid #767676;
-  border-radius: 0.375rem;
+  border-radius: 5px;
   background-color: white;
   color: #212529;
   color-scheme: light;
@@ -108,16 +239,24 @@
 
 .searchContainer {
   display: flex;
-  align-items: center;
+  align-items: stretch;
+  flex-direction: column;
   gap: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #c8ced1;
+}
+
+.searchActions {
+  display: flex;
+  gap: 8px;
+}
+
+.searchActions button {
+  flex: 1 1 0;
 }
 
 @media (max-width: 768px) {
-  .searchContainer {
-    flex-direction: column;
-  }
-
   .searchContainer select,
   .searchContainer button {
     width: 100%;
@@ -214,19 +353,21 @@
 }
 
 .buttonPrimary {
-  background-color: #0056b3;
+  background-color: var(--geno-accent);
   color: white;
   border: none;
   padding: 10px 20px;
   font-size: 1rem;
   font-family: inherit;
+  border: 1px solid var(--geno-accent);
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.2s ease-in-out;
 }
 
 .buttonPrimary:hover {
-  background-color: #004494;
+  background-color: var(--geno-accent-dark);
+  border-color: var(--geno-accent-dark);
 }
 
 .buttonPrimary:focus {
@@ -276,13 +417,50 @@
 
 .genoSplit {
   display: grid;
-  grid-template-columns: minmax(280px, 1fr) minmax(0, 4fr);
+  grid-template-columns:
+    clamp(260px, var(--filter-pane-width, 320px), min(55%, 700px))
+    18px minmax(0, 1fr);
+  gap: 0;
   align-items: start;
+}
+
+.paneResizeHandle {
+  position: relative;
+  align-self: stretch;
+  min-height: 360px;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.paneResizeHandle::before {
+  content: "";
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  left: 50%;
+  width: 3px;
+  border-radius: 999px;
+  background: #adb5bd;
+  transform: translateX(-50%);
+  transition:
+    width 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.paneResizeHandle:hover::before,
+.paneResizeHandle:focus-visible::before {
+  width: 5px;
+  background: #0056b3;
+}
+
+.paneResizeHandle:focus-visible {
+  outline: 2px solid #80bdff;
+  outline-offset: -4px;
 }
 
 .filtersPane {
   background: #eff2f3;
-  padding: 12px;
+  padding: 16px;
   position: sticky;
   top: 12px;
   min-width: 0;
@@ -290,20 +468,62 @@
   max-height: calc(100dvh - 24px);
   overflow-x: hidden;
   overflow-y: auto;
+  border: 1px solid var(--geno-border);
+  border-radius: 5px;
+  box-shadow: 0 3px 4px rgba(0, 0, 0, 0.08);
+}
+
+.filtersPane h3 {
+  font-size: 1.1rem;
+}
+
+.filtersPane h4 {
+  font-size: 1rem;
+}
+
+.serverFoundName {
+  margin: 4px 0;
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
 }
 
 .resultsPane {
   background: #eff2f3;
   min-width: 0;
+  min-height: 360px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  border: 1px solid var(--geno-border);
+  border-radius: 5px;
+  box-shadow: 0 3px 4px rgba(0, 0, 0, 0.08);
+}
+
+.paneHeader {
+  padding-bottom: 12px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid #c8ced1;
+  text-align: left;
+}
+
+.paneHeader h4 {
+  margin: 0;
+}
+
+.paneHeader h4,
+.filtersPane h3,
+.datasetSelectorContainer > h4 {
+  font-size: 1.15rem;
 }
 
 .resultsArea {
-  border-left: 3px solid gray;
-  padding: 8px;
+  padding: 0;
   min-height: 240px;
+  border: 1px solid #dce4e1;
+  border-radius: 6px;
+  background: #fff;
+  overflow: hidden;
 }
 
 .tableScroll {
@@ -315,11 +535,28 @@
   display: flex;
   gap: 8px;
   align-items: center;
+  justify-content: flex-start;
+  padding: 12px;
+  border: 1px solid var(--geno-border);
+  border-radius: 6px;
+  background: #f4f4f4;
+}
+
+.exportBar select,
+.filtersPane select {
+  min-height: 38px;
+  max-width: 100%;
+  padding: 6px 32px 6px 10px;
+  border: 1px solid #767676;
+  border-radius: 5px;
+  background-color: #fff;
 }
 
 @media (max-width: 1024px) {
   .genoSplit {
-    grid-template-columns: minmax(260px, 35%) minmax(0, 1fr);
+    grid-template-columns:
+      clamp(260px, var(--filter-pane-width, 320px), 45%)
+      18px minmax(0, 1fr);
   }
 }
 
@@ -328,6 +565,10 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+  }
+
+  .paneResizeHandle {
+    display: none;
   }
 
   .filtersPane {
@@ -344,8 +585,6 @@
 
   .resultsArea {
     min-height: 0;
-    border-left: 0;
-    border-top: 3px solid gray;
   }
 
   .tableScroll {
