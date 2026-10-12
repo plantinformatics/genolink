@@ -335,7 +335,6 @@ const GenotypeExplorer = () => {
 
     fetchAllLinkageGroups();
   }, [
-    genomData,
     selectedOption,
     selectedGigwaServers,
     selectedStudyDbId,
@@ -795,6 +794,10 @@ const GenotypeExplorer = () => {
               idx: originalIndex,
             }))
             .filter(({ idx }) => {
+              // A first-page request represents a new search and must not be
+              // blocked by page counts from the previous filter criteria.
+              if (page === 1) return true;
+
               const pages = pagesPerServer?.[idx];
               return !(Array.isArray(pages) && page > pages.length);
             })
@@ -929,8 +932,9 @@ const GenotypeExplorer = () => {
 
         const variantResponses = await Promise.all(fetchVariantRequests);
 
-        // Initialize pagesPerServer once (typically on first call)
-        if (pagesPerServer.length === 0) {
+        // Refresh pagination for every new search because different filters
+        // can produce a different number of variants, including zero.
+        if (page === 1 || pagesPerServer.length === 0) {
           const newPagesPerServer = alleleResponses.map((server) => {
             const varPag = server?.result?.pagination?.find(
               (p) => (p.dimension || "").toUpperCase() === "VARIANTS",
