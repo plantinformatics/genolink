@@ -1,13 +1,19 @@
+.resultsTableContainer {
+  width: 100%;
+  background-color: #eff2f3;
+}
+
 .table {
   width: 100%;
   margin-bottom: 1rem;
   color: #212529;
   border-collapse: collapse;
+  background: #fff;
 }
 
 .table th,
 .table td {
-  padding: 0.75rem;
+  padding: 0.65rem 0.75rem;
   vertical-align: top;
   border-top: 1px solid #dee2e6;
 }
@@ -69,11 +75,13 @@
   margin-top: 5px;
 }
 
-table thead th {
+.table thead th {
   font-family: Roboto, sans-serif;
   position: sticky;
-  top: 0;
-  background-color: #add8e6;
+  top: -1px;
+  background-color: lightblue;
+  background-clip: border-box;
+  box-shadow: 0 -2px 0 lightblue;
   z-index: 10;
 }
 
@@ -102,14 +110,14 @@ table thead th {
 
 .btnPrimary {
   color: #fff;
-  background-color: #007bff;
-  border-color: #007bff;
+  background-color: #0056b3;
+  border-color: #0056b3;
 }
 
 .btnPrimary:hover {
   color: #fff;
-  background-color: #0069d9;
-  border-color: #0062cc;
+  background-color: #0b5ed7;
+  border-color: #0a58ca;
 }
 
 .btnPrimaryActive {
@@ -127,5 +135,8 @@ table thead th {
 }
 
 .dFlex {
-  display: flex;
+  display: inline-flex;
+  max-width: 100%;
+  flex-wrap: wrap;
+  background-color: #eff2f3;
 }

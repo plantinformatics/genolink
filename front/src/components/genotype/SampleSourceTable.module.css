@@ -13,6 +13,7 @@
   color: #212529;
   border-collapse: collapse;
   min-width: max-content;
+  background: #fff;
 }
 
 .table th,
@@ -25,8 +26,10 @@
 .table thead th {
   font-family: Roboto, sans-serif;
   position: sticky;
-  top: 0;
-  background-color: #add8e6;
+  top: -1px;
+  background-color: lightblue;
+  background-clip: border-box;
+  box-shadow: 0 -2px 0 lightblue;
   z-index: 10;
   white-space: nowrap;
 }

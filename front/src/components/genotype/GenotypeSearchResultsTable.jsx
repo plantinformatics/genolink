@@ -162,7 +162,7 @@ const GenotypeSearchResultsTable = ({ variantPageSize }) => {
   };
 
   return (
-    <div>
+    <div className={styles.resultsTableContainer}>
       <div className={styles.tableWrapper}>
         {platform === "Gigwa" ? (
           <table
