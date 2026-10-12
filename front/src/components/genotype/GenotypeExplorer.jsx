@@ -187,6 +187,21 @@ const GenotypeExplorer = () => {
         )
       : [];
   }, [searchResults, checkedAccessions]);
+  const hasEmptyAlleleMatrixResult = useMemo(() => {
+    if (!Array.isArray(alleleData) || alleleData.length === 0) return false;
+
+    return alleleData.every((response) => {
+      const result = response?.result;
+      const hasVariantIds =
+        Array.isArray(result?.variantDbIds) && result.variantDbIds.length > 0;
+      const hasMatrixData = result?.dataMatrices?.some(
+        (matrix) =>
+          Array.isArray(matrix?.dataMatrix) && matrix.dataMatrix.length > 0,
+      );
+
+      return !hasVariantIds && !hasMatrixData;
+    });
+  }, [alleleData]);
   const dispatch = useDispatch();
 
   const getFilterPaneWidthBounds = useCallback(() => {
@@ -1461,6 +1476,18 @@ const GenotypeExplorer = () => {
                   <div className={styles.tableScroll}>
                     <SampleSourceTable sampleSourceData={sampleSourceData} />
                   </div>
+                </div>
+              )}
+            {selectedOption === "Gigwa" &&
+              !isGenomDataLoading &&
+              genomData.length === 0 &&
+              hasEmptyAlleleMatrixResult && (
+                <div className={styles.emptyResults} role="status">
+                  <strong>No genotype data found.</strong>
+                  <span>
+                    No variants matched the selected filters or variant IDs.
+                    Try adjusting your search.
+                  </span>
                 </div>
               )}
           </main>

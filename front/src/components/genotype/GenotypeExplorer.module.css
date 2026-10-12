@@ -526,6 +526,26 @@
   overflow: hidden;
 }
 
+.emptyResults {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 18px 20px;
+  border: 1px solid #ffeeba;
+  border-radius: 5px;
+  color: #856404;
+  background: #fff3cd;
+  text-align: left;
+}
+
+.emptyResults strong {
+  font-size: 1rem;
+}
+
+.emptyResults span {
+  font-size: 0.95rem;
+}
+
 .tableScroll {
   overflow-x: auto;
   overflow-y: hidden;
