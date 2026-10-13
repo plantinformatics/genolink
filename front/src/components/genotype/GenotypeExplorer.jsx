@@ -13,7 +13,12 @@ import { linkageGroupFilter } from "./filters/LinkageGroupFilter";
 import PositionRangeFilter from "./filters/PositionRangeFilter";
 import VariantListFilter from "./filters/VariantListFilter";
 
-import { faUser, faLock, faCopy } from "@fortawesome/free-solid-svg-icons";
+import {
+  faUser,
+  faLock,
+  faCopy,
+  faCircleInfo,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import GenolinkGigwaApi from "../../api/GenolinkGigwaApi";
@@ -24,6 +29,9 @@ import styles from "./GenotypeExplorer.module.css";
 import SampleSourceTable from "./SampleSourceTable";
 
 const MAX_GIGWA_ACCESSIONS = 1000;
+const MIN_FILTER_PANE_WIDTH = 260;
+const MAX_FILTER_PANE_WIDTH = 700;
+const FILTER_PANE_RESIZE_STEP = 20;
 
 const getGenotypeIdFromCallset = (callset) =>
   callset?.germplasmDbId?.split("§")?.[1] ?? "";
@@ -115,6 +123,7 @@ const GenotypeExplorer = () => {
   const [callsetPageSize, setCallsetPageSize] = useState(
     MAX_GIGWA_ACCESSIONS,
   );
+  const [filterPaneWidth, setFilterPaneWidth] = useState(320);
 
   const selectedOption = useSelector((state) => state.genotype.selectedOption);
   const genomData = useSelector((state) => state.genotype.genomData);
@@ -168,6 +177,8 @@ const GenotypeExplorer = () => {
   );
 
   const genolinkGigwaApisRef = useRef({});
+  const genoSplitRef = useRef(null);
+  const resizePointerRef = useRef(null);
   const checkedAccessions = Object.keys(checkedAccessionsObject);
   const checkedResults = useMemo(() => {
     return Array.isArray(searchResults)
@@ -176,7 +187,93 @@ const GenotypeExplorer = () => {
         )
       : [];
   }, [searchResults, checkedAccessions]);
+  const hasEmptyAlleleMatrixResult = useMemo(() => {
+    if (!Array.isArray(alleleData) || alleleData.length === 0) return false;
+
+    return alleleData.every((response) => {
+      const result = response?.result;
+      const hasVariantIds =
+        Array.isArray(result?.variantDbIds) && result.variantDbIds.length > 0;
+      const hasMatrixData = result?.dataMatrices?.some(
+        (matrix) =>
+          Array.isArray(matrix?.dataMatrix) && matrix.dataMatrix.length > 0,
+      );
+
+      return !hasVariantIds && !hasMatrixData;
+    });
+  }, [alleleData]);
   const dispatch = useDispatch();
+
+  const getFilterPaneWidthBounds = useCallback(() => {
+    const containerWidth = genoSplitRef.current?.getBoundingClientRect().width;
+    const maxRatio = window.innerWidth <= 1024 ? 0.45 : 0.55;
+
+    return {
+      min: MIN_FILTER_PANE_WIDTH,
+      max: Math.max(
+        MIN_FILTER_PANE_WIDTH,
+        Math.min(MAX_FILTER_PANE_WIDTH, (containerWidth || 0) * maxRatio),
+      ),
+    };
+  }, []);
+
+  const resizeFilterPane = useCallback(
+    (clientX) => {
+      const containerLeft =
+        genoSplitRef.current?.getBoundingClientRect().left || 0;
+      const { min, max } = getFilterPaneWidthBounds();
+      setFilterPaneWidth(Math.min(max, Math.max(min, clientX - containerLeft)));
+    },
+    [getFilterPaneWidthBounds],
+  );
+
+  const handleResizePointerDown = useCallback((event) => {
+    resizePointerRef.current = event.pointerId;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    event.preventDefault();
+  }, []);
+
+  const handleResizePointerMove = useCallback(
+    (event) => {
+      if (resizePointerRef.current === event.pointerId) {
+        resizeFilterPane(event.clientX);
+      }
+    },
+    [resizeFilterPane],
+  );
+
+  const handleResizePointerUp = useCallback((event) => {
+    if (resizePointerRef.current !== event.pointerId) return;
+
+    resizePointerRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  }, []);
+
+  const handleResizeKeyDown = useCallback(
+    (event) => {
+      const { min, max } = getFilterPaneWidthBounds();
+      let nextWidth = filterPaneWidth;
+
+      if (event.key === "ArrowLeft") {
+        nextWidth -= FILTER_PANE_RESIZE_STEP;
+      } else if (event.key === "ArrowRight") {
+        nextWidth += FILTER_PANE_RESIZE_STEP;
+      } else if (event.key === "Home") {
+        nextWidth = min;
+      } else if (event.key === "End") {
+        nextWidth = max;
+      } else {
+        return;
+      }
+
+      event.preventDefault();
+      setFilterPaneWidth(Math.min(max, Math.max(min, nextWidth)));
+    },
+    [filterPaneWidth, getFilterPaneWidthBounds],
+  );
+
   useEffect(() => {
     if (selectedOption === "Gigwa" && isGenomeSearchSubmit) {
       fetchData(genotypeCurrentPage);
@@ -238,7 +335,6 @@ const GenotypeExplorer = () => {
 
     fetchAllLinkageGroups();
   }, [
-    genomData,
     selectedOption,
     selectedGigwaServers,
     selectedStudyDbId,
@@ -698,6 +794,10 @@ const GenotypeExplorer = () => {
               idx: originalIndex,
             }))
             .filter(({ idx }) => {
+              // A first-page request represents a new search and must not be
+              // blocked by page counts from the previous filter criteria.
+              if (page === 1) return true;
+
               const pages = pagesPerServer?.[idx];
               return !(Array.isArray(pages) && page > pages.length);
             })
@@ -832,8 +932,9 @@ const GenotypeExplorer = () => {
 
         const variantResponses = await Promise.all(fetchVariantRequests);
 
-        // Initialize pagesPerServer once (typically on first call)
-        if (pagesPerServer.length === 0) {
+        // Refresh pagination for every new search because different filters
+        // can produce a different number of variants, including zero.
+        if (page === 1 || pagesPerServer.length === 0) {
           const newPagesPerServer = alleleResponses.map((server) => {
             const varPag = server?.result?.pagination?.find(
               (p) => (p.dimension || "").toUpperCase() === "VARIANTS",
@@ -982,13 +1083,57 @@ const GenotypeExplorer = () => {
 
   return (
     Array.isArray(searchResults) && (
-      <div>
-        <h3>Genotype Data</h3>
-        <br />
+      <div className={styles.genotypeWorkspace}>
+        <header className={styles.workspaceHeader}>
+          <div className={styles.titleRow}>
+            <h3>Genotype Data</h3>
+            <span className={styles.genotypeInfo}>
+              <button
+                type="button"
+                className={styles.infoButton}
+                aria-label="How to use Genotype Data"
+                aria-describedby="genotype-data-tip"
+              >
+                <FontAwesomeIcon icon={faCircleInfo} />
+              </button>
+              <span
+                id="genotype-data-tip"
+                className={styles.infoTooltip}
+                role="tooltip"
+              >
+                <strong>How it works</strong>
+                <span>
+                  Selected accessions with genotype IDs reveal matching
+                  servers.
+                </span>
+                <span>
+                  Select Lookup Data to find available Gigwa projects and
+                  datasets.
+                </span>
+                <span>
+                  Apply genotype filters, then select Search Genotype to view
+                  results.
+                </span>
+              </span>
+            </span>
+          </div>
+          {checkedAccessions.length === 0 && (
+            <p className={styles.selectionHint} role="alert">
+              Select accessions in Passport Data to begin.
+            </p>
+          )}
+        </header>
         {isLoading && <LoadingComponent />}
-        <div className={styles.genoSplit}>
+        <div
+          ref={genoSplitRef}
+          className={styles.genoSplit}
+          style={{ "--filter-pane-width": `${filterPaneWidth}px` }}
+        >
           {/* LEFT: FILTERS */}
           <aside className={styles.filtersPane}>
+            <div className={styles.paneHeader}>
+              <h4>Filters</h4>
+            </div>
             <div className={styles.searchContainer}>
               {platforms.length > 1 && (
                 <select
@@ -1014,7 +1159,7 @@ const GenotypeExplorer = () => {
                 </button>
               ) : (
                 //  {isGenomeSearchSubmit ? "Search Genotype" :
-                <div style={{ display: "flex", gap: "10px" }}>
+                <div className={styles.searchActions}>
                   <button
                     type="button"
                     className={styles.buttonPrimary}
@@ -1038,7 +1183,9 @@ const GenotypeExplorer = () => {
                 {selectedGigwaServers.length > 0 && <h4>Server found:</h4>}
                 {selectedGigwaServers.map((server, index) => (
                   <div key={server} style={{ marginBottom: "15px" }}>
-                    <h5>{server?.replace(/^https?:\/\//, "")}</h5>
+                    <h5 className={styles.serverFoundName}>
+                      {server?.replace(/^https?:\/\//, "")}
+                    </h5>
                     {REQUIRE_GIGWA_CREDENTIALS && (
                       <>
                         <div className={styles.accessModeToggle}>
@@ -1257,8 +1404,27 @@ const GenotypeExplorer = () => {
             )}
           </aside>
 
+          <div
+            className={styles.paneResizeHandle}
+            role="separator"
+            aria-label="Resize filters and results panes"
+            aria-orientation="vertical"
+            aria-valuemin={MIN_FILTER_PANE_WIDTH}
+            aria-valuemax={MAX_FILTER_PANE_WIDTH}
+            aria-valuenow={Math.round(filterPaneWidth)}
+            tabIndex={0}
+            onPointerDown={handleResizePointerDown}
+            onPointerMove={handleResizePointerMove}
+            onPointerUp={handleResizePointerUp}
+            onPointerCancel={handleResizePointerUp}
+            onKeyDown={handleResizeKeyDown}
+          />
+
           {/* RIGHT: RESULTS */}
           <main className={styles.resultsPane}>
+            <div className={styles.paneHeader}>
+              <h4>Results</h4>
+            </div>
             {isGenomDataLoading && <LoadingComponent />}
 
             {genomData.length > 0 &&
@@ -1293,7 +1459,6 @@ const GenotypeExplorer = () => {
                     </select>
                     <button
                       onClick={handleExportVCF}
-                      style={{ marginLeft: "10px", padding: "3px 10px" }}
                       className={styles.buttonPrimary}
                     >
                       Export VCF
@@ -1315,6 +1480,18 @@ const GenotypeExplorer = () => {
                   <div className={styles.tableScroll}>
                     <SampleSourceTable sampleSourceData={sampleSourceData} />
                   </div>
+                </div>
+              )}
+            {selectedOption === "Gigwa" &&
+              !isGenomDataLoading &&
+              genomData.length === 0 &&
+              hasEmptyAlleleMatrixResult && (
+                <div className={styles.emptyResults} role="status">
+                  <strong>No genotype data found.</strong>
+                  <span>
+                    No variants matched the selected filters or variant IDs.
+                    Try adjusting your search.
+                  </span>
                 </div>
               )}
           </main>

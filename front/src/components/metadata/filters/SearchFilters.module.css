@@ -488,7 +488,7 @@
 .genotypeResultContainer {
   background: linear-gradient(to right, #eef1f2, #f1f3f4, #f3f6f7);
   padding: 10px;
-  height: 100vh;
+  min-height: 100vh;
 }
 
 .footerSection {

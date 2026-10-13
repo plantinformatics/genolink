@@ -23,8 +23,15 @@
 .tableHead {
   background-color: lightblue;
   position: sticky;
-  top: 0;
+  top: -1px;
   z-index: 2;
+}
+
+.tableHead th {
+  top: -1px;
+  background-color: lightblue;
+  background-clip: border-box;
+  box-shadow: 0 -2px 0 lightblue;
 }
 
 .fixedCheckboxHeader {

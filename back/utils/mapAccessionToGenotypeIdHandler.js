@@ -25,7 +25,7 @@ const mapAccessionToGenotypeIdHandler = async (req, res) => {
           "Mapping for given accessions not found or no completed accessions. Ensure accessions and samples are imported.",
       });
       logger.info(
-        "No sample accessions found for the provided list or none are completed."
+        "No sample accessions found for the provided list or none are completed.",
       );
       return;
     }
@@ -37,9 +37,6 @@ const mapAccessionToGenotypeIdHandler = async (req, res) => {
     }));
 
     res.status(200).send({ Samples: samples });
-    logger.info(
-      `Accessions mapped successfully for request: ${JSON.stringify(req.body)}`
-    );
   } catch (error) {
     logger.error("Error fetching samples:", error);
     res.status(500).send({ message: "Internal server error" });
