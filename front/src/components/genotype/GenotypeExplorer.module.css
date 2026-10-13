@@ -252,8 +252,14 @@
   gap: 8px;
 }
 
+.searchContainer > .buttonPrimary,
 .searchActions button {
   flex: 1 1 0;
+  padding: 7px 12px;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
 }
 
 @media (max-width: 768px) {
