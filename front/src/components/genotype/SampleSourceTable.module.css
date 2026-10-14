@@ -48,10 +48,47 @@
   white-space: nowrap;
 }
 
+.table tbody .groupHeaderRow {
+  background-color: #eef4f7;
+  font-weight: 600;
+}
+
+.groupHeaderRow td {
+  border-top: 2px solid #b8cbd4;
+  border-bottom-color: #cbd8de;
+}
+
+.table tbody .childRow {
+  background-color: #f9fbfc;
+}
+
+.childRow td {
+  border-top-color: #e7ecef;
+}
+
+.childIndicator {
+  color: #6c757d;
+  font-size: 0.95rem;
+  padding-left: 1.25rem !important;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.genotypeCell {
+  padding-left: 1rem !important;
+}
+
 .tickCell {
   white-space: nowrap;
   text-align: left;
   padding-right: 15px;
+}
+
+.noMembership {
+  color: #89939c;
+  display: inline-block;
+  text-align: center;
+  width: 26px;
 }
 
 .tickBadge {
