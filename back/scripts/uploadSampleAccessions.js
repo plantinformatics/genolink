@@ -7,6 +7,9 @@ const {
   parseDatasetDois,
   setDatasetDois,
 } = require("../utils/datasetDoiCsv");
+const {
+  reconcileSampleAccession,
+} = require("../utils/reconcileSampleAccession");
 
 const csvFilePath = process.argv[2];
 
@@ -28,7 +31,11 @@ const parseCSV = (filePath) => {
         const accession = data.accession?.trim();
         const sample = data.sample?.trim() || null;
         const status = data.status?.trim();
-        const serverUrl = data.serverUrl?.trim() || null;
+        const hasServerUrl = Object.prototype.hasOwnProperty.call(
+          data,
+          "serverUrl",
+        );
+        const serverUrl = hasServerUrl ? data.serverUrl?.trim() || null : null;
         const { supplied: hasDatasetDois, dois: datasetDois } =
           parseDatasetDois(data);
 
@@ -48,6 +55,7 @@ const parseCSV = (filePath) => {
           Accession: accession,
           Sample: sample,
           Status: status,
+          hasServerUrl,
           ServerUrl: serverUrl,
           hasDatasetDois,
           datasetDois,
@@ -71,25 +79,31 @@ const parseCSV = (filePath) => {
     }
 
     transaction = await db.sequelize.transaction();
-    let inserted = 0;
+    const summary = {
+      created: 0,
+      updated: 0,
+      "resolved-placeholder": 0,
+      removedPlaceholders: 0,
+    };
 
     for (const row of sampleAccessions) {
-      const { hasDatasetDois, datasetDois, ...values } = row;
-      const [sampleAccession, created] = await db.SampleAccession.findOrCreate({
-        where: { Accession: values.Accession, Sample: values.Sample },
-        defaults: values,
+      const result = await reconcileSampleAccession({
+        db,
+        incoming: row,
         transaction,
+        setDatasetDois,
       });
-
-      if (created) inserted += 1;
-      if (hasDatasetDois) {
-        await setDatasetDois(db, sampleAccession, datasetDois, transaction);
-      }
+      summary[result.action] += 1;
+      summary.removedPlaceholders += result.removedPlaceholders;
     }
 
     await transaction.commit();
 
-    console.log(`${inserted} sample accessions inserted.`);
+    console.log(
+      `${summary.created} created, ${summary.updated} updated, ` +
+        `${summary["resolved-placeholder"]} placeholders resolved, ` +
+        `${summary.removedPlaceholders} extra placeholders removed.`,
+    );
     process.exit(0);
   } catch (err) {
     if (transaction) await transaction.rollback();

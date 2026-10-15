@@ -6,6 +6,10 @@ const {
   parseDatasetDois,
   setDatasetDois,
 } = require("../utils/datasetDoiCsv");
+const {
+  PLACEHOLDER_STATUSES,
+  reconcileSampleAccession,
+} = require("../utils/reconcileSampleAccession");
 
 const csvFilePath = process.argv[2];
 const isDryRun = process.argv.includes("--dry");
@@ -141,15 +145,20 @@ function parseCSV(filePath) {
         (r) => normalize(r.Sample) === normalize(incoming.Sample),
       );
 
-      let target = exact || rows.find((r) => r.Sample == null) || rows[0];
+      const placeholder = rows.find(
+        (r) =>
+          normalize(r.Sample) === null &&
+          PLACEHOLDER_STATUSES.includes(r.Status),
+      );
+      const target = exact || (incoming.Sample ? placeholder : null);
 
-      const oldSampleN = normalize(target.Sample);
+      const oldSampleN = normalize(target?.Sample);
       const newSampleN = normalize(incoming.Sample);
 
-      const oldStatusN = normalize(target.Status);
+      const oldStatusN = normalize(target?.Status);
       const newStatusN = normalize(incoming.Status);
 
-      const oldServerUrlN = normalize(target.ServerUrl);
+      const oldServerUrlN = normalize(target?.ServerUrl);
 
       const newServerUrlN = normalize(incoming.ServerUrl);
 
@@ -157,7 +166,7 @@ function parseCSV(filePath) {
         incoming.hasServerUrl && oldServerUrlN !== newServerUrlN;
 
       let datasetDoisChanged = false;
-      if (incoming.hasDatasetDois) {
+      if (incoming.hasDatasetDois && target) {
         const currentDatasetDois = await target.getDatasetDois({
           attributes: ["Doi"],
           joinTableAttributes: [],
@@ -167,27 +176,40 @@ function parseCSV(filePath) {
         datasetDoisChanged =
           oldDois.length !== newDois.length ||
           oldDois.some((doi, index) => doi !== newDois[index]);
+      } else if (incoming.hasDatasetDois) {
+        datasetDoisChanged = incoming.datasetDois.length > 0;
       }
+
+      const needsPlaceholderCleanup =
+        newSampleN !== null &&
+        rows.some(
+          (row) =>
+            row.id !== target?.id &&
+            normalize(row.Sample) === null &&
+            PLACEHOLDER_STATUSES.includes(row.Status),
+        );
 
       // Only enqueue if something actually changes
       if (
+        !target ||
         oldSampleN !== newSampleN ||
         oldStatusN !== newStatusN ||
         serverUrlChanged ||
-        datasetDoisChanged
+        datasetDoisChanged ||
+        needsPlaceholderCleanup
       ) {
         plan.push({
           target,
           incoming,
           meta: {
-            id: target.id,
+            id: target?.id ?? null,
             Accession: acc,
-            fromSample: target.Sample,
+            fromSample: target?.Sample ?? null,
             toSample: incoming.Sample,
-            fromStatus: target.Status,
+            fromStatus: target?.Status ?? null,
             toStatus: incoming.Status,
             hasServerUrl: incoming.hasServerUrl,
-            fromServerUrl: target.ServerUrl,
+            fromServerUrl: target?.ServerUrl ?? null,
             toServerUrl: incoming.ServerUrl,
             datasetDoisChanged,
             toDatasetDois: incoming.datasetDois,
@@ -217,7 +239,7 @@ function parseCSV(filePath) {
         : "";
 
       console.log(
-        `${i + 1}. [${m.Accession}] id=${m.id} Sample: ${
+        `${i + 1}. [${m.Accession}] id=${m.id ?? "NEW"} Sample: ${
           m.fromSample ?? "NULL"
         } -> ${m.toSample ?? "NULL"} | Status: ${m.fromStatus} -> ${
           m.toStatus
@@ -233,75 +255,30 @@ function parseCSV(filePath) {
 
     t = await db.sequelize.transaction();
 
-    for (const { target, incoming } of plan) {
-      const desiredSampleN = normalize(incoming.Sample);
-      const targetSampleN = normalize(target.Sample);
+    const summary = {
+      created: 0,
+      updated: 0,
+      "resolved-placeholder": 0,
+      removedPlaceholders: 0,
+    };
 
-      // Build change set (only changed fields)
-      const changes = {};
-      if (targetSampleN !== desiredSampleN) {
-        // If switching Sample, check for unique (Accession, Sample) clash
-        if (desiredSampleN) {
-          const clash = await db.SampleAccession.findOne({
-            where: {
-              Accession: target.Accession,
-              Sample: incoming.Sample, // use the raw (already normalized by parse) value
-              id: { [Op.ne]: target.id },
-            },
-            transaction: t,
-            lock: t.LOCK.UPDATE,
-          });
-
-          if (clash) {
-            // Another row already has this (Accession, Sample).
-            // Update ONLY the matching row's fields; leave the current target's Sample as-is to avoid unique violation.
-            const clashChanges = {};
-
-            if (normalize(clash.Status) !== normalize(incoming.Status)) {
-              clashChanges.Status = incoming.Status;
-            }
-
-            if (
-              incoming.hasServerUrl &&
-              normalize(clash.ServerUrl) !== normalize(incoming.ServerUrl)
-            ) {
-              clashChanges.ServerUrl = incoming.ServerUrl;
-            }
-
-            if (Object.keys(clashChanges).length > 0) {
-              await clash.update(clashChanges, { transaction: t });
-            }
-            if (incoming.hasDatasetDois) {
-              await setDatasetDois(db, clash, incoming.datasetDois, t);
-            }
-            // Skip changing the target in this case.
-            continue;
-          }
-        }
-
-        changes.Sample = incoming.Sample; // set to normalized CSV value (trimmed, collapsed spaces)
-      }
-
-      if (normalize(target.Status) !== normalize(incoming.Status)) {
-        changes.Status = incoming.Status;
-      }
-      if (
-        incoming.hasServerUrl &&
-        normalize(target.ServerUrl) !== normalize(incoming.ServerUrl)
-      ) {
-        changes.ServerUrl = incoming.ServerUrl;
-      }
-
-      if (Object.keys(changes).length > 0) {
-        await target.update(changes, { transaction: t });
-      }
-      if (incoming.hasDatasetDois) {
-        await setDatasetDois(db, target, incoming.datasetDois, t);
-      }
+    for (const { incoming } of plan) {
+      const result = await reconcileSampleAccession({
+        db,
+        incoming,
+        transaction: t,
+        setDatasetDois,
+      });
+      summary[result.action] += 1;
+      summary.removedPlaceholders += result.removedPlaceholders;
     }
 
     await t.commit();
-    console.log(`Updated ${plan.length} row(s).`);
+    console.log(
+      `${summary.created} created, ${summary.updated} updated, ` +
+        `${summary["resolved-placeholder"]} placeholders resolved, ` +
+        `${summary.removedPlaceholders} extra placeholders removed.`,
+    );
     process.exit(0);
   } catch (err) {
     if (t) await t.rollback();
