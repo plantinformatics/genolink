@@ -10,6 +10,7 @@ const {
   PLACEHOLDER_STATUSES,
   reconcileSampleAccession,
 } = require("../utils/reconcileSampleAccession");
+const { parsePreferredAlias } = require("../utils/preferredAliasCsv");
 
 const csvFilePath = process.argv[2];
 const isDryRun = process.argv.includes("--dry");
@@ -58,6 +59,8 @@ function parseCSV(filePath) {
         const serverUrl = hasServerUrl ? normalize(raw.serverUrl) : undefined;
         const { supplied: hasDatasetDois, dois: datasetDois } =
           parseDatasetDois(raw);
+        const { supplied: hasPreferredAlias, value: preferredAlias } =
+          parsePreferredAlias(raw);
 
         if (!accession) {
           console.warn("Skipped row with missing accession:", raw);
@@ -78,6 +81,8 @@ function parseCSV(filePath) {
           ServerUrl: serverUrl,
           hasDatasetDois,
           datasetDois,
+          hasPreferredAlias,
+          PreferredAlias: preferredAlias,
         });
       })
       .on("end", () => resolve(rows))
@@ -165,6 +170,12 @@ function parseCSV(filePath) {
       const serverUrlChanged =
         incoming.hasServerUrl && oldServerUrlN !== newServerUrlN;
 
+      const oldPreferredAliasN = normalize(target?.PreferredAlias);
+      const newPreferredAliasN = normalize(incoming.PreferredAlias);
+      const preferredAliasChanged =
+        incoming.hasPreferredAlias &&
+        oldPreferredAliasN !== newPreferredAliasN;
+
       let datasetDoisChanged = false;
       if (incoming.hasDatasetDois && target) {
         const currentDatasetDois = await target.getDatasetDois({
@@ -195,6 +206,7 @@ function parseCSV(filePath) {
         oldSampleN !== newSampleN ||
         oldStatusN !== newStatusN ||
         serverUrlChanged ||
+        preferredAliasChanged ||
         datasetDoisChanged ||
         needsPlaceholderCleanup
       ) {
@@ -211,6 +223,9 @@ function parseCSV(filePath) {
             hasServerUrl: incoming.hasServerUrl,
             fromServerUrl: target?.ServerUrl ?? null,
             toServerUrl: incoming.ServerUrl,
+            hasPreferredAlias: incoming.hasPreferredAlias,
+            fromPreferredAlias: target?.PreferredAlias ?? null,
+            toPreferredAlias: incoming.PreferredAlias,
             datasetDoisChanged,
             toDatasetDois: incoming.datasetDois,
           },
@@ -238,12 +253,18 @@ function parseCSV(filePath) {
         ? ` | Dataset DOIs -> ${m.toDatasetDois.join("; ") || "NONE"}`
         : "";
 
+      const preferredAliasPreview = m.hasPreferredAlias
+        ? ` | PreferredAlias: ${m.fromPreferredAlias ?? "NULL"} -> ${
+            m.toPreferredAlias ?? "NULL"
+          }`
+        : "";
+
       console.log(
         `${i + 1}. [${m.Accession}] id=${m.id ?? "NEW"} Sample: ${
           m.fromSample ?? "NULL"
         } -> ${m.toSample ?? "NULL"} | Status: ${m.fromStatus} -> ${
           m.toStatus
-        }${serverUrlPreview}${datasetDoiPreview}`,
+        }${serverUrlPreview}${preferredAliasPreview}${datasetDoiPreview}`,
       );
     });
     if (plan.length > 15) console.log(`...and ${plan.length - 15} more`);

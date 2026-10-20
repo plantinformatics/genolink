@@ -12,15 +12,16 @@ The header names are case-sensitive and must use the following spelling:
 | `sample` | No | Sample/genotype ID. A blank value is stored as `NULL`. |
 | `status` | Yes | One of `Completed`, `Pending`, `Excluded`, or `TBC`. The upload script requires the exact capitalization shown. |
 | `serverUrl` | No | URL of the Gigwa server containing the sample. A blank value is stored as `NULL`. |
+| `preferredAlias` | No | Preferred alias for the accession. A blank value is stored as `NULL`; aliases do not need to be unique. |
 | `datasetDois` | No | One or more dataset DOIs separated by semicolons (or `|`). DOI URLs are also accepted. |
 
 Example:
 
 ```csv
-accession,sample,status,serverUrl,datasetDois
-AGG 4143 WHEA,AGG4143WHEA1-B00003-1-02,Completed,https://gigwa.example.org,10.7910/DVN/MOBTA8
-AGG 4681 WHEA,AGG4681WHEA2-B00003-1-03,Pending,https://gigwa.example.org,10.1234/ONE;10.1234/TWO
-AGG 5000 WHEA,,TBC,,
+accession,sample,status,serverUrl,preferredAlias,datasetDois
+AGG 4143 WHEA,AGG4143WHEA1-B00003-1-02,Completed,https://gigwa.example.org,Wheat Alias,10.7910/DVN/MOBTA8
+AGG 4681 WHEA,AGG4681WHEA2-B00003-1-03,Pending,https://gigwa.example.org,Another Alias,10.1234/ONE;10.1234/TWO
+AGG 5000 WHEA,,TBC,,,
 ```
 
 Only mappings whose status is `Completed` are returned when Genolink maps accessions to genotype IDs. `ServerUrl` is used to associate accessions with the Gigwa server on which their genotype data is stored.
@@ -46,7 +47,7 @@ Rows with a missing accession or an invalid status are skipped. Existing `(acces
 
 ## Update existing mappings
 
-Use the update script to change the sample, status, server URL, or dataset DOIs of existing accessions:
+Use the update script to change the sample, status, server URL, preferred alias, or dataset DOIs of existing accessions:
 
 ```bash
 node scripts/updateSampleAccessionsFromCSV.js uploads/YOUR_FILE.csv --dry
@@ -58,7 +59,8 @@ Run with `--dry` first to preview changes without writing to the database. The u
 - updates existing accessions only; it does not insert accessions that are not already in the database;
 - treats status values case-insensitively but accepts only the four statuses listed above;
 - uses the last CSV row when the same accession and sample pair appears more than once;
-- changes `ServerUrl` only when the CSV contains a `serverUrl` column. If that column exists but its value is blank, the stored URL is cleared; and
+- changes `ServerUrl` only when the CSV contains a `serverUrl` column. If that column exists but its value is blank, the stored URL is cleared;
+- changes `PreferredAlias` only when the CSV contains a `preferredAlias` column. If that column exists but its value is blank, the stored alias is cleared;
 - changes DOI associations only when the CSV contains `datasetDois` (or the legacy singular header `datasetDoi`). A blank value clears all DOI associations for that sample.
 
 ## Run with Docker

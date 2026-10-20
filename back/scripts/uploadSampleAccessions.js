@@ -10,6 +10,7 @@ const {
 const {
   reconcileSampleAccession,
 } = require("../utils/reconcileSampleAccession");
+const { parsePreferredAlias } = require("../utils/preferredAliasCsv");
 
 const csvFilePath = process.argv[2];
 
@@ -38,6 +39,8 @@ const parseCSV = (filePath) => {
         const serverUrl = hasServerUrl ? data.serverUrl?.trim() || null : null;
         const { supplied: hasDatasetDois, dois: datasetDois } =
           parseDatasetDois(data);
+        const { supplied: hasPreferredAlias, value: preferredAlias } =
+          parsePreferredAlias(data);
 
         if (!accession) {
           console.warn("Skipped row with missing accession:", data);
@@ -59,6 +62,8 @@ const parseCSV = (filePath) => {
           ServerUrl: serverUrl,
           hasDatasetDois,
           datasetDois,
+          hasPreferredAlias,
+          PreferredAlias: preferredAlias,
         });
       })
       .on("end", () => resolve(sampleAccessions))
