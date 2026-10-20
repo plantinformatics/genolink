@@ -34,6 +34,7 @@ export const METADATA_COLUMNS = [
     label: "Accession Name",
     apiParams: ["accessionName"],
   },
+  { id: "preferredAlias", label: "Preferred Alias", apiParams: [] },
   { id: "pedigree", label: "Pedigree", apiParams: ["ancest"] },
   { id: "mlsStatus", label: "MLS Status", apiParams: ["mlsStatus"] },
   { id: "aliases", label: "Aliases", apiParams: ["aliases"] },
@@ -172,6 +173,10 @@ export function renderMetadataCell(colId, item, ctx) {
 
     case "accessionName":
       return item.accessionName || "N/A";
+
+    case "preferredAlias":
+      if (ctx.preferredAliasLoading) return "Loading...";
+      return ctx.preferredAlias || "NA";
 
     case "pedigree":
       return item.ancest || "N/A";
