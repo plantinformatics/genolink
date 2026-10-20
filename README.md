@@ -121,7 +121,7 @@ Navigate to the _back_ directory and install dependencies:
 npm install
 ```
 
-#### 6. Install and configure MySQL:
+#### 6. Install and configure MySQL
 
 \_Install MySQL server and client for your OS
 \_Start MySQL server
@@ -139,7 +139,7 @@ GRANT ALL PRIVILEGES ON <your_db_name>.* TO '<your_db_username>'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
-#### 10. Create .env File for Backend
+#### 8. Create .env File for Backend
 
 Create a .env file in the 'back' directory with the following content:
 
@@ -162,15 +162,24 @@ EXPORT_TOTAL_TIMEOUT_MS=600000 # optional; timeout for the complete export
 EXPORT_POLL_INTERVAL_MS=2000 # optional; delay between ZIP readiness checks
 ```
 
-#### 11. Run the Application
+#### 9. Apply Database Migrations
+
+From the `back` directory, apply every pending migration before starting the
+application:
+
+```bash
+npm run db:migrate
+```
+
+#### 10. Run the Application
 
 Start the backend server by running the following in '_back_' folder:
 
 ```bash
-node index.js
+npm start
 ```
 
-#### 12. Access the Application
+#### 11. Access the Application
 
 Open your browser and navigate to http://localhost:3000 to use your application.
 
@@ -240,8 +249,11 @@ BASE_PATH=<optional_base_path> # e.g. /test OR leave empty for root
 Navigate to the directory containing the docker-compose.yml file and run the following command to start the containers:
 
 ```bash
-docker-compose up -d
+docker-compose up -d --build
 ```
+
+This command builds the application, applies pending database migrations, and
+starts Genolink.
 
 #### 4. Access the Application
 
