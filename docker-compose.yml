@@ -41,7 +41,8 @@ services:
       VITE_SEARCH_BACKGROUND_IMAGE: ${VITE_SEARCH_BACKGROUND_IMAGE}
 
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
     volumes:
       - ./back/uploads:/app/back/uploads
@@ -55,6 +56,12 @@ services:
       MYSQL_DATABASE: ${DB_NAME}
       MYSQL_USER: ${DB_USERNAME}
       MYSQL_PASSWORD: ${DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
     volumes:
       - mysql_data:/var/lib/mysql
 
