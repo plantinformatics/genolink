@@ -57,9 +57,6 @@ config/dbConfig.json
 # Seeders directory
 seeders/
  
-# Migrations directory
-migrations/
- 
 # Uploaded files directory
 uploads/
 
