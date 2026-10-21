@@ -4,6 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
+    "db:migrate": "sequelize-cli db:migrate --env production",
+    "db:migrate:status": "sequelize-cli db:migrate:status --env production",
+    "db:migrate:undo": "sequelize-cli db:migrate:undo --env production",
     "test": "jest --passWithNoTests=true",
     "test:watch": "jest --watch"
   },
@@ -19,6 +23,7 @@
     "json2csv": "^6.0.0-alpha.2",
     "mysql2": "^3.9.1",
     "sequelize": "^6.37.0",
+    "sequelize-cli": "^6.6.5",
     "winston": "^3.13.0"
   },
   "devDependencies": {

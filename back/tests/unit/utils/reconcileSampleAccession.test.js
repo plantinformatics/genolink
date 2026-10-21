@@ -189,4 +189,80 @@ describe("reconcileSampleAccession", () => {
     expect(db.SampleAccession.destroy).not.toHaveBeenCalled();
     expect(pendingSample.update).not.toHaveBeenCalled();
   });
+
+  it("sets a preferred alias when the CSV column is supplied", async () => {
+    const exact = makeRow({
+      id: 60,
+      Accession: "ACC-1",
+      Sample: "SAMPLE-1",
+      Status: "Completed",
+      PreferredAlias: null,
+    });
+    const db = makeDb([exact]);
+
+    await reconcileSampleAccession({
+      db,
+      incoming: incoming({
+        hasPreferredAlias: true,
+        PreferredAlias: " Alias One ",
+      }),
+      transaction,
+      setDatasetDois: jest.fn(),
+    });
+
+    expect(exact.update).toHaveBeenCalledWith(
+      expect.objectContaining({ PreferredAlias: "Alias One" }),
+      { transaction },
+    );
+  });
+
+  it("preserves a preferred alias when the CSV column is omitted", async () => {
+    const exact = makeRow({
+      id: 61,
+      Accession: "ACC-1",
+      Sample: "SAMPLE-1",
+      Status: "Completed",
+      PreferredAlias: "Existing Alias",
+    });
+    const db = makeDb([exact]);
+
+    await reconcileSampleAccession({
+      db,
+      incoming: incoming(),
+      transaction,
+      setDatasetDois: jest.fn(),
+    });
+
+    expect(exact.update).toHaveBeenCalledWith(
+      expect.not.objectContaining({ PreferredAlias: expect.anything() }),
+      { transaction },
+    );
+    expect(exact.PreferredAlias).toBe("Existing Alias");
+  });
+
+  it("clears a preferred alias when the supplied CSV value is blank", async () => {
+    const exact = makeRow({
+      id: 62,
+      Accession: "ACC-1",
+      Sample: "SAMPLE-1",
+      Status: "Completed",
+      PreferredAlias: "Existing Alias",
+    });
+    const db = makeDb([exact]);
+
+    await reconcileSampleAccession({
+      db,
+      incoming: incoming({
+        hasPreferredAlias: true,
+        PreferredAlias: null,
+      }),
+      transaction,
+      setDatasetDois: jest.fn(),
+    });
+
+    expect(exact.update).toHaveBeenCalledWith(
+      expect.objectContaining({ PreferredAlias: null }),
+      { transaction },
+    );
+  });
 });

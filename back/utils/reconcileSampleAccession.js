@@ -50,6 +50,10 @@ async function reconcileSampleAccession({
     values.ServerUrl = normalize(incoming.ServerUrl);
   }
 
+  if (incoming.hasPreferredAlias) {
+    values.PreferredAlias = normalize(incoming.PreferredAlias);
+  }
+
   let target = exact || placeholder;
   let action;
 

@@ -22,6 +22,11 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING(2048),
         allowNull: true,
       },
+
+      PreferredAlias: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+      },
     },
     {
       indexes: [

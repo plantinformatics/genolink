@@ -89,6 +89,9 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
     ),
   );
   const [datasetInfoByAccession, setDatasetInfoByAccession] = useState({});
+  const [preferredAliasByAccession, setPreferredAliasByAccession] = useState(
+    {},
+  );
   const [genesysGenotypeIdsByAccession, setGenesysGenotypeIdsByAccession] =
     useState({});
 
@@ -183,6 +186,23 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
     [visibleAccessionsForDatasetDoi],
   );
 
+  const visibleAccessionsForPreferredAlias = useMemo(() => {
+    if (!visibleColumnIds.includes("preferredAlias")) {
+      return [];
+    }
+
+    const accessions = (searchResults || [])
+      .map((item) => item.accessionNumber)
+      .filter(Boolean);
+
+    return [...new Set(accessions)];
+  }, [searchResults, visibleColumnIds]);
+
+  const visiblePreferredAliasAccessionSet = useMemo(
+    () => new Set(visibleAccessionsForPreferredAlias),
+    [visibleAccessionsForPreferredAlias],
+  );
+
   useEffect(() => {
     if (!searchResults || searchResults.length === 0) {
       setSelectAll(false);
@@ -250,6 +270,45 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
       cancelled = true;
     };
   }, [visibleAccessionsForDatasetDoi, datasetInfoByAccession]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchPreferredAliasesForVisibleRows = async () => {
+      const accessionsToCheck = visibleAccessionsForPreferredAlias.filter(
+        (accession) =>
+          !Object.prototype.hasOwnProperty.call(
+            preferredAliasByAccession,
+            accession,
+          ),
+      );
+
+      if (accessionsToCheck.length === 0) return;
+
+      const mapping =
+        await genolinkInternalApi.fetchPreferredAliasesForAccessions(
+          accessionsToCheck,
+        );
+
+      if (cancelled) return;
+
+      setPreferredAliasByAccession((previous) => {
+        const next = { ...previous, ...mapping };
+        accessionsToCheck.forEach((accession) => {
+          if (!Object.prototype.hasOwnProperty.call(next, accession)) {
+            next[accession] = null;
+          }
+        });
+        return next;
+      });
+    };
+
+    fetchPreferredAliasesForVisibleRows();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [visibleAccessionsForPreferredAlias, preferredAliasByAccession]);
 
   useEffect(() => {
     if (!shouldFetchGenesysGenotypeIds) return;
@@ -634,6 +693,14 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
                           datasetInfoByAccession,
                           acc,
                         )))
+                  }
+                  preferredAlias={preferredAliasByAccession[acc]}
+                  preferredAliasLoading={
+                    visiblePreferredAliasAccessionSet.has(acc) &&
+                    !Object.prototype.hasOwnProperty.call(
+                      preferredAliasByAccession,
+                      acc,
+                    )
                   }
                   visibleColumnIds={visibleColumnIds}
                   formatDate={formatDate}

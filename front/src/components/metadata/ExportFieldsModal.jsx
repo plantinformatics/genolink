@@ -11,6 +11,10 @@ const fieldsMapping = {
     tsvHeader: "Holding Institute",
   },
   "Accession Name": { apiParam: "accessionName", tsvHeader: "Accession Name" },
+  "Preferred Alias": {
+    apiParam: "preferredAlias",
+    tsvHeader: "Preferred Alias",
+  },
   Pedigree: { apiParam: "ancest", tsvHeader: "Pedigree" },
   "MLS Status": { apiParam: "mlsStatus", tsvHeader: "MLS Status" },
   Aliases: { apiParam: "aliases", tsvHeader: "Aliases" },

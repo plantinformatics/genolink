@@ -1,0 +1,8 @@
+.git
+.env
+**/node_modules
+back/logs
+back/reports
+back/uploads
+backups
+*.sql

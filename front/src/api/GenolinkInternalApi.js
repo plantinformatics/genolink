@@ -88,6 +88,41 @@ class GenolinkInternalApi extends BaseApi {
       return {};
     }
   }
+
+  async fetchPreferredAliasesForAccessions(accessions) {
+    try {
+      const cleanedAccessions = [
+        ...new Set(
+          (Array.isArray(accessions) ? accessions : [])
+            .filter((accession) => typeof accession === "string")
+            .map((accession) => accession.trim())
+            .filter(Boolean),
+        ),
+      ];
+
+      if (cleanedAccessions.length === 0) {
+        return {};
+      }
+
+      const batchSize = 5000;
+      const preferredAliases = {};
+
+      for (let i = 0; i < cleanedAccessions.length; i += batchSize) {
+        const chunk = cleanedAccessions.slice(i, i + batchSize);
+        const response = await this.post(
+          `${BASE_PATH}/api/internalApi/accession-preferred-aliases`,
+          { accessions: chunk },
+        );
+
+        Object.assign(preferredAliases, response);
+      }
+
+      return preferredAliases;
+    } catch (error) {
+      console.error("Error fetching preferred aliases:", error);
+      return {};
+    }
+  }
 }
 
 export default GenolinkInternalApi;

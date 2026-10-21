@@ -860,8 +860,12 @@ class GenesysApi extends BaseApi {
       const shouldDownloadDatasetDoi = Boolean(
         selectedMappings["Dataset DOI"],
       );
+      const shouldDownloadPreferredAlias = Boolean(
+        selectedMappings["Preferred Alias"],
+      );
       const genesysSelectedMappings = { ...selectedMappings };
       delete genesysSelectedMappings["Dataset DOI"];
+      delete genesysSelectedMappings["Preferred Alias"];
       const selectFields = Object.keys(genesysSelectedMappings).map(
         (field) => genesysSelectedMappings[field].apiParam,
       );
@@ -919,6 +923,7 @@ class GenesysApi extends BaseApi {
 
       if (allResults.length > 0) {
         let datasetInfoMapping = {};
+        let preferredAliasMapping = {};
         let genesysGenotypeIdMap = {};
 
         const accessionIds = allResults
@@ -932,6 +937,13 @@ class GenesysApi extends BaseApi {
         if (shouldDownloadDatasetDoi) {
           datasetInfoMapping =
             await genolinkInternalApi.fetchDatasetInfoForAccessions(
+              accessionIds,
+            );
+        }
+
+        if (shouldDownloadPreferredAlias) {
+          preferredAliasMapping =
+            await genolinkInternalApi.fetchPreferredAliasesForAccessions(
               accessionIds,
             );
         }
@@ -954,6 +966,7 @@ class GenesysApi extends BaseApi {
           selectedMappingsForTSV,
           genesysGenotypeIdMap,
           datasetInfoMapping,
+          preferredAliasMapping,
         );
 
         this.downloadFile(
@@ -974,6 +987,7 @@ class GenesysApi extends BaseApi {
     selectedMappings,
     genesysGenotypeIdMap = {},
     datasetInfoMapping = {},
+    preferredAliasMapping = {},
   ) {
     const header = Object.keys(selectedMappings)
       .map((field) => selectedMappings[field].tsvHeader)
@@ -1064,6 +1078,10 @@ class GenesysApi extends BaseApi {
                 .filter(Boolean)
                 .join(", ") || "N/A"
             );
+          }
+
+          if (fieldPath === "preferredAlias") {
+            return preferredAliasMapping[item.accessionNumber] || "NA";
           }
 
           if (fieldPath === "subsets.title") {

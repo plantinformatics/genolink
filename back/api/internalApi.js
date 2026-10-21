@@ -10,6 +10,7 @@ const mapAccessionToGenotypeIdHandler = require("../utils/mapAccessionToGenotype
 // const genotypeIdMappingHandler = require("../utils/genotypeIdMappingHandler");
 const mapGenotypeIdToAccessionHandler = require("../utils/mapGenotypeIdToAccessionHandler");
 const datasetDoiHandler = require("../utils/datasetDoiHandler");
+const preferredAliasHandler = require("../utils/preferredAliasHandler");
 
 // router.post("/accessionMapping", accessionMappingHandler);
 router.post("/mapAccessionToGenotypeId", mapAccessionToGenotypeIdHandler);
@@ -18,6 +19,7 @@ router.post("/mapAccessionToGenotypeId", mapAccessionToGenotypeIdHandler);
 router.post("/mapGenotypIdToAccession", mapGenotypeIdToAccessionHandler);
 
 router.post("/accession-dataset-info", datasetDoiHandler);
+router.post("/accession-preferred-aliases", preferredAliasHandler);
 
 // router.get("/getAllAccessionsCsv", async (req, res) => {
 //   try {

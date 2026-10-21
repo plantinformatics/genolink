@@ -60,5 +60,6 @@ COPY --from=frontend-build /app/dist ./dist
 # Expose the port the app runs on
 EXPOSE 3000
 
-# Command to run the app
-CMD ["node", "index.js"]
+# Apply pending schema migrations before starting the single Compose app
+# process. sequelize-cli records completed migrations in SequelizeMeta.
+CMD ["sh", "-c", "npm run db:migrate && exec npm start"]
