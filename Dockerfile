@@ -1,5 +1,5 @@
 # Stage 1: Build the frontend
-FROM node:20-alpine AS frontend-build
+FROM node:24.22.1-alpine AS frontend-build
 
 # Set the working directory
 WORKDIR /app
@@ -38,7 +38,7 @@ ENV VITE_SEARCH_BACKGROUND_IMAGE=$VITE_SEARCH_BACKGROUND_IMAGE
 RUN npm run build
 
 # Stage 2: Set up the backend and serve the frontend
-FROM node:20-alpine
+FROM node:24.22.1-alpine
 
 # Set the working directory
 WORKDIR /app/back
