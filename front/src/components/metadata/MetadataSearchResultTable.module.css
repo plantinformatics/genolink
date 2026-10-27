@@ -11,6 +11,19 @@
   table-layout: fixed;
 }
 
+.metadataCell {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.expandedCell {
+  white-space: normal;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 @media (max-width: 1024px) {
   .tableWrapper {
     max-width: 100%;

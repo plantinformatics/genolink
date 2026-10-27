@@ -1,6 +1,7 @@
 import React from "react";
 import { useSelector, shallowEqual } from "react-redux";
 import { renderMetadataCell } from "./MetadataColumns";
+import styles from "./MetadataSearchResultTable.module.css";
 
 const ResultRow = React.memo(function ResultRow({
   item,
@@ -23,12 +24,6 @@ const ResultRow = React.memo(function ResultRow({
     shallowEqual,
   );
 
-  const cellStyle = {
-    overflow: isExpanded ? "visible" : "hidden",
-    whiteSpace: isExpanded ? "normal" : "nowrap",
-    textOverflow: isExpanded ? "clip" : "ellipsis",
-  };
-
   const ctx = {
     status,
     genotypeID,
@@ -40,13 +35,17 @@ const ResultRow = React.memo(function ResultRow({
     countryByCode,
   };
 
+  const cellClassName = `cell ${styles.metadataCell}${
+    isExpanded ? ` ${styles.expandedCell}` : ""
+  }`;
+
   return (
     <tr
       key={item.uuid || item.id || index}
       style={{ backgroundColor: "white", cursor: "pointer" }}
       onClick={() => onRowClick(index)}
     >
-      <td className="cell" style={cellStyle}>
+      <td className={cellClassName}>
         <input
           type="checkbox"
           checked={checked}
@@ -58,12 +57,12 @@ const ResultRow = React.memo(function ResultRow({
         />
       </td>
 
-      <td className="cell" style={cellStyle}>
+      <td className={cellClassName}>
         {index + 1}
       </td>
 
       {visibleColumnIds.map((colId) => (
-        <td key={colId} className="cell" style={cellStyle}>
+        <td key={colId} className={cellClassName}>
           {renderMetadataCell(colId, item, ctx)}
       </td>
       ))}
