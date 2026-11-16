@@ -69,11 +69,45 @@
 }
 
 .headerLabel {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 4px;
   overflow: hidden;
   white-space: nowrap;
-  text-overflow: ellipsis;
   padding-right: 10px;
+}
+
+.headerLabelText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.columnExpandButton {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: #244b5a;
+  background: transparent;
+  cursor: pointer;
+}
+
+.columnExpandButton:hover,
+.columnExpandButton:focus-visible,
+.expandedHeader .columnExpandButton {
+  border-color: #5d8797;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.columnExpandButton:focus-visible {
+  outline: 2px solid #174f74;
+  outline-offset: 1px;
 }
 
 .resizeHandle {
