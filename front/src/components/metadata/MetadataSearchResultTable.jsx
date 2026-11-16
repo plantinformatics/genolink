@@ -24,6 +24,7 @@ import { batch } from "react-redux";
 import ExportFieldsModal from "./ExportFieldsModal";
 import { METADATA_COLUMNS, sanitizeSelectedColumns } from "./MetadataColumns";
 import styles from "./MetadataSearchResultTable.module.css";
+import { MdUnfoldLess, MdUnfoldMore } from "react-icons/md";
 
 function formatDate(dateStr) {
   if (dateStr && dateStr.length === 8) {
@@ -83,6 +84,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [selectAll, setSelectAll] = useState(false);
   const [expandedRow, setExpandedRow] = useState(null);
+  const [expandedColumnIds, setExpandedColumnIds] = useState(() => new Set());
   const [remainingPages, setRemainingPages] = useState(
     Math.floor(
       (hasGenotype ? totalPreGenotypedAccessions : totalAccessions) / 500,
@@ -552,6 +554,20 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
     setExpandedRow((prev) => (prev === index ? null : index));
   }, []);
 
+  const toggleExpandedColumn = useCallback((columnId) => {
+    setExpandedColumnIds((previous) => {
+      const next = new Set(previous);
+
+      if (next.has(columnId)) {
+        next.delete(columnId);
+      } else {
+        next.add(columnId);
+      }
+
+      return next;
+    });
+  }, []);
+
   const handleExportPassportData = async (selectedMappings) => {
     try {
       setIsDownloading(true);
@@ -617,10 +633,44 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
               <th className={styles.fixedRowNumberHeader}>#</th>
               {visibleColumnIds.map((id) => {
                 const col = METADATA_COLUMNS.find((c) => c.id === id);
+                const label = col?.label || id;
+                const isColumnExpanded = expandedColumnIds.has(id);
                 return (
-                  <th key={id} scope="col" className={styles.resizableHeader}>
-                    <span className={styles.headerLabel}>
-                      {col?.label || id}
+                  <th
+                    key={id}
+                    scope="col"
+                    className={`${styles.resizableHeader}${
+                      isColumnExpanded ? ` ${styles.expandedHeader}` : ""
+                    }`}
+                  >
+                    <span
+                      className={styles.headerLabel}
+                      onDoubleClick={() => toggleExpandedColumn(id)}
+                      title="Double-click to expand or collapse this column"
+                    >
+                      <span className={styles.headerLabelText}>{label}</span>
+                      <button
+                        type="button"
+                        className={styles.columnExpandButton}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          toggleExpandedColumn(id);
+                        }}
+                        onDoubleClick={(event) => event.stopPropagation()}
+                        aria-pressed={isColumnExpanded}
+                        aria-label={`${
+                          isColumnExpanded ? "Collapse" : "Expand"
+                        } ${label} column content`}
+                        title={`${
+                          isColumnExpanded ? "Collapse" : "Expand"
+                        } entire column`}
+                      >
+                        {isColumnExpanded ? (
+                          <MdUnfoldLess aria-hidden="true" />
+                        ) : (
+                          <MdUnfoldMore aria-hidden="true" />
+                        )}
+                      </button>
                     </span>
 
                     <div
@@ -703,6 +753,7 @@ const MetadataSearchResultTable = ({ filterCode, hasGenotype, filterBody }) => {
                     )
                   }
                   visibleColumnIds={visibleColumnIds}
+                  expandedColumnIds={expandedColumnIds}
                   formatDate={formatDate}
                   countryByCode={countryByCode}
                 />

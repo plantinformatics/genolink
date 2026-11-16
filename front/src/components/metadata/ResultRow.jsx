@@ -10,6 +10,7 @@ const ResultRow = React.memo(function ResultRow({
   onToggleCheckbox,
   onRowClick,
   visibleColumnIds,
+  expandedColumnIds,
   status,
   genotypeID,
   datasetInfoForAcc,
@@ -35,7 +36,7 @@ const ResultRow = React.memo(function ResultRow({
     countryByCode,
   };
 
-  const cellClassName = `cell ${styles.metadataCell}${
+  const rowCellClassName = `cell ${styles.metadataCell}${
     isExpanded ? ` ${styles.expandedCell}` : ""
   }`;
 
@@ -45,7 +46,7 @@ const ResultRow = React.memo(function ResultRow({
       style={{ backgroundColor: "white", cursor: "pointer" }}
       onClick={() => onRowClick(index)}
     >
-      <td className={cellClassName}>
+      <td className={rowCellClassName}>
         <input
           type="checkbox"
           checked={checked}
@@ -57,15 +58,22 @@ const ResultRow = React.memo(function ResultRow({
         />
       </td>
 
-      <td className={cellClassName}>
+      <td className={rowCellClassName}>
         {index + 1}
       </td>
 
-      {visibleColumnIds.map((colId) => (
-        <td key={colId} className={cellClassName}>
-          {renderMetadataCell(colId, item, ctx)}
-      </td>
-      ))}
+      {visibleColumnIds.map((colId) => {
+        const isCellExpanded = isExpanded || expandedColumnIds.has(colId);
+        const className = `cell ${styles.metadataCell}${
+          isCellExpanded ? ` ${styles.expandedCell}` : ""
+        }`;
+
+        return (
+          <td key={colId} className={className}>
+            {renderMetadataCell(colId, item, ctx)}
+          </td>
+        );
+      })}
     </tr>
   );
 });
