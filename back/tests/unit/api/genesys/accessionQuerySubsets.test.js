@@ -72,4 +72,50 @@ describe("POST /accession/query direct subset projection", () => {
     expect(axios.post.mock.calls[0][0]).toContain("subsets.title");
   });
 
+  it("returns every unique genotype ID mapped to the same accession", async () => {
+    const firstGenotypeId = "AGG413162BARL1-B00004-9-80";
+    const secondGenotypeId = "AGG413162BARL1-B00030-4-40";
+
+    axios.post.mockResolvedValueOnce({
+      data: {
+        content: [{ accessionNumber: "AGG 413162 BARL" }],
+      },
+    });
+
+    const response = await request(app)
+      .post(`${endpoint}?select=accessionNumber`)
+      .send({
+        genotypeIds: [
+          firstGenotypeId,
+          secondGenotypeId,
+          firstGenotypeId,
+        ],
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.content[0]).toMatchObject({
+      accessionNumber: "AGG 413162 BARL",
+      genotypeID: [firstGenotypeId, secondGenotypeId],
+    });
+    expect(response.body.content[0]).not.toHaveProperty("genotypeIDs");
+  });
+
+  it("keeps genotypeID as a string when one genotype ID is supplied", async () => {
+    const genotypeId = "AGG413162BARL1-B00004-9-80";
+
+    axios.post.mockResolvedValueOnce({
+      data: {
+        content: [{ accessionNumber: "AGG 413162 BARL" }],
+      },
+    });
+
+    const response = await request(app)
+      .post(`${endpoint}?select=accessionNumber`)
+      .send({ genotypeIds: [genotypeId] });
+
+    expect(response.status).toBe(200);
+    expect(response.body.content[0].genotypeID).toBe(genotypeId);
+    expect(response.body.content[0]).not.toHaveProperty("genotypeIDs");
+  });
+
 });

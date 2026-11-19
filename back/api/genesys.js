@@ -336,10 +336,10 @@ router.post("/accession/query", async (req, res) => {
         if (!acc) continue;
 
         if (!accToGid.has(acc)) {
-          accToGid.set(acc, []);
+          accToGid.set(acc, new Set());
         }
 
-        accToGid.get(acc).push(gid);
+        accToGid.get(acc).add(gid);
       }
     }
 
@@ -459,11 +459,11 @@ router.post("/accession/query", async (req, res) => {
 
     if (Array.isArray(data?.content)) {
       data.content = data.content.map((row) => {
-        const gids = accToGid.get(row.accessionNumber) || [];
+        const gids = [...(accToGid.get(row.accessionNumber) || [])];
 
         const base = {
           ...row,
-          genotypeID: gids[0] || "",
+          genotypeID: gids.length > 1 ? gids : gids[0] || "",
         };
 
         const mapping = country2Region.find(
