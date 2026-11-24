@@ -46,7 +46,9 @@ describe("mapGenotypeIdToAccessionHandler", () => {
     await mapGenotypeIdToAccessionHandler(req, res);
 
     expect(db.SampleAccession.findAll).toHaveBeenCalledWith({
+      attributes: ["Accession", "Sample"],
       where: { Sample: ["id1", "id2"] },
+      raw: true,
     });
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.send).toHaveBeenCalledWith({
@@ -68,7 +70,9 @@ describe("mapGenotypeIdToAccessionHandler", () => {
     await mapGenotypeIdToAccessionHandler(req, res);
 
     expect(db.SampleAccession.findAll).toHaveBeenCalledWith({
+      attributes: ["Accession", "Sample"],
       where: { Sample: ["id1", "id2"] },
+      raw: true,
     });
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.send).toHaveBeenCalledWith(["Accession1", "Accession2"]);
@@ -82,7 +86,9 @@ describe("mapGenotypeIdToAccessionHandler", () => {
     await mapGenotypeIdToAccessionHandler(req, res);
 
     expect(db.SampleAccession.findAll).toHaveBeenCalledWith({
+      attributes: ["Accession", "Sample"],
       where: { Sample: ["id1"] },
+      raw: true,
     });
     expect(logger.error).toHaveBeenCalledWith("Error fetching samples:", error);
     expect(res.status).toHaveBeenCalledWith(500);
