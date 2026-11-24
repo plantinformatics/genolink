@@ -2,8 +2,19 @@ process.env.BASE_PATH = "";
 
 jest.mock("axios");
 jest.mock("../../../../middlewares/logger");
+jest.mock("../../../../models", () => ({
+  SampleAccession: {
+    findAll: jest.fn(),
+  },
+  Sequelize: {
+    Op: {
+      in: Symbol("in"),
+    },
+  },
+}));
 
 const axios = require("axios");
+const db = require("../../../../models");
 const app = require("../../../../index");
 const request = require("supertest");
 
@@ -12,6 +23,7 @@ const endpoint = "/api/genesys/accession/query";
 describe("POST /accession/query direct subset projection", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    db.SampleAccession.findAll.mockResolvedValue([]);
   });
 
   it("passes the caller's page size and subsets.title directly to Genesys", async () => {
@@ -76,6 +88,11 @@ describe("POST /accession/query direct subset projection", () => {
     const firstGenotypeId = "AGG413162BARL1-B00004-9-80";
     const secondGenotypeId = "AGG413162BARL1-B00030-4-40";
 
+    db.SampleAccession.findAll.mockResolvedValue([
+      { Accession: "AGG 413162 BARL", Sample: firstGenotypeId },
+      { Accession: "AGG 413162 BARL", Sample: secondGenotypeId },
+    ]);
+
     axios.post.mockResolvedValueOnce({
       data: {
         content: [{ accessionNumber: "AGG 413162 BARL" }],
@@ -101,11 +118,15 @@ describe("POST /accession/query direct subset projection", () => {
   });
 
   it("keeps genotypeID as a string when one genotype ID is supplied", async () => {
-    const genotypeId = "AGG413162BARL1-B00004-9-80";
+    const genotypeId = "future-pattern::sample-42";
+
+    db.SampleAccession.findAll.mockResolvedValue([
+      { Accession: "FUTURE ACCESSION 42", Sample: genotypeId },
+    ]);
 
     axios.post.mockResolvedValueOnce({
       data: {
-        content: [{ accessionNumber: "AGG 413162 BARL" }],
+        content: [{ accessionNumber: "FUTURE ACCESSION 42" }],
       },
     });
 

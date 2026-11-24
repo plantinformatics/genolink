@@ -1,26 +1,30 @@
 const db = require("../models");
 const logger = require("../middlewares/logger");
 
+const normalizeGenotypeIds = (genotypeIds) =>
+  genotypeIds.map((value) => value.replace(/"/g, ""));
+
+const findGenotypeIdToAccessionMappings = async (genotypeIds) =>
+  db.SampleAccession.findAll({
+    attributes: ["Accession", "Sample"],
+    where: {
+      Sample: normalizeGenotypeIds(genotypeIds),
+    },
+    raw: true,
+  });
+
 const mapGenotypeIdToAccessionHandler = async (req, res) => {
   try {
     const { genotypeIds } = req.body;
 
-    genotypeIds.forEach((val, idx, arr) => {
-      arr[idx] = val.replace(/"/g, "");
-    });
-
-    if (!genotypeIds || genotypeIds.length === 0) {
+    if (!Array.isArray(genotypeIds) || genotypeIds.length === 0) {
       res.status(400).send({ message: "genotypeId list is required" });
       logger.warn("genotypeId list was empty or not provided.");
       return;
     }
 
-    // Query the database to map genotypeIds to sample accessions
-    const sampleAccessions = await db.SampleAccession.findAll({
-      where: {
-        Sample: genotypeIds,
-      },
-    });
+    const sampleAccessions =
+      await findGenotypeIdToAccessionMappings(genotypeIds);
 
     if (sampleAccessions.length === 0) {
       res.status(404).send({
@@ -42,3 +46,5 @@ const mapGenotypeIdToAccessionHandler = async (req, res) => {
 };
 
 module.exports = mapGenotypeIdToAccessionHandler;
+module.exports.findGenotypeIdToAccessionMappings =
+  findGenotypeIdToAccessionMappings;

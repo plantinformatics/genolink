@@ -5,7 +5,9 @@ const https = require("https");
 
 const config = require("../config/appConfig");
 const logger = require("../middlewares/logger");
-const sampleNameToAccession = require("../utils/sampleNameToAccession");
+const {
+  findGenotypeIdToAccessionMappings,
+} = require("../utils/mapGenotypeIdToAccessionHandler");
 const country2Region = require("../../shared-data/Country2Region.json");
 const { Op } = require("sequelize");
 const db = require("../models");
@@ -312,13 +314,17 @@ router.post("/accession/query", async (req, res) => {
   try {
     let body = req.body || {};
     const { genotypeIds } = body;
+    let genotypeMappings = [];
 
     if (Array.isArray(genotypeIds) && genotypeIds.length > 0) {
+      genotypeMappings =
+        await findGenotypeIdToAccessionMappings(genotypeIds);
+
       body = {
         ...body,
         accessionNumbers: [
           ...(body.accessionNumbers || []),
-          ...genotypeIds.map((id) => sampleNameToAccession(id)),
+          ...new Set(genotypeMappings.map((row) => row.Accession)),
         ],
       };
     } else if (!genotypeIds && body.accessionNumbers) {
@@ -330,17 +336,15 @@ router.post("/accession/query", async (req, res) => {
 
     const accToGid = new Map();
 
-    if (Array.isArray(genotypeIds)) {
-      for (const gid of genotypeIds) {
-        const acc = sampleNameToAccession(gid);
-        if (!acc) continue;
+    for (const mapping of genotypeMappings) {
+      const accession = mapping.Accession;
+      const genotypeId = mapping.Sample;
 
-        if (!accToGid.has(acc)) {
-          accToGid.set(acc, new Set());
-        }
-
-        accToGid.get(acc).add(gid);
+      if (!accToGid.has(accession)) {
+        accToGid.set(accession, new Set());
       }
+
+      accToGid.get(accession).add(genotypeId);
     }
 
     const queryParams = new URLSearchParams();
