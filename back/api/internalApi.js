@@ -11,6 +11,7 @@ const mapAccessionToGenotypeIdHandler = require("../utils/mapAccessionToGenotype
 const mapGenotypeIdToAccessionHandler = require("../utils/mapGenotypeIdToAccessionHandler");
 const datasetDoiHandler = require("../utils/datasetDoiHandler");
 const preferredAliasHandler = require("../utils/preferredAliasHandler");
+const mapPreferredAliasToAccessionHandler = require("../utils/mapPreferredAliasToAccessionHandler");
 
 // router.post("/accessionMapping", accessionMappingHandler);
 router.post("/mapAccessionToGenotypeId", mapAccessionToGenotypeIdHandler);
@@ -20,6 +21,10 @@ router.post("/mapGenotypIdToAccession", mapGenotypeIdToAccessionHandler);
 
 router.post("/accession-dataset-info", datasetDoiHandler);
 router.post("/accession-preferred-aliases", preferredAliasHandler);
+router.post(
+  "/mapPreferredAliasToAccession",
+  mapPreferredAliasToAccessionHandler,
+);
 
 // router.get("/getAllAccessionsCsv", async (req, res) => {
 //   try {

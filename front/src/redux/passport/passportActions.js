@@ -129,6 +129,10 @@ export const setGenotypeIds = (genotypeIds) => ({
   type: "SET_GENOTYPE_IDS",
   payload: genotypeIds,
 });
+export const setPreferredAliases = (preferredAliases) => ({
+  type: "SET_PREFERRED_ALIASES",
+  payload: preferredAliases,
+});
 export const setTotalAccessions = (totalAccessions) => ({
   type: "SET_TOTAL_ACCESSIONS",
   payload: totalAccessions,
