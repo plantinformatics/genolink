@@ -1,4 +1,8 @@
 const logger = require("./logger");
+const {
+  getOrCreateVisitor,
+  getRequestTrafficMetadata,
+} = require("../utils/requestTraffic");
 
 const rawBase = process.env.BASE_PATH || "";
 const BASE_PATH = rawBase.replace(/\/+$/, "");
@@ -103,10 +107,16 @@ const trackRequests = (req, res, next) => {
   }
 
   const startTime = Date.now();
+  const { visitorId, isNewVisitor } = getOrCreateVisitor(req, res);
 
   res.on("finish", () => {
     const durationMs = Date.now() - startTime;
     const category = getUsageCategory(req);
+    const trafficMetadata = getRequestTrafficMetadata(
+      req,
+      visitorId,
+      !isNewVisitor,
+    );
 
     logger.info(
       JSON.stringify({
@@ -118,6 +128,7 @@ const trackRequests = (req, res, next) => {
         statusCode: res.statusCode,
         responseTimeMs: durationMs,
         category,
+        ...trafficMetadata,
       }),
     );
   });
