@@ -1,11 +1,33 @@
 const fs = require("fs");
 const path = require("path");
+const zlib = require("zlib");
 
 const rawBase = process.env.BASE_PATH || "";
 const BASE_PATH = rawBase.replace(/\/+$/, "");
 
-const LOG_FILE =
-  process.argv[2] || path.join(__dirname, "../logs/combined.log");
+const LOGS_DIR = path.join(__dirname, "../logs");
+const LEGACY_LOG_FILE = path.join(LOGS_DIR, "combined.log");
+
+const getDefaultLogFiles = () => {
+  if (!fs.existsSync(LOGS_DIR)) {
+    return [];
+  }
+
+  const datedLogs = fs
+    .readdirSync(LOGS_DIR)
+    .filter((name) =>
+      /^combined-\d{4}-\d{2}(?:-\d{2})?\.log(?:\.gz)?$/.test(name),
+    )
+    .sort()
+    .map((name) => path.join(LOGS_DIR, name));
+
+  return [
+    ...(fs.existsSync(LEGACY_LOG_FILE) ? [LEGACY_LOG_FILE] : []),
+    ...datedLogs,
+  ];
+};
+
+const LOG_FILES = process.argv[2] ? [process.argv[2]] : getDefaultLogFiles();
 
 const CSV_OUTPUT_DIR = path.join(__dirname, "../reports/usage-csv");
 
@@ -19,6 +41,11 @@ const PASSPORT_GENESYS_CSV_FILE = path.join(
 const GENOTYPE_CSV_FILE = path.join(
   CSV_OUTPUT_DIR,
   "genolink-daily-genotype-searches.csv",
+);
+
+const TRAFFIC_CSV_FILE = path.join(
+  CSV_OUTPUT_DIR,
+  "genolink-daily-traffic-classification.csv",
 );
 
 const shouldIgnoreStatus = (statusCode) => {
@@ -120,18 +147,35 @@ const incrementMetric = (object, key) => {
 };
 
 const generateReport = () => {
-  if (!fs.existsSync(LOG_FILE)) {
-    console.error(`Log file not found: ${LOG_FILE}`);
+  if (!LOG_FILES.length) {
+    console.error(`No combined log files found in: ${LOGS_DIR}`);
     process.exit(1);
   }
 
-  const lines = fs.readFileSync(LOG_FILE, "utf8").split("\n").filter(Boolean);
+  for (const logFile of LOG_FILES) {
+    if (!fs.existsSync(logFile)) {
+      console.error(`Log file not found: ${logFile}`);
+      process.exit(1);
+    }
+  }
+
+  const lines = LOG_FILES.flatMap((logFile) => {
+    const fileContent = fs.readFileSync(logFile);
+    const content = logFile.endsWith(".gz")
+      ? zlib.gunzipSync(fileContent).toString("utf8")
+      : fileContent.toString("utf8");
+
+    return content.split("\n").filter(Boolean);
+  });
 
   const metrics = {
     totalStructuredRequests: 0,
 
     totalPageAccesses: 0,
     successfulPageAccesses: 0,
+    rawPageAccesses: 0,
+    likelyBotPageAccesses: 0,
+    unknownPageAccesses: 0,
 
     totalApiRequests: 0,
     successfulApiRequests: 0,
@@ -141,6 +185,11 @@ const generateReport = () => {
     statusCodes: {},
 
     dailyPageAccesses: {},
+    dailyRawPageAccesses: {},
+    dailyLikelyBotPageAccesses: {},
+    dailyUnknownPageAccesses: {},
+    dailyUniqueVisitorIds: {},
+    uniqueVisitorIds: new Set(),
     dailyPassportGenesysSearches: {},
     dailyGenotypeSearches: {},
 
@@ -199,6 +248,30 @@ const generateReport = () => {
       isFrontendEntryPage(entry, cleanPath);
 
     if (isPageAccess) {
+      metrics.rawPageAccesses += 1;
+      incrementMetric(metrics.dailyRawPageAccesses, date);
+
+      if (entry.trafficType === "likely_bot") {
+        metrics.likelyBotPageAccesses += 1;
+        incrementMetric(metrics.dailyLikelyBotPageAccesses, date);
+        continue;
+      }
+
+      if (!entry.trafficType || entry.trafficType === "unknown") {
+        metrics.unknownPageAccesses += 1;
+        incrementMetric(metrics.dailyUnknownPageAccesses, date);
+      }
+
+      if (entry.visitorIdHash) {
+        metrics.uniqueVisitorIds.add(entry.visitorIdHash);
+
+        if (!metrics.dailyUniqueVisitorIds[date]) {
+          metrics.dailyUniqueVisitorIds[date] = new Set();
+        }
+
+        metrics.dailyUniqueVisitorIds[date].add(entry.visitorIdHash);
+      }
+
       metrics.totalPageAccesses += 1;
 
       if (!shouldIgnoreStatus(entry.statusCode)) {
@@ -208,13 +281,17 @@ const generateReport = () => {
       incrementMetric(metrics.dailyPageAccesses, date);
     }
 
-    if (category === "passport_genesys_search") {
+    if (
+      category === "passport_genesys_search" &&
+      entry.trafficType !== "likely_bot"
+    ) {
       incrementMetric(metrics.dailyPassportGenesysSearches, date);
     }
 
     const isGenotypeAlleleMatrixSearch =
       category === "genotype_gigwa_search" &&
-      cleanPath.includes("/allelematrix");
+      cleanPath.includes("/allelematrix") &&
+      entry.trafficType !== "likely_bot";
 
     if (isGenotypeAlleleMatrixSearch) {
       incrementMetric(metrics.dailyGenotypeSearches, date);
@@ -290,6 +367,39 @@ const generateMetricCsv = ({
   return outputFile;
 };
 
+const generateTrafficCsv = (metrics, allDates) => {
+  const rows = [
+    [
+      "Date",
+      "Raw Page Loads",
+      "Excluded Likely Bots",
+      "Estimated Non-Bot Page Loads",
+      "Unknown Page Loads",
+      "Estimated Unique Visitors",
+    ],
+  ];
+
+  for (const date of allDates) {
+    rows.push([
+      date,
+      metrics.dailyRawPageAccesses[date] || 0,
+      metrics.dailyLikelyBotPageAccesses[date] || 0,
+      metrics.dailyPageAccesses[date] || 0,
+      metrics.dailyUnknownPageAccesses[date] || 0,
+      metrics.dailyUniqueVisitorIds[date]?.size || 0,
+    ]);
+  }
+
+  fs.mkdirSync(path.dirname(TRAFFIC_CSV_FILE), { recursive: true });
+  fs.writeFileSync(
+    TRAFFIC_CSV_FILE,
+    rows.map((row) => row.join(",")).join("\n"),
+    "utf8",
+  );
+
+  return TRAFFIC_CSV_FILE;
+};
+
 const generateCsvReports = (metrics) => {
   const allDates = getDateRange(metrics.startTimestamp, metrics.endTimestamp);
 
@@ -314,10 +424,13 @@ const generateCsvReports = (metrics) => {
     allDates,
   });
 
+  const trafficCsv = generateTrafficCsv(metrics, allDates);
+
   return {
     visitsCsv,
     passportGenesysCsv,
     genotypeCsv,
+    trafficCsv,
   };
 };
 
@@ -326,7 +439,11 @@ const printReport = (metrics) => {
   console.log("Genolink Usage Report");
   console.log("==============================\n");
 
-  console.log(`Log file: ${LOG_FILE}`);
+  console.log(`Log files: ${LOG_FILES.length}`);
+
+  for (const logFile of LOG_FILES) {
+    console.log(`- ${logFile}`);
+  }
   console.log(`Base path: ${BASE_PATH || "/"}`);
 
   console.log(`From: ${metrics.startTimestamp || "No structured logs found"}`);
@@ -338,7 +455,19 @@ const printReport = (metrics) => {
 
   console.log(`Total structured requests: ${metrics.totalStructuredRequests}`);
 
-  console.log(`Total Genolink page accesses: ${metrics.totalPageAccesses}`);
+  console.log(`Raw Genolink page loads: ${metrics.rawPageAccesses}`);
+
+  console.log(
+    `Excluded likely-bot page loads: ${metrics.likelyBotPageAccesses}`,
+  );
+
+  console.log(
+    `Estimated non-bot page loads: ${metrics.totalPageAccesses}`,
+  );
+
+  console.log(`Unknown page loads: ${metrics.unknownPageAccesses}`);
+
+  console.log(`Estimated unique visitors: ${metrics.uniqueVisitorIds.size}`);
 
   console.log(
     `Successful Genolink page accesses: ${metrics.successfulPageAccesses}`,
@@ -420,6 +549,8 @@ const main = () => {
   console.log(
     `3. Daily genotype allele matrix searches: ${csvFiles.genotypeCsv}`,
   );
+
+  console.log(`4. Traffic classification: ${csvFiles.trafficCsv}`);
 
   console.log("");
 };
