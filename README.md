@@ -160,7 +160,21 @@ EXPORT_MAX_CONCURRENT=2 # optional; simultaneous exports per backend process
 EXPORT_UPSTREAM_TIMEOUT_MS=30000 # optional; timeout for each Gigwa export request
 EXPORT_TOTAL_TIMEOUT_MS=600000 # optional; timeout for the complete export
 EXPORT_POLL_INTERVAL_MS=2000 # optional; delay between ZIP readiness checks
+ANALYTICS_HASH_SECRET=<random-secret> # required to create privacy-preserving client IP hashes
 ```
+
+Generate `ANALYTICS_HASH_SECRET` once with `openssl rand -hex 32` and keep it
+private. Changing it prevents client hashes generated before and after the
+change from being matched.
+
+## Request log rotation
+
+Request logs are written to `back/logs/combined-YYYY-MM.log`. At the end of
+each month, older monthly logs are compressed as `.log.gz`, and the latest 18
+monthly files are retained. A pre-existing `back/logs/combined.log` is left
+untouched as the legacy history. The usage report generator reads the legacy
+file together with monthly logs, compressed logs, and any earlier daily-format
+logs automatically.
 
 #### 9. Apply Database Migrations
 
@@ -223,6 +237,7 @@ EXPORT_MAX_CONCURRENT=2 # optional; simultaneous exports per backend process
 EXPORT_UPSTREAM_TIMEOUT_MS=30000 # optional; timeout for each Gigwa request
 EXPORT_TOTAL_TIMEOUT_MS=600000 # optional; timeout for the complete export
 EXPORT_POLL_INTERVAL_MS=2000 # optional; delay between ZIP readiness checks
+ANALYTICS_HASH_SECRET=<random-secret> # required to create privacy-preserving client IP hashes
 GENESYS_CLIENT_ID=<your_Genesys_client_id>
 GENESYS_CLIENT_SECRET=<your_Genesys_client_secret>
 GENOTYPE_MAPPING_SOURCE=hybrid_internal_first
