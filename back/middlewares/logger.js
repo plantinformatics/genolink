@@ -20,7 +20,6 @@ const logger = winston.createLogger({
       filename: path.join(logsDir, "combined-%DATE%.log"),
       datePattern: "YYYY-MM",
       zippedArchive: true,
-      maxFiles: 18,
       auditFile: path.join(logsDir, ".combined-log-rotation-audit.json"),
     }),
     new winston.transports.Console({

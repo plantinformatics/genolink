@@ -170,8 +170,8 @@ change from being matched.
 ## Request log rotation
 
 Request logs are written to `back/logs/combined-YYYY-MM.log`. At the end of
-each month, older monthly logs are compressed as `.log.gz`, and the latest 18
-monthly files are retained. A pre-existing `back/logs/combined.log` is left
+each month, older monthly logs are compressed as `.log.gz`. Logs are not
+deleted automatically. A pre-existing `back/logs/combined.log` is left
 untouched as the legacy history. The usage report generator reads the legacy
 file together with monthly logs, compressed logs, and any earlier daily-format
 logs automatically.
