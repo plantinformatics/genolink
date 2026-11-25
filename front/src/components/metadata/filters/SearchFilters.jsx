@@ -19,6 +19,7 @@ import {
   setResetTrigger,
   setAccessionNumbers,
   setGenotypeIds,
+  setPreferredAliases,
   setCreationStartDate,
   setCreationEndDate,
   setAcquisitionStartDate,
@@ -50,6 +51,7 @@ import HistoricalAccessionsFilter, {
 } from "./HistoricalAccessionsFilter";
 import AccessionFilter from "./AccessionFilter";
 import GenotypeIdFilter from "./GenotypeIdFilter";
+import PreferredAliasFilter from "./PreferredAliasFilter";
 import MetadataSearchResultTable from "../MetadataSearchResultTable";
 import DateRangeFilter from "./DateRangeFilter";
 import GenotypeExplorer from "../../genotype/GenotypeExplorer";
@@ -104,6 +106,9 @@ const SearchFilters = ({ initialDataReady }) => {
     (state) => state.passport.accessionNumbers,
   );
   const genotypeIds = useSelector((state) => state.passport.genotypeIds);
+  const preferredAliases = useSelector(
+    (state) => state.passport.preferredAliases,
+  );
   const creationStartDate = useSelector(
     (state) => state.passport.creationStartDate,
   );
@@ -196,6 +201,26 @@ const SearchFilters = ({ initialDataReady }) => {
     }
   };
 
+  const mapPreferredAliasesUsingInternalDb = async (aliases = []) => {
+    const cleanedAliases = cleanGenotypeIds(aliases);
+
+    if (cleanedAliases.length === 0) return [];
+
+    try {
+      const mappedAccessions =
+        await genolinkInternalApi.preferredAliasMapping(cleanedAliases);
+
+      return Array.isArray(mappedAccessions)
+        ? mappedAccessions.map((accession) =>
+            accession.replace(/"/g, "").trim().toUpperCase(),
+          )
+        : [];
+    } catch (error) {
+      console.warn("Internal preferredAlias mapping failed:", error);
+      return [];
+    }
+  };
+
   const shouldUseInternalGenotypeIdMapping = () => {
     return (
       genotypeMappingSource === "internal" ||
@@ -257,6 +282,7 @@ const SearchFilters = ({ initialDataReady }) => {
         const urlParams = new URLSearchParams(window.location.search);
         const filterMode = urlParams.get("filterMode");
         const genotypeIdsParam = urlParams.get("genotypeIds");
+        const preferredAliasesParam = urlParams.get("preferredAliases");
 
         let accessionNums = [];
 
@@ -279,10 +305,21 @@ const SearchFilters = ({ initialDataReady }) => {
           }
         }
 
+        if (filterMode === "PreferredAlias Filter" && preferredAliasesParam) {
+          const aliases = cleanGenotypeIds(preferredAliasesParam.split(","));
+          setFilterMode(filterMode);
+          dispatch(setPreferredAliases(aliases));
+          accessionNums = await mapPreferredAliasesUsingInternalDb(aliases);
+          setMappingFailed(accessionNums.length === 0);
+        }
+
         let baseBody = { _text: " " };
-        if (!filterMode && !genotypeIdsParam) {
+        if (!filterMode && !genotypeIdsParam && !preferredAliasesParam) {
           baseBody.institute = { code: [defaultInstituteCode] };
-        } else if (filterMode && genotypeIdsParam) {
+        } else if (
+          filterMode &&
+          (genotypeIdsParam || preferredAliasesParam)
+        ) {
           baseBody.accessionNumbers =
             accessionNums.length > 0 ? accessionNums : ["__INVALID__"];
         }
@@ -346,6 +383,9 @@ const SearchFilters = ({ initialDataReady }) => {
         break;
       case "Genotype Ids":
         dispatch(setGenotypeIds([]));
+        break;
+      case "Preferred Aliases":
+        dispatch(setPreferredAliases([]));
         break;
       case "Genotype Filter":
         setHasGenotype(false);
@@ -429,6 +469,9 @@ const SearchFilters = ({ initialDataReady }) => {
             break;
           case "Genotype Ids":
             updatedBody.genotypeIds = filter.value;
+            break;
+          case "Preferred Aliases":
+            updatedBody.accessionNumbers = filter.accessionNumbers || [];
             break;
           case "Institute Code":
             updatedBody.institute = { code: filter.value };
@@ -516,11 +559,18 @@ const SearchFilters = ({ initialDataReady }) => {
     cropCheckedBoxesRef.current = cropCheckedBoxes;
 
     let accessionNums1;
+    let preferredAliasAccessions;
 
     const cleanedGenotypeIds = cleanGenotypeIds(genotypeIds);
 
     if (cleanedGenotypeIds.length > 0 && shouldUseInternalGenotypeIdMapping()) {
       accessionNums1 = await mapGenotypeIdsUsingInternalDb(cleanedGenotypeIds);
+    }
+
+    const cleanedPreferredAliases = cleanGenotypeIds(preferredAliases);
+    if (cleanedPreferredAliases.length > 0) {
+      preferredAliasAccessions =
+        await mapPreferredAliasesUsingInternalDb(cleanedPreferredAliases);
     }
 
     let sets = [];
@@ -534,6 +584,9 @@ const SearchFilters = ({ initialDataReady }) => {
       );
     if (accessionNums1 && accessionNums1.length > 0)
       sets.push(new Set(accessionNums1));
+    if (cleanedPreferredAliases.length > 0) {
+      sets.push(new Set(preferredAliasAccessions || []));
+    }
 
     let commonAccessions = [];
 
@@ -644,6 +697,12 @@ const SearchFilters = ({ initialDataReady }) => {
         newFilters.push({ type: "Accession Numbers", value: accessionNumbers });
       if (genotypeIds.length > 0)
         newFilters.push({ type: "Genotype Ids", value: genotypeIds });
+      if (preferredAliases.length > 0)
+        newFilters.push({
+          type: "Preferred Aliases",
+          value: preferredAliases,
+          accessionNumbers: preferredAliasAccessions,
+        });
       if (hasGenotype)
         newFilters.push({ type: "Genotype Filter", value: "On" });
       if (instituteCheckedBoxes.length > 0)
@@ -744,6 +803,7 @@ const SearchFilters = ({ initialDataReady }) => {
       );
       dispatch(setAccessionNumbers([]));
       dispatch(setGenotypeIds([]));
+      dispatch(setPreferredAliases([]));
       dispatch(setCreationStartDate(null));
       dispatch(setCreationEndDate(null));
       dispatch(setAcquisitionStartDate(null));
@@ -1011,6 +1071,9 @@ const SearchFilters = ({ initialDataReady }) => {
                       <option value="GenotypeId Filter">
                         GenotypeId Filter
                       </option>
+                      <option value="PreferredAlias Filter">
+                        PreferredAlias Filter
+                      </option>
                     </select>
                   </div>
                 </div>
@@ -1112,6 +1175,8 @@ const SearchFilters = ({ initialDataReady }) => {
                   </>
                 ) : filterMode === "Accession Filter" ? (
                   <AccessionFilter />
+                ) : filterMode === "PreferredAlias Filter" ? (
+                  <PreferredAliasFilter />
                 ) : (
                   <GenotypeIdFilter />
                 )}

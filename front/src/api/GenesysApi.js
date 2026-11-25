@@ -28,6 +28,7 @@ import {
   setTotalPreGenotypedAccessions,
   setPassportCurrentPage,
   setResetTrigger,
+  setPreferredAliases,
 } from "../redux/passport/passportActions";
 import { buildGenesysSelect } from "../components/metadata/MetadataColumns";
 import { germplasmStorageMapping } from "../components/metadata/filters/MultiSelectFilter";
@@ -203,9 +204,10 @@ class GenesysApi extends BaseApi {
       const urlParams = new URLSearchParams(window.location.search);
       const filterMode = urlParams.get("filterMode");
       const genotypeIds = urlParams.get("genotypeIds");
+      const preferredAliases = urlParams.get("preferredAliases");
 
       let body;
-      if (!isReset && !filterMode && !genotypeIds) {
+      if (!isReset && !filterMode && !genotypeIds && !preferredAliases) {
         body = {
           _text: userInput,
           institute: {
@@ -228,6 +230,24 @@ class GenesysApi extends BaseApi {
         dispatch(
           setActiveFilters([
             { type: "Genotype Ids", value: genotypeIds.split(",") },
+            { type: "Historical Accessions", value: "No" },
+          ]),
+        );
+      } else if (!isReset && filterMode && preferredAliases) {
+        const aliases = preferredAliases.split(",");
+        body = {
+          _text: userInput,
+          accessionNumbers:
+            accessionNumbers.length > 0 ? accessionNumbers : ["__INVALID__"],
+        };
+        dispatch(setPreferredAliases(aliases));
+        dispatch(
+          setActiveFilters([
+            {
+              type: "Preferred Aliases",
+              value: aliases,
+              accessionNumbers,
+            },
             { type: "Historical Accessions", value: "No" },
           ]),
         );
@@ -298,9 +318,10 @@ class GenesysApi extends BaseApi {
       const urlParams = new URLSearchParams(window.location.search);
       const filterMode = urlParams.get("filterMode");
       const genotypeIds = urlParams.get("genotypeIds");
+      const preferredAliases = urlParams.get("preferredAliases");
 
       let body;
-      if (!isReset && !filterMode && !genotypeIds) {
+      if (!isReset && !filterMode && !genotypeIds && !preferredAliases) {
         body = {
           _text: userInput,
           institute: {
@@ -323,6 +344,24 @@ class GenesysApi extends BaseApi {
         dispatch(
           setActiveFilters([
             { type: "Genotype Ids", value: genotypeIds.split(",") },
+            { type: "Historical Accessions", value: "No" },
+          ]),
+        );
+      } else if (!isReset && filterMode && preferredAliases) {
+        const aliases = preferredAliases.split(",");
+        body = {
+          _text: userInput,
+          accessionNumbers:
+            accessionNumbers.length > 0 ? accessionNumbers : ["__INVALID__"],
+        };
+        dispatch(setPreferredAliases(aliases));
+        dispatch(
+          setActiveFilters([
+            {
+              type: "Preferred Aliases",
+              value: aliases,
+              accessionNumbers,
+            },
             { type: "Historical Accessions", value: "No" },
           ]),
         );

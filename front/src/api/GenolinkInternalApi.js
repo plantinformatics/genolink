@@ -52,6 +52,23 @@ class GenolinkInternalApi extends BaseApi {
     }
   }
 
+  async preferredAliasMapping(preferredAliases) {
+    try {
+      return await this.post(
+        `${BASE_PATH}/api/internalApi/mapPreferredAliasToAccession`,
+        { preferredAliases },
+      );
+    } catch (error) {
+      if (error.response?.data?.message) {
+        alert(error.response.data.message);
+      } else {
+        alert("An unexpected error occurred.");
+      }
+      console.error("Error mapping preferred aliases:", error);
+      throw error;
+    }
+  }
+
   async fetchDatasetInfoForAccessions(accessions) {
     try {
       const cleanedAccessions = [
