@@ -10,21 +10,21 @@ const aliasModes = [
   {
     key: "eq",
     label: "Exact match",
-    placeholder: "Example: OSIRIS",
-    help: "The complete alias must match. Do not use quotes.",
+    placeholder: "Example: OSIRIS, BAXTER",
+    help: "Each complete alias must match. Separate multiple values with commas. Do not use quotes.",
   },
   {
     key: "sw",
     label: "Starts with",
-    placeholder: "Example: OSIRIS",
-    help: "Matches OSIRIS, OSIRIS 1, and similar aliases. Do not use quotes.",
+    placeholder: "Example: OSIRIS, BAXTER",
+    help: "Matches aliases beginning with any value. Separate multiple values with commas. Do not use quotes.",
   },
   {
     key: "contains",
     label: "Contains",
-    placeholder: "Example: SIRIS",
+    placeholder: "Example: SIRIS, AXTER",
     help:
-      "Matches the text anywhere; broad searches may be slower. Do not use quotes.",
+      "Matches any value anywhere. Separate multiple values with commas; broad searches may be slower. Do not use quotes.",
   },
 ];
 
