@@ -22,9 +22,9 @@ const aliasModes = [
   {
     key: "contains",
     label: "Contains",
-    placeholder: "Example: SIRIS, AXTER",
+    placeholder: "Example: SIRIS",
     help:
-      "Matches any value anywhere. Separate multiple values with commas; broad searches may be slower. Do not use quotes.",
+      "Matches one value anywhere; broad searches may be slower. Do not use quotes.",
   },
 ];
 
@@ -80,12 +80,17 @@ const AliasSearchFilter = () => {
           <input
             type="text"
             value={values[key]}
-            onChange={(event) =>
+            onChange={(event) => {
+              const value =
+                key === "contains"
+                  ? event.target.value.split(",")[0]
+                  : event.target.value;
+
               setValues((current) => ({
                 ...current,
-                [key]: event.target.value,
-              }))
-            }
+                [key]: value,
+              }));
+            }}
             onBlur={() => commitValue(key)}
             disabled={activeMode !== null && activeMode !== key}
             className={styles.accessionSearchBox}

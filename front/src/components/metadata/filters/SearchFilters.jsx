@@ -64,11 +64,14 @@ import {
 } from "../../../config/apiConfig";
 import { Autocomplete, TextField, Chip, Box } from "@mui/material";
 
-const parseAliasSearchValues = (value = "") =>
-  value
+const parseAliasSearchValues = (value = "", mode) => {
+  const values = value
     .split(",")
     .map((alias) => alias.trim())
     .filter(Boolean);
+
+  return mode === "contains" ? values.slice(0, 1) : values;
+};
 
 const SearchFilters = ({ initialDataReady }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -252,6 +255,7 @@ const SearchFilters = ({ initialDataReady }) => {
             aliases: {
               [aliasSearchMode]: parseAliasSearchValues(
                 accessionNameSearchValue,
+                aliasSearchMode,
               ),
             },
           }),
@@ -469,7 +473,10 @@ const SearchFilters = ({ initialDataReady }) => {
             break;
           case "Alias Search":
             updatedBody.aliases = {
-              [filter.operator]: parseAliasSearchValues(filter.value),
+              [filter.operator]: parseAliasSearchValues(
+                filter.value,
+                filter.operator,
+              ),
             };
             break;
           case "Accession Numbers":
@@ -622,6 +629,7 @@ const SearchFilters = ({ initialDataReady }) => {
         ? {
             [aliasSearchMode]: parseAliasSearchValues(
               accessionNameSearchValue,
+              aliasSearchMode,
             ),
           }
         : {},
